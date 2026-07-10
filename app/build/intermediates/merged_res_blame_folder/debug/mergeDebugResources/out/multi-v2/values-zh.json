@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.bond.md3elauncher.app-mergeDebugResources-38:/values-zh/values-zh.xml",
+            "map": [
+                {
+                    "source": "D:\\Code\\ProJect\\MD3ELauncher\\app\\src\\main\\res\\values-zh\\strings.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endColumns": "40",
+                        "endOffsets": "52"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "40",
+                        "endOffsets": "91"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.bond.md3elauncher.app-mergeDebugResources-38:/values-night-v8/values-night-v8.xml",
+            "map": [
+                {
+                    "source": "D:\\Code\\ProJect\\MD3ELauncher\\app\\src\\main\\res\\values-night\\colors.xml",
+                    "from": {
+                        "startLines": "2,3,4",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,114,166",
+                        "endColumns": "58,51,51",
+                        "endOffsets": "109,161,213"
+                    }
+                }
+            ]
+        }
+    ]
+}

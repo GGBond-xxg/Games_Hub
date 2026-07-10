@@ -1,0 +1,28 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.bond.md3elauncher.app-mergeDebugResources-38:/values-v31/values-v31.xml",
+            "map": [
+                {
+                    "source": "D:\\Code\\ProJect\\MD3ELauncher\\app\\src\\main\\res\\values-v31\\themes.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endLines": "12",
+                        "endColumns": "12",
+                        "endOffsets": "842"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "13",
+                        "endColumns": "12",
+                        "endOffsets": "881"
+                    }
+                }
+            ]
+        }
+    ]
+}

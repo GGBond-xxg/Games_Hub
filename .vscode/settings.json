@@ -1,0 +1,5 @@
+{
+  "java.import.gradle.wrapper.enabled": true,
+  "java.import.gradle.java.home": "D:\\Code\\AndroidStudio\\jbr",
+  "gradle.java.home": "D:\\Code\\AndroidStudio\\jbr"
+}

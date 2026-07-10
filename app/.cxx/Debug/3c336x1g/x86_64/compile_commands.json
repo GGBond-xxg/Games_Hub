@@ -1,0 +1,7 @@
+[
+{
+  "directory": "D:/Code/ProJect/MD3ELauncher/app/.cxx/Debug/3c336x1g/x86_64",
+  "command": "C:\\Users\\Administrator\\AppData\\Local\\Android\\Sdk\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=x86_64-none-linux-android23 --sysroot=C:/Users/Administrator/AppData/Local/Android/Sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dmd3e_gba_cheat_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -o CMakeFiles\\md3e_gba_cheat.dir\\gba_cheat_bridge.cpp.o -c D:\\Code\\ProJect\\MD3ELauncher\\app\\src\\main\\cpp\\gba_cheat_bridge.cpp",
+  "file": "D:\\Code\\ProJect\\MD3ELauncher\\app\\src\\main\\cpp\\gba_cheat_bridge.cpp"
+}
+]

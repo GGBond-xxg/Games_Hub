@@ -1,0 +1,14 @@
+com.bond.md3elauncher
+color ic_launcher_background
+color launch_background
+color launch_system_bar
+drawable deficon
+drawable ic_launcher_monochrome
+drawable monaicon
+mipmap ic_launcher
+mipmap ic_launcher_foreground
+mipmap ic_launcher_monochrome
+mipmap ic_launcher_round
+string app_name
+style Theme_MD3ELauncher
+xml file_paths
