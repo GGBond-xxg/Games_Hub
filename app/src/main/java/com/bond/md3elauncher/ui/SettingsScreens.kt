@@ -69,6 +69,7 @@ import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.data.SafeMarginSettings
 import com.bond.md3elauncher.data.ThemeMode
 import com.bond.md3elauncher.emulator.InternalEmulators
+import com.bond.md3elauncher.emulator.fc.FcExternalEmulatorProfiles
 
 @Composable
 internal fun SettingsBeaconScreen(
@@ -396,6 +397,7 @@ private fun EmulatorManagerRows(
             BeaconTab.PSP -> platforms.firstOrNull { it.kind == PlatformKind.PSP }
             BeaconTab.NS -> platforms.firstOrNull { it.kind == PlatformKind.SWITCH }
             BeaconTab.GBA -> platforms.firstOrNull { it.kind == PlatformKind.GBA }
+            BeaconTab.NES -> platforms.firstOrNull { it.kind == PlatformKind.NES }
             else -> null
         }
         val title = tab.label
@@ -532,7 +534,8 @@ private fun TabOrderEditor(
                     when (tab) {
                         BeaconTab.NS -> "NS / Switch 平台入口"
                         BeaconTab.PSP -> "PSP 平台入口"
-                        BeaconTab.GBA -> "GBA / My Boy! 平台入口"
+                        BeaconTab.GBA -> "GBA / 内置模拟器平台入口"
+                        BeaconTab.NES -> "FC/NES 外部模拟器入口"
                         BeaconTab.ANDROID -> "安卓应用入口"
                         else -> ""
                     },
@@ -609,6 +612,12 @@ private fun OrderedPlatformRows(
             }
             BeaconTab.GBA -> {
                 platforms.firstOrNull { it.kind == PlatformKind.GBA }?.let { platform ->
+                    PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            BeaconTab.NES -> {
+                platforms.firstOrNull { it.kind == PlatformKind.NES }?.let { platform ->
                     PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
                     Spacer(Modifier.height(8.dp))
                 }
@@ -923,7 +932,7 @@ internal fun PlatformSetupScreen(
                 }
                 PlatformConfigRow(
                     title = "外部模拟器 App",
-                    subtitle = if (hasExternalEmulator) "${displayApp.label} · ${displayApp.packageName}" else "可选：改用 My Boy / PPSSPP / 其他模拟器",
+                    subtitle = if (hasExternalEmulator) "${displayApp.label} · ${displayApp.packageName}" else externalEmulatorHelpText(platform.kind),
                     actionText = if (hasExternalEmulator) "更换" else "选择",
                     leading = if (hasExternalEmulator) { { AppIcon(app = displayApp, size = 34) } } else null,
                     onClick = onPickEmulator
@@ -950,7 +959,7 @@ internal fun PlatformSetupScreen(
             Column(Modifier.padding(14.dp)) {
                 Text("提示", fontWeight = FontWeight.Black)
                 Text(
-                    "GBA 默认使用内置模拟器；PSP/GBA 也可以改用外部模拟器。长按游戏可以自定义显示名称和图标。",
+                    "GBA 默认使用内置模拟器；PSP/FC/NES/GBA 也可以改用外部模拟器。长按游戏可以自定义显示名称和图标。",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1032,7 +1041,7 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
 
     val recommendedApps = remember(apps, platform.id) { apps.filter { app -> isRecommendedEmulatorForPlatform(platform, app) } }
     val pickerApps = remember(apps, recommendedApps, query, showAll, platform.id) {
-        val base = if (query.isBlank() && !showAll && recommendedApps.isNotEmpty()) recommendedApps else apps
+        val base = if (query.isBlank() && !showAll) recommendedApps else apps
         base.filter { app -> query.isBlank() || app.label.contains(query, true) || app.packageName.contains(query, true) }
             .sortedWith(
                 compareByDescending<InstalledApp> { isRecommendedEmulatorForPlatform(platform, it) }
@@ -1139,6 +1148,14 @@ private fun emulatorSearchHint(platform: PlatformConfig): String = when (platfor
     PlatformKind.PSP -> "搜索 PPSSPP / Rocket PSP / MYPSP / RetroArch / 包名"
     PlatformKind.SWITCH -> "搜索 Yuzu / Suyu / Citron / 包名"
     PlatformKind.GBA -> "搜索 My Boy / Pizza Boy / John GBA / GBA.emu / RetroArch / 包名"
+    PlatformKind.NES -> "搜索 Nes.emu / Nostalgia.NES / RetroArch / 包名"
+}
+
+private fun externalEmulatorHelpText(kind: PlatformKind): String = when (kind) {
+    PlatformKind.GBA -> "可选：改用 My Boy / Pizza Boy / John GBA / RetroArch"
+    PlatformKind.PSP -> "请选择 PPSSPP / PPSSPP Gold / RetroArch 等 PSP 模拟器"
+    PlatformKind.NES -> "请选择 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 模拟器"
+    PlatformKind.SWITCH -> "请选择 Switch 外部模拟器；本项目不包含 keys / firmware"
 }
 
 private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: InstalledApp): Boolean {
@@ -1184,6 +1201,7 @@ private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: Inst
             "retroarch",
             "com.retroarch"
         )
+        PlatformKind.NES -> FcExternalEmulatorProfiles.recommendedKeywords
     }
     return platformKeywords.any { it in text }
 }

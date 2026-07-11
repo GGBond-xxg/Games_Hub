@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bond.md3elauncher"
-    android:versionCode="1"
-    android:versionName="0.1.52" >
+    android:versionCode="63"
+    android:versionName="0.1.63" >
 
     <uses-sdk
         android:minSdkVersion="23"
@@ -44,6 +44,13 @@
         <package android:name="com.retroarch.ra32" />
         <package android:name="com.retroarch.ra64" />
         <package android:name="com.retroarch.plus" />
+        <package android:name="com.explusalpha.NesEmu" />
+        <package android:name="com.johnemulators.johnness" />
+        <package android:name="com.johnemulators.johnnesslite" />
+        <package android:name="com.johnemulators.johnnes" />
+        <package android:name="com.johnemulators.johnneslite" />
+        <package android:name="com.nostalgiaemulators.neslite" />
+        <package android:name="com.nostalgiaemulators.nesfull" />
 
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -69,6 +76,21 @@
             <action android:name="android.intent.action.VIEW" />
 
             <data android:mimeType="application/x-gba-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+
+            <data android:mimeType="application/x-nes-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+
+            <data android:mimeType="application/x-nintendo-nes-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+
+            <data android:mimeType="application/x-nes-rom" />
         </intent>
     </queries>
 

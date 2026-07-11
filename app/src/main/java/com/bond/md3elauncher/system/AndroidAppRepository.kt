@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.os.Build
 import com.bond.md3elauncher.data.InstalledApp
+import com.bond.md3elauncher.emulator.fc.FcExternalEmulatorProfiles
 import java.util.Locale
 
 class AndroidAppRepository(private val context: Context) {
@@ -106,7 +107,7 @@ class AndroidAppRepository(private val context: Context) {
             "com.retroarch",
             "emulator",
             "emu"
-        ).any { it in text }
+        ).plus(FcExternalEmulatorProfiles.recommendedKeywords).any { it in text }
     }
 
     @Suppress("DEPRECATION")

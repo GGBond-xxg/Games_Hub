@@ -11,8 +11,8 @@ android {
         applicationId = "com.bond.md3elauncher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.52"
+        versionCode = 63
+        versionName = "0.1.63"
     }
 
     buildFeatures {

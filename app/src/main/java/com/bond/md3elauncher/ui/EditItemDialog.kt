@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -40,6 +41,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,11 +52,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,6 +67,7 @@ import com.bond.md3elauncher.data.CoverCandidate
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.system.CoverScraper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -127,6 +131,8 @@ private fun EditInfoPage(
     onRemoveImage: () -> Unit
 ) {
     val context = LocalContext.current
+    var showNameDialog by rememberSaveable(target.key) { mutableStateOf(false) }
+    var draftTitle by rememberSaveable(target.key) { mutableStateOf(title) }
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) onImageSelected(uri.toString())
     }
@@ -158,9 +164,24 @@ private fun EditInfoPage(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = "返回") }
-            Column(Modifier.weight(1f)) {
-                Text("编辑显示信息", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-                Text(target.typeLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "编辑显示信息",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                title.ifBlank { target.defaultTitle },
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+            if (previewBitmap != null) {
+                TextButton(onClick = onRemoveImage) { Text("移除封面") }
+                Spacer(Modifier.width(6.dp))
             }
             OutlinedButton(onClick = onBack) { Text("取消") }
             Spacer(Modifier.width(8.dp))
@@ -190,21 +211,75 @@ private fun EditInfoPage(
             }
 
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = onTitleChange,
-                    modifier = Modifier.fillMaxWidth().focusProperties { canFocus = false },
-                    singleLine = true,
-                    label = { Text("显示名称") },
-                    shape = RoundedCornerShape(18.dp)
-                )
-
                 FilledTonalButton(onClick = onSearchCover, modifier = Modifier.fillMaxWidth()) { Text("联网搜索封面") }
-                FilledTonalButton(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text(if (selectedImageUri.isNullOrBlank()) "从设备选择封面 / 图标" else "已选择新图片") }
+                FilledTonalButton(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("设备选择封面") }
+                FilledTonalButton(
+                    onClick = {
+                        draftTitle = title.ifBlank { target.defaultTitle }
+                        showNameDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("编辑显示名称") }
 
                 Spacer(Modifier.weight(1f))
             }
         }
+    }
+
+    if (showNameDialog) {
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            delay(160)
+            runCatching { focusRequester.requestFocus() }
+        }
+
+        AlertDialog(
+            onDismissRequest = { showNameDialog = false },
+            title = { Text("编辑显示名称", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = draftTitle,
+                        onValueChange = { draftTitle = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester),
+                        singleLine = true,
+                        label = { Text("显示名称") },
+                        shape = RoundedCornerShape(18.dp)
+                    )
+                    Text(
+                        "名称过长会在顶部和列表中自动以 ... 省略显示。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val cleanTitle = draftTitle.trim()
+                        if (cleanTitle.isNotBlank()) {
+                            onTitleChange(cleanTitle)
+                            showNameDialog = false
+                        }
+                    },
+                    enabled = draftTitle.isNotBlank()
+                ) { Text("确定") }
+            },
+            dismissButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = {
+                            draftTitle = target.defaultTitle
+                            onRestoreName()
+                            showNameDialog = false
+                        }
+                    ) { Text("还原默认") }
+                    TextButton(onClick = { showNameDialog = false }) { Text("取消") }
+                }
+            }
+        )
     }
 }
 

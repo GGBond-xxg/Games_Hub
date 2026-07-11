@@ -33,6 +33,13 @@
         <package android:name="com.retroarch.ra32" />
         <package android:name="com.retroarch.ra64" />
         <package android:name="com.retroarch.plus" />
+        <package android:name="com.explusalpha.NesEmu" />
+        <package android:name="com.johnemulators.johnness" />
+        <package android:name="com.johnemulators.johnnesslite" />
+        <package android:name="com.johnemulators.johnnes" />
+        <package android:name="com.johnemulators.johnneslite" />
+        <package android:name="com.nostalgiaemulators.neslite" />
+        <package android:name="com.nostalgiaemulators.nesfull" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:mimeType="application/x-iso9660-image" />
@@ -52,6 +59,18 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:mimeType="application/x-gba-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/x-nes-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/x-nintendo-nes-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="application/x-nes-rom" />
         </intent>
     </queries>
 

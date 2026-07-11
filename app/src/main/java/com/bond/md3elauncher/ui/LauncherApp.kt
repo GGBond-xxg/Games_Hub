@@ -108,6 +108,7 @@ fun LauncherApp(
                 BeaconTab.NS -> games.any { it.platformId == PlatformKind.SWITCH.name } || tab == BeaconTab.NS
                 BeaconTab.PSP -> games.any { it.platformId == PlatformKind.PSP.name } || tab == BeaconTab.PSP
                 BeaconTab.GBA -> games.any { it.platformId == PlatformKind.GBA.name } || tab == BeaconTab.GBA
+                BeaconTab.NES -> games.any { it.platformId == PlatformKind.NES.name } || tab == BeaconTab.NES
                 BeaconTab.ANDROID -> true
                 else -> false
             }
@@ -186,6 +187,10 @@ fun LauncherApp(
             }
             BeaconTab.GBA -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.GBA.name }
+                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+            }
+            BeaconTab.NES -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.NES.name }
                 if (first != null && first.id in favorites) "取消收藏" else "收藏"
             }
             BeaconTab.ANDROID -> {
@@ -485,6 +490,23 @@ fun LauncherApp(
                                 onToggleFavorite = onToggleFavorite
                             )
 
+                            BeaconTab.NES -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.NES },
+                                games = games.filter { it.platformId == PlatformKind.NES.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                onLaunchSelectedChange = { launchSelected = it },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
                             BeaconTab.ANDROID -> AndroidBeaconScreen(
                                 apps = installedApps.filter { "app:${it.packageName}" in androidGames },
                                 favorites = favorites,
@@ -573,6 +595,7 @@ fun LauncherApp(
                             BeaconTab.ANDROID -> "安卓游戏"
                             BeaconTab.PSP -> "PSP 游戏"
                             BeaconTab.GBA -> "GBA 游戏"
+                            BeaconTab.NES -> "FC 游戏"
                             BeaconTab.SETTINGS -> "设置"
                         }
                     }
@@ -591,6 +614,7 @@ fun LauncherApp(
                 tab == BeaconTab.ANDROID -> "搜索安卓游戏"
                 tab == BeaconTab.PSP -> "搜索 PSP 游戏"
                 tab == BeaconTab.GBA -> "搜索 GBA 游戏"
+                tab == BeaconTab.NES -> "搜索 FC/NES 游戏"
                 tab == BeaconTab.SETTINGS -> "搜索设置"
                 else -> "搜索"
             },
