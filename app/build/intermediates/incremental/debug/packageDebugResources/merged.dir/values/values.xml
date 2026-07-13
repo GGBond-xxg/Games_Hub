@@ -4,7 +4,7 @@
     <color name="launch_background">#F8FAFF</color>
     <color name="launch_system_bar">#F8FAFF</color>
     <string name="app_name">GameHub</string>
-    <style name="Theme.MD3ELauncher" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.GameHub" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>

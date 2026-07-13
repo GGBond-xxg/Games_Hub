@@ -35,6 +35,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.nativeKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -47,6 +48,7 @@ import com.bond.md3elauncher.data.PlatformKind
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.data.SafeMarginSettings
 import com.bond.md3elauncher.data.ThemeMode
+import com.bond.md3elauncher.i18n.I18n
 
 @Composable
 fun LauncherApp(
@@ -64,6 +66,7 @@ fun LauncherApp(
     scraperSettings: ScraperSettings,
     tabOrder: List<String>,
     itemOrders: Map<String, List<String>>,
+    languageMode: String,
     isScanning: Boolean,
     showHomePrompt: Boolean,
     onPickFolder: (PlatformConfig) -> Unit,
@@ -86,10 +89,19 @@ fun LauncherApp(
     onSaveScraperSettings: (ScraperSettings) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit,
     onSaveItemOrder: (scope: String, order: List<String>) -> Unit,
+    onSetLanguageMode: (String) -> Unit,
     isDefaultHome: Boolean,
     onExitApp: () -> Unit,
     onDismissHomePrompt: () -> Unit
 ) {
+    val context = LocalContext.current
+    val lang = I18n.languageFor(context)
+    val favoriteText = I18n.t(context, "launcher.bottom.favorite", "收藏")
+    val unfavoriteText = I18n.t(context, "launcher.bottom.unfavorite", "取消收藏")
+    val addText = I18n.t(context, "launcher.bottom.add", "添加")
+    val removeAddText = I18n.t(context, "launcher.bottom.remove_add", "取消添加")
+    val backText = I18n.t(context, "common.back", "返回")
+
     var tabName by rememberSaveable { mutableStateOf(BeaconTab.NOW.name) }
     val tab = BeaconTab.valueOf(tabName)
     var setupPlatformId by rememberSaveable { mutableStateOf<String?>(null) }
@@ -101,11 +113,11 @@ fun LauncherApp(
     var launchSelected by remember { mutableStateOf<(() -> Unit)?>(null) }
     var bottomBSelected by remember { mutableStateOf<(() -> Unit)?>(null) }
     var editSelected by remember { mutableStateOf<(() -> Unit)?>(null) }
-    var bottomBLabel by rememberSaveable { mutableStateOf("收藏") }
+    var bottomBLabel by rememberSaveable { mutableStateOf(favoriteText) }
     var moveSelectionUp by remember { mutableStateOf<(() -> Unit)?>(null) }
     var moveSelectionDown by remember { mutableStateOf<(() -> Unit)?>(null) }
     var editTarget by remember { mutableStateOf<EditTarget?>(null) }
-    var editCenterText by remember { mutableStateOf("编辑显示信息") }
+    var editCenterText by remember { mutableStateOf(I18n.t(context, "edit.title", "编辑显示信息")) }
     var controllerShortcutCaptureHandler by remember { mutableStateOf<((AndroidKeyEvent) -> Boolean)?>(null) }
     val visibleTabs = remember(games, tabOrder, tab) {
         val orderedMiddle = normalizedTabOrder(tabOrder).filter { candidate ->
@@ -185,41 +197,41 @@ fun LauncherApp(
             BeaconTab.NOW -> {
                 val hasFavoriteGame = games.any { it.id in favorites }
                 val hasFavoriteApp = installedApps.any { "app:${it.packageName}" in favorites }
-                if (hasFavoriteGame || hasFavoriteApp) "取消收藏" else "收藏"
+                if (hasFavoriteGame || hasFavoriteApp) unfavoriteText else favoriteText
             }
             BeaconTab.PSP -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.PSP.name }
-                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.NS -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.SWITCH.name }
-                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.GBA -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.GBA.name }
-                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.GB -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.GB.name }
-                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.NES -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.NES.name }
-                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.ANDROID -> {
                 val first = installedApps.firstOrNull { "app:${it.packageName}" in androidGames }
                 val key = first?.let { "app:${it.packageName}" }
-                if (key != null && key in favorites) "取消收藏" else "收藏"
+                if (key != null && key in favorites) unfavoriteText else favoriteText
             }
-            BeaconTab.SETTINGS -> "收藏"
+            BeaconTab.SETTINGS -> favoriteText
         }
     }
 
     fun estimatedAndroidAddLabel(): String {
         val first = installedApps.firstOrNull()
         val key = first?.let { "app:${it.packageName}" }
-        return if (key != null && key in androidGames) "取消添加" else "添加"
+        return if (key != null && key in androidGames) removeAddText else addText
     }
 
     fun selectTab(next: BeaconTab) {
@@ -279,12 +291,24 @@ fun LauncherApp(
     } else {
         { bottomBSelected?.invoke() }
     }
-    val bottomBDisplayLabel = if (isBackPage) "返回" else bottomBLabel
+    val bottomBDisplayLabel = if (isBackPage) backText else bottomBLabel
     val bottomSearchAction: (() -> Unit)? = if (isBackPage) null else ({ showSearchDialog = true })
 
     fun setMoveSelectionActions(up: (() -> Unit)?, down: (() -> Unit)?) {
         moveSelectionUp = up
         moveSelectionDown = down
+    }
+
+
+
+    LaunchedEffect(lang, tab, favorites, androidGames, games, installedApps, showAllApps, isBackPage) {
+        if (!isBackPage) {
+            bottomBLabel = if (showAllApps && tab == BeaconTab.ANDROID) {
+                estimatedAndroidAddLabel()
+            } else {
+                estimatedBottomBLabel(tab)
+            }
+        }
     }
 
     LaunchedEffect(isBackPage, showAllApps, tab) {
@@ -399,13 +423,13 @@ fun LauncherApp(
                             target = editTarget!!,
                             scraperSettings = scraperSettings,
                             onBack = {
-                                editCenterText = "编辑显示信息"
+                                editCenterText = I18n.t(context, "edit.title", "编辑显示信息")
                                 editTarget = null
                             },
                             onFooterTextChange = { editCenterText = it },
                             onSave = { title, imageUriString ->
                                 onSaveItemOverride(editTarget!!.key, title, imageUriString)
-                                editCenterText = "编辑显示信息"
+                                editCenterText = I18n.t(context, "edit.title", "编辑显示信息")
                                 editTarget = null
                             }
                         )
@@ -589,6 +613,7 @@ fun LauncherApp(
                                 safeMargins = safeMargins,
                                 scraperSettings = scraperSettings,
                                 tabOrder = tabOrder,
+                                languageMode = languageMode,
                                 isScanning = isScanning,
                                 onOpenPlatform = { setupPlatformId = it.id },
                                 onOpenAndroid = {
@@ -613,6 +638,7 @@ fun LauncherApp(
                                 onSetSafeMargins = onSetSafeMargins,
                                 onSaveScraperSettings = onSaveScraperSettings,
                                 onSaveTabOrder = onSaveTabOrder,
+                                onSetLanguageMode = onSetLanguageMode,
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onControllerShortcutCaptureHandlerChange = { controllerShortcutCaptureHandler = it }
                             )
@@ -643,17 +669,17 @@ fun LauncherApp(
                     centerText = if (editTarget != null) {
                         editCenterText
                     } else if (showAllApps) {
-                        "全部应用"
+                        I18n.t(context, "launcher.center.all_apps", "全部应用")
                     } else {
                         when (tab) {
-                            BeaconTab.NOW -> "收藏"
-                            BeaconTab.NS -> "NS 游戏"
-                            BeaconTab.ANDROID -> "安卓游戏"
-                            BeaconTab.PSP -> "PSP 游戏"
-                            BeaconTab.GBA -> "GBA 游戏"
-                            BeaconTab.GB -> "GB/GBC 游戏"
-                            BeaconTab.NES -> "FC 游戏"
-                            BeaconTab.SETTINGS -> "设置"
+                            BeaconTab.NOW -> I18n.t(context, "launcher.center.favorites", "收藏")
+                            BeaconTab.NS -> I18n.t(context, "launcher.center.ns", "NS 游戏")
+                            BeaconTab.ANDROID -> I18n.t(context, "launcher.center.android", "安卓游戏")
+                            BeaconTab.PSP -> I18n.t(context, "launcher.center.psp", "PSP 游戏")
+                            BeaconTab.GBA -> I18n.t(context, "launcher.center.gba", "GBA 游戏")
+                            BeaconTab.GB -> I18n.t(context, "launcher.center.gb", "GB/GBC 游戏")
+                            BeaconTab.NES -> I18n.t(context, "launcher.center.nes", "FC 游戏")
+                            BeaconTab.SETTINGS -> I18n.t(context, "launcher.center.settings", "设置")
                         }
                     }
                 )
@@ -664,17 +690,17 @@ fun LauncherApp(
     if (showSearchDialog) {
         SearchDialog(
             title = when {
-                setupPlatform != null -> "搜索当前页面"
-                showAllApps -> "搜索全部应用"
-                tab == BeaconTab.NOW -> "搜索收藏"
-                tab == BeaconTab.NS -> "搜索 NS 游戏"
-                tab == BeaconTab.ANDROID -> "搜索安卓游戏"
-                tab == BeaconTab.PSP -> "搜索 PSP 游戏"
-                tab == BeaconTab.GBA -> "搜索 GBA 游戏"
-                tab == BeaconTab.GB -> "搜索 GB/GBC 游戏"
-                tab == BeaconTab.NES -> "搜索 FC/NES 游戏"
-                tab == BeaconTab.SETTINGS -> "搜索设置"
-                else -> "搜索"
+                setupPlatform != null -> I18n.t(context, "launcher.search.current_page", "搜索当前页面")
+                showAllApps -> I18n.t(context, "launcher.search.all_apps", "搜索全部应用")
+                tab == BeaconTab.NOW -> I18n.t(context, "launcher.search.favorites", "搜索收藏")
+                tab == BeaconTab.NS -> I18n.t(context, "launcher.search.ns", "搜索 NS 游戏")
+                tab == BeaconTab.ANDROID -> I18n.t(context, "launcher.search.android", "搜索安卓游戏")
+                tab == BeaconTab.PSP -> I18n.t(context, "launcher.search.psp", "搜索 PSP 游戏")
+                tab == BeaconTab.GBA -> I18n.t(context, "launcher.search.gba", "搜索 GBA 游戏")
+                tab == BeaconTab.GB -> I18n.t(context, "launcher.search.gb", "搜索 GB/GBC 游戏")
+                tab == BeaconTab.NES -> I18n.t(context, "launcher.search.nes", "搜索 FC/NES 游戏")
+                tab == BeaconTab.SETTINGS -> I18n.t(context, "launcher.search.settings", "搜索设置")
+                else -> I18n.t(context, "common.search", "搜索")
             },
             query = searchQuery,
             onQueryChange = { searchQuery = it },
@@ -686,16 +712,16 @@ fun LauncherApp(
     if (showHomePrompt) {
         AlertDialog(
             onDismissRequest = onDismissHomePrompt,
-            title = { Text("设为默认桌面？") },
-            text = { Text("如果这台设备主要用来玩游戏，可以把这个 App 设为默认桌面。以后按 Home 键会回到这里。") },
+            title = { Text(I18n.t(context, "launcher.home.title", "设为默认桌面？"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+            text = { Text(I18n.t(context, "launcher.home.text", "如果这台设备主要用来玩游戏，可以把这个 App 设为默认桌面。以后按 Home 键会回到这里。"), maxLines = 4, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
             confirmButton = {
                 Button(onClick = {
                     onDismissHomePrompt()
                     onOpenHomeSettings()
-                }) { Text("去选择") }
+                }) { Text(I18n.t(context, "launcher.home.confirm", "去选择"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
             },
             dismissButton = {
-                TextButton(onClick = onDismissHomePrompt) { Text("暂时不要") }
+                TextButton(onClick = onDismissHomePrompt) { Text(I18n.t(context, "launcher.home.dismiss", "暂时不要"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
             }
         )
     }

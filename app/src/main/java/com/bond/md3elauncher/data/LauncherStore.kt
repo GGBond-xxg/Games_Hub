@@ -282,6 +282,17 @@ class LauncherStore(context: Context) {
         prefs.edit().putString(KEY_ITEM_ORDERS, obj.toString()).apply()
     }
 
+
+    fun loadLanguageMode(): String {
+        val raw = prefs.getString(KEY_LANGUAGE_MODE, "system") ?: "system"
+        return raw.takeIf { it in setOf("system", "en", "zh", "zh-Hant") } ?: "system"
+    }
+
+    fun saveLanguageMode(mode: String) {
+        val clean = mode.takeIf { it in setOf("system", "en", "zh", "zh-Hant") } ?: "system"
+        prefs.edit().putString(KEY_LANGUAGE_MODE, clean).apply()
+    }
+
     fun loadScraperSettings(): ScraperSettings = ScraperSettings(
         useLibretro = prefs.getBoolean(KEY_SCRAPER_LIBRETRO, true),
         theGamesDbApiKey = prefs.getString(KEY_SCRAPER_TGDB, "").orEmpty(),
@@ -343,5 +354,6 @@ class LauncherStore(context: Context) {
         private const val KEY_SCRAPER_STEAMGRID = "scraper_steamgrid_key"
         private const val KEY_SCRAPER_SCREEN_USER = "scraper_screenscraper_user"
         private const val KEY_SCRAPER_SCREEN_PASS = "scraper_screenscraper_pass"
+        private const val KEY_LANGUAGE_MODE = "language_mode"
     }
 }

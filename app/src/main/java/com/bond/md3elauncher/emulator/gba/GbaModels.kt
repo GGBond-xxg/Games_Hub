@@ -61,7 +61,7 @@ internal const val MAX_STATE_SLOTS = 5
 
 internal val MAIN_MENU_ITEMS = CommonEmulatorUiSpec.MAIN_MENU_ITEMS
 internal val VIRTUAL_KEY_MENU_ITEMS = CommonEmulatorUiSpec.VIRTUAL_KEY_MENU_ITEMS
-internal val VIRTUAL_EDITOR_ITEMS = listOf("添加自定键", "放大当前键", "缩小当前键", "保存并返回游戏", "重置布局", "取消编辑 / 返回游戏")
+internal val VIRTUAL_EDITOR_ITEMS = listOf("Add Custom Button", "Increase Button Size", "Decrease Button Size", "Save and Return", "Reset Layout", "Cancel / Return to Game")
 
 internal const val PREF_CUSTOM_TOUCH_BUTTONS = "custom_touch_buttons"
 internal const val PREF_TOUCH_LAYOUT_RECTS = "touch_layout_rects"

@@ -2,6 +2,7 @@ package com.bond.md3elauncher.emulator
 
 import android.content.Context
 import android.view.KeyEvent
+import com.bond.md3elauncher.i18n.I18n
 import java.util.Locale
 
 /**
@@ -12,15 +13,20 @@ import java.util.Locale
  */
 enum class ControllerShortcutAction(
     val title: String,
-    val subtitle: String
+    val subtitle: String,
+    val titleKey: String,
+    val subtitleKey: String
 ) {
-    QUICK_SAVE("快速保存", "保存当前游戏状态"),
-    QUICK_LOAD("快速读取", "读取快捷存档"),
-    FAST_FORWARD("快进切换", "1x / 2x / 4x 循环"),
-    OPEN_MENU("打开菜单", "打开内置模拟器菜单"),
-    EXIT_GAME("退出游戏", "返回 MD3ELauncher"),
-    TURBO_A("连发 A", "按住后连续触发 A"),
-    TURBO_B("连发 B", "按住后连续触发 B")
+    QUICK_SAVE("快速保存", "保存当前游戏状态", "controller.quick_save.title", "controller.quick_save.subtitle"),
+    QUICK_LOAD("快速读取", "读取快捷存档", "controller.quick_load.title", "controller.quick_load.subtitle"),
+    FAST_FORWARD("快进切换", "1x / 2x / 4x 循环", "controller.fast_forward.title", "controller.fast_forward.subtitle"),
+    OPEN_MENU("打开菜单", "打开内置模拟器菜单", "controller.open_menu.title", "controller.open_menu.subtitle"),
+    EXIT_GAME("退出游戏", "返回 GameHub", "controller.exit_game.title", "controller.exit_game.subtitle"),
+    TURBO_A("连发 A", "按住后连续触发 A", "controller.turbo_a.title", "controller.turbo_a.subtitle"),
+    TURBO_B("连发 B", "按住后连续触发 B", "controller.turbo_b.title", "controller.turbo_b.subtitle");
+
+    fun localizedTitle(context: Context): String = I18n.t(context, titleKey, title)
+    fun localizedSubtitle(context: Context): String = I18n.t(context, subtitleKey, subtitle)
 }
 
 data class ControllerShortcutSettings(

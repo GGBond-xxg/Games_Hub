@@ -259,7 +259,7 @@ class CoverScraper(private val context: Context) {
         conn.connectTimeout = 9000
         conn.readTimeout = 15000
         conn.instanceFollowRedirects = true
-        conn.setRequestProperty("User-Agent", "MD3ELauncher/0.1.18 Android")
+        conn.setRequestProperty("User-Agent", "GameHub/0.1.87 Android")
         conn.setRequestProperty("Accept", "application/json,image/*,*/*")
         headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
         return conn

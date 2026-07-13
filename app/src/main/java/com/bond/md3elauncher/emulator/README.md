@@ -116,3 +116,47 @@ UI：都走 GBA 标准按键排布和公共内置菜单规范
 ```
 
 手柄操作说明文案固定为：`设置内置模拟器通用快捷键，支持1~3键组合。`
+
+---
+
+## v0.1.78 内置模拟器文本规范
+
+内置模拟器菜单、提示、虚拟按键短文本统一从 JSON 读取：
+
+```text
+app/src/main/assets/i18n/zh.json
+```
+
+公共菜单 key：
+
+```text
+emulator.menu.save
+emulator.menu.virtual_keys
+emulator.menu.cheat
+emulator.menu.reset
+emulator.menu.restart
+emulator.menu.exit
+```
+
+公共提示 key：
+
+```text
+emulator.hint.main
+emulator.hint.save
+emulator.hint.virtual_keys
+emulator.hint.reset
+emulator.hint.restart
+```
+
+虚拟按键短文本 key：
+
+```text
+emulator.short.quick_save
+emulator.short.quick_load
+emulator.short.fast_forward
+emulator.short.exit
+```
+
+新增内置模拟器时，不要直接写死中文菜单。必须复用 `CommonEmulatorUiSpec` 和 `I18n.t()`。
+
+Canvas 绘制文本必须做宽度保护，长文本要省略，避免国际化后菜单重叠。

@@ -1,6 +1,7 @@
 package com.bond.md3elauncher.emulator.common
 
 import android.content.Context
+import com.bond.md3elauncher.i18n.I18n
 import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
 
@@ -11,40 +12,46 @@ import com.bond.md3elauncher.emulator.ControllerShortcutSettings
  * these menu labels, hints and shortcut text instead of defining their own style.
  */
 internal object CommonEmulatorUiSpec {
-    val MAIN_MENU_ITEMS: List<String> = listOf(
-        "存档",
-        "虚拟按键设置",
-        "作弊",
-        "重置",
-        "重启游戏",
-        "退出游戏"
+    // Legacy fallback lists kept for old code paths. New code should call
+    // mainMenuItems(context) / virtualKeyMenuItems(context) so the text comes from JSON.
+    val MAIN_MENU_ITEMS: List<String> = listOf("Save States", "Virtual Buttons", "Cheats", "Reset", "Restart Game", "Exit Game")
+
+    val VIRTUAL_KEY_MENU_ITEMS: List<String> = listOf("Transparency", "Virtual Button Editor")
+
+    fun mainMenuItems(context: Context): List<String> = listOf(
+        I18n.t(context, "emulator.menu.save", "Save States"),
+        I18n.t(context, "emulator.menu.virtual_keys", "Virtual Buttons"),
+        I18n.t(context, "emulator.menu.cheat", "Cheats"),
+        I18n.t(context, "emulator.menu.reset", "Reset"),
+        I18n.t(context, "emulator.menu.restart", "Restart Game"),
+        I18n.t(context, "emulator.menu.exit", "Exit Game")
     )
 
-    val VIRTUAL_KEY_MENU_ITEMS: List<String> = listOf(
-        "透明度设置",
-        "虚拟键编辑"
+    fun virtualKeyMenuItems(context: Context): List<String> = listOf(
+        I18n.t(context, "emulator.menu.transparency", "Transparency"),
+        I18n.t(context, "emulator.menu.virtual_editor", "Virtual Button Editor")
     )
 
     const val MAX_STATE_SLOTS: Int = 5
 
     fun mainMenuHint(context: Context): String {
         val exit = exitShortcutLabel(context)
-        return "上下选择，A 进入，B 返回。$exit 退出。"
+        return I18n.t(context, "emulator.hint.main", "Up/Down to choose, A enter, B back. {exit} exits.", "exit" to exit)
     }
 
-    fun saveMenuHint(): String = "上下选中，A 存档，Y 读档，X 删除，B 返回。"
+    fun saveMenuHint(context: Context): String = I18n.t(context, "emulator.hint.save", "Up/Down select, A save, Y load, X delete, B back.")
 
-    fun virtualKeysHint(): String = "A 进入设置项，B 返回。"
+    fun virtualKeysHint(context: Context): String = I18n.t(context, "emulator.hint.virtual_keys", "A enters item, B returns.")
 
-    fun resetHint(): String = "冷重载当前 ROM，从头开始游戏，不清除存档。"
+    fun resetHint(context: Context): String = I18n.t(context, "emulator.hint.reset", "Cold reload current ROM from the beginning without deleting saves.")
 
-    fun restartHint(): String = "不退出游戏界面，直接让当前 core 从头开始。"
+    fun restartHint(context: Context): String = I18n.t(context, "emulator.hint.restart", "Restart the current core from the beginning without leaving the game screen.")
 
     fun exitShortcutLabel(context: Context): String {
         return runCatching {
             val settings = ControllerShortcutSettings.load(context)
             val keys = settings.keysFor(ControllerShortcutAction.EXIT_GAME)
             ControllerShortcutSettings.comboLabel(keys)
-        }.getOrDefault("默认 SELECT + X")
+        }.getOrDefault("Default SELECT + X")
     }
 }

@@ -9,5 +9,5 @@ int mipmap ic_launcher_foreground 0x0
 int mipmap ic_launcher_monochrome 0x0
 int mipmap ic_launcher_round 0x0
 int string app_name 0x0
-int style Theme_MD3ELauncher 0x0
+int style Theme_GameHub 0x0
 int xml file_paths 0x0

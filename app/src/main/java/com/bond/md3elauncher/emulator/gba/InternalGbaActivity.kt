@@ -3,6 +3,7 @@ package com.bond.md3elauncher.emulator.gba
 import com.bond.md3elauncher.MainActivity
 import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
+import com.bond.md3elauncher.i18n.I18n
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
 import android.content.Context
@@ -91,6 +92,9 @@ class InternalGbaActivity : ComponentActivity() {
         getSharedPreferences("internal_gba_settings", Context.MODE_PRIVATE)
     }
 
+    private fun tr(key: String, fallback: String, vararg args: Pair<String, Any?>): String =
+        I18n.t(this, key, fallback, *args)
+
     internal var touchControlsAlpha: Float = DEFAULT_TOUCH_CONTROLS_ALPHA
         set(value) {
             val fixed = value.coerceIn(0f, 1f)
@@ -114,7 +118,7 @@ class InternalGbaActivity : ComponentActivity() {
         skipAutoStateRestore = intent.getBooleanExtra(EXTRA_SKIP_AUTO_STATE_RESTORE, false)
         skipSaveRamRestore = intent.getBooleanExtra(EXTRA_SKIP_SAVE_RAM_RESTORE, false)
 
-        showLoading("正在启动内置 GBA / GB/GBC 模拟器...")
+        showLoading(tr("emulator.loading.gba", "Starting built-in GBA / GB/GBC emulator..."))
         configureWindow()
 
         val romUri = intent.getStringExtra(EXTRA_ROM_URI)?.let(Uri::parse)
@@ -125,7 +129,7 @@ class InternalGbaActivity : ComponentActivity() {
         }
 
         if (romUri == null) {
-            finishWithMessage("没有收到 $platformLabel ROM")
+            finishWithMessage(tr("emulator.no_rom", "No {platform} ROM received", "platform" to platformLabel))
             return
         }
 
@@ -134,7 +138,7 @@ class InternalGbaActivity : ComponentActivity() {
                 runCatching { prepareRomFile(romUri, fileName) }
             }
             val romFile = result.getOrElse {
-                finishWithMessage("读取 ROM 失败：${it.message ?: "未知错误"}")
+                finishWithMessage(tr("emulator.read_rom_failed", "Failed to read ROM: {error}", "error" to (it.message ?: tr("common.unknown_error", "Unknown error"))))
                 return@launch
             }
             startRetroView(romFile, title, platformLabel)
@@ -290,7 +294,7 @@ class InternalGbaActivity : ComponentActivity() {
     private fun startRetroView(romFile: File, title: String, platformLabel: String) {
         val coreFile = File(applicationInfo.nativeLibraryDir, CORE_FILE_NAME)
         if (!coreFile.exists()) {
-            finishWithMessage("内置 GBA 核心不存在：${coreFile.absolutePath}")
+            finishWithMessage(tr("emulator.core_missing", "Built-in {platform} core is missing: {path}", "platform" to "GBA", "path" to coreFile.absolutePath))
             return
         }
 
@@ -343,7 +347,7 @@ class InternalGbaActivity : ComponentActivity() {
         configureWindow()
         view.requestFocus()
         startAutoRestoreWatcher(view, storage)
-        Toast.makeText(this, "内置 $platformLabel：$title", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, tr("emulator.toast.started", "Built-in {platform}: {title}", "platform" to platformLabel, "title" to title), Toast.LENGTH_SHORT).show()
     }
 
     private fun gbaVariables(): Array<Variable> = arrayOf(
@@ -362,7 +366,7 @@ class InternalGbaActivity : ComponentActivity() {
 
         val outFile = File(dir, safeName.ensureGbaFamilyExtension())
         contentResolver.openInputStream(uri).use { input ->
-            requireNotNull(input) { "无法打开 ROM 输入流" }
+            requireNotNull(input) { tr("emulator.rom_input_failed", "Unable to open ROM input stream") }
             FileOutputStream(outFile).use { output -> input.copyTo(output) }
         }
         return outFile
@@ -370,7 +374,7 @@ class InternalGbaActivity : ComponentActivity() {
 
     private fun extractGbaFromZip(uri: Uri, dir: File, archiveName: String): File? {
         contentResolver.openInputStream(uri).use { input ->
-            requireNotNull(input) { "无法打开 ZIP 输入流" }
+            requireNotNull(input) { tr("emulator.zip_input_failed", "Unable to open ZIP input stream") }
             ZipInputStream(input).use { zip ->
                 while (true) {
                     val entry = zip.nextEntry ?: break
@@ -422,8 +426,8 @@ class InternalGbaActivity : ComponentActivity() {
 
     private suspend fun restoreInitialState(view: GLRetroView, storage: GameStorage) {
         val candidates = listOf(
-            "快捷存档" to storage.quickStateFile,
-            "存档 1" to storage.slotStateFile(1)
+            tr("emulator.state.quick_label", "Quick Save") to storage.quickStateFile,
+            tr("emulator.state.slot_label", "Save {slot}", "slot" to 1) to storage.slotStateFile(1)
         ).filter { it.second.exists() && it.second.length() > 0L }
 
         for ((label, file) in candidates) {
@@ -431,7 +435,7 @@ class InternalGbaActivity : ComponentActivity() {
             if (bytes == null || bytes.isEmpty()) continue
             val ok = runCatching { view.unserializeState(bytes) }.getOrDefault(false)
             if (ok) {
-                Toast.makeText(this, "已自动读取 $label", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, tr("emulator.state.auto_loaded", "Auto-loaded {label}", "label" to label), Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -444,18 +448,18 @@ class InternalGbaActivity : ComponentActivity() {
         }
         if (bytes == null || bytes.isEmpty()) {
             Log.w(TAG, "cold restart has no clean state to restore")
-            Toast.makeText(this, "已冷重启并关闭金手指", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, tr("emulator.cheat.closed_restart", "Cold-restarted and disabled cheats"), Toast.LENGTH_SHORT).show()
             return
         }
         val ok = runCatching { view.unserializeState(bytes) }.getOrDefault(false)
         Log.d(TAG, "cold restart restore clean state ok=$ok bytes=${bytes.size}")
         if (ok) {
-            Toast.makeText(this, "已恢复到开启作弊前状态", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, tr("emulator.cheat.restored_clean", "Restored to the clean state before enabling cheats"), Toast.LENGTH_SHORT).show()
             if (loadCustomCheats().none { it.enabled }) {
                 withContext(Dispatchers.IO) { runCatching { file.delete() } }
             }
         } else {
-            Toast.makeText(this, "已冷重启并关闭金手指", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, tr("emulator.cheat.closed_restart", "Cold-restarted and disabled cheats"), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -473,7 +477,7 @@ class InternalGbaActivity : ComponentActivity() {
             if (fallbackToCleanState) {
                 restoreCheatCleanState(view, storage)
             } else {
-                Toast.makeText(this, "已重启并关闭金手指，但没有快捷存档", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, tr("emulator.cheat.no_quick_after_restart", "Restarted and disabled cheats, but no quick save exists"), Toast.LENGTH_SHORT).show()
             }
             return
         }
@@ -481,7 +485,7 @@ class InternalGbaActivity : ComponentActivity() {
         val ok = unserializeStateWithBootRetries(view, bytes, label = "cheat quick state")
         Log.d(TAG, "cheat restart quick load ok=$ok bytes=${bytes.size} mtime=${file.lastModified()}")
         if (ok) {
-            Toast.makeText(this, "已快速读档并关闭金手指", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, tr("emulator.cheat.quick_loaded_closed", "Quick-loaded and disabled cheats"), Toast.LENGTH_SHORT).show()
             if (loadCustomCheats().none { it.enabled }) {
                 withContext(Dispatchers.IO) { runCatching { storage.cheatCleanStateFile.delete() } }
             }
@@ -489,7 +493,7 @@ class InternalGbaActivity : ComponentActivity() {
             Log.w(TAG, "cheat restart quick load failed, fallback to clean state")
             restoreCheatCleanState(view, storage)
         } else {
-            Toast.makeText(this, "已重启并关闭金手指，快捷读档失败", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, tr("emulator.cheat.quick_load_failed", "Restarted and disabled cheats, but quick load failed"), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -511,43 +515,43 @@ class InternalGbaActivity : ComponentActivity() {
     }
 
     internal fun saveQuickState() {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        saveStateToFile(storage.quickStateFile, "快捷存档")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        saveStateToFile(storage.quickStateFile, tr("emulator.state.quick_label", "Quick Save"))
     }
 
     internal fun loadQuickState(hideMenuAfterLoad: Boolean) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        loadStateFromFile(storage.quickStateFile, "快捷存档", hideMenuAfterLoad)
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        loadStateFromFile(storage.quickStateFile, tr("emulator.state.quick_label", "Quick Save"), hideMenuAfterLoad)
     }
 
     internal fun deleteQuickState() {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        deleteStateFile(storage.quickStateFile, "快捷存档")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        deleteStateFile(storage.quickStateFile, tr("emulator.state.quick_label", "Quick Save"))
     }
 
     internal fun saveSlotState(slot: Int) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        saveStateToFile(storage.slotStateFile(slot), "存档 $slot")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        saveStateToFile(storage.slotStateFile(slot), tr("emulator.state.slot_label", "Save {slot}", "slot" to slot))
     }
 
     internal fun loadSlotState(slot: Int, hideMenuAfterLoad: Boolean = true) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        loadStateFromFile(storage.slotStateFile(slot), "存档 $slot", hideMenuAfterLoad)
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        loadStateFromFile(storage.slotStateFile(slot), tr("emulator.state.slot_label", "Save {slot}", "slot" to slot), hideMenuAfterLoad)
     }
 
     internal fun deleteSlotState(slot: Int) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        deleteStateFile(storage.slotStateFile(slot), "存档 $slot")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        deleteStateFile(storage.slotStateFile(slot), tr("emulator.state.slot_label", "Save {slot}", "slot" to slot))
     }
 
     private fun saveStateToFile(file: File, label: String) {
-        val view = retroView ?: return showToast("模拟器还没准备好")
+        val view = retroView ?: return showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     file.parentFile?.mkdirs()
                     val state = view.serializeState()
-                    require(state.isNotEmpty()) { "状态数据为空" }
+                    require(state.isNotEmpty()) { tr("emulator.state.data_empty", "State data is empty") }
                     file.writeBytes(state)
                     // 不再额外调用 serializeSRAM。当前 LibretroDroid 在 Activity 重载/Surface 销毁附近
                     // 调用 serializeSRAM 可能触发 native SIGSEGV，状态存档本身已足够恢复进度。
@@ -555,43 +559,43 @@ class InternalGbaActivity : ComponentActivity() {
             }
             result.onSuccess {
                 controlsView?.invalidate()
-                showToast("$label 保存成功")
+                showToast(tr("emulator.state.saved", "{label} saved", "label" to label))
             }.onFailure {
-                showToast("保存 $label 失败：${it.message ?: "未知错误"}")
+                showToast(tr("emulator.state.save_failed", "Failed to save {label}: {error}", "label" to label, "error" to (it.message ?: tr("common.unknown_error", "Unknown error"))))
             }
         }
     }
 
     private fun loadStateFromFile(file: File, label: String, hideMenuAfterLoad: Boolean) {
-        val view = retroView ?: return showToast("模拟器还没准备好")
+        val view = retroView ?: return showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
         if (!file.exists() || file.length() <= 0L) {
-            showToast("没有 $label")
+            showToast(tr("emulator.state.no_state", "No {label}", "label" to label))
             return
         }
         lifecycleScope.launch {
             val bytes = withContext(Dispatchers.IO) { runCatching { file.readBytes() }.getOrNull() }
             if (bytes == null || bytes.isEmpty()) {
-                showToast("读取 $label 失败")
+                showToast(tr("emulator.state.load_failed", "Failed to load {label}", "label" to label))
                 return@launch
             }
             val ok = runCatching { view.unserializeState(bytes) }.getOrDefault(false)
             if (ok) {
-                showToast("已读取 $label")
+                showToast(tr("emulator.state.loaded", "Loaded {label}", "label" to label))
                 if (hideMenuAfterLoad) controlsView?.hideMenu()
             } else {
-                showToast("读取 $label 失败")
+                showToast(tr("emulator.state.load_failed", "Failed to load {label}", "label" to label))
             }
         }
     }
 
     private fun deleteStateFile(file: File, label: String) {
         if (!file.exists()) {
-            showToast("没有 $label")
+            showToast(tr("emulator.state.no_state", "No {label}", "label" to label))
             return
         }
         val ok = runCatching { file.delete() }.getOrDefault(false)
         controlsView?.invalidate()
-        showToast(if (ok) "已删除 $label" else "删除 $label 失败")
+        showToast(if (ok) tr("emulator.state.deleted", "Deleted {label}", "label" to label) else tr("emulator.state.delete_failed", "Failed to delete {label}", "label" to label))
     }
 
     private fun persistSaveRamIfSafe(reason: String) {
@@ -609,7 +613,7 @@ class InternalGbaActivity : ComponentActivity() {
 
 
     internal fun softRestartGameNoExit() {
-        val view = retroView ?: return showToast("模拟器还没准备好")
+        val view = retroView ?: return showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
         stopAllTurbo()
         controlsView?.releaseAll()
         controlsView?.hideMenu()
@@ -619,16 +623,16 @@ class InternalGbaActivity : ComponentActivity() {
                     .onFailure { Log.e(TAG, "soft reset GBA core failed", it) }
             }
         }.onSuccess {
-            showToast("已重启当前 GBA 游戏")
+            showToast(tr("emulator.restart_done", "Restarted current {platform} game", "platform" to "GBA"))
         }.onFailure {
             Log.e(TAG, "queue soft reset GBA failed", it)
-            showToast("重启游戏失败")
+            showToast(tr("emulator.restart_failed", "Failed to restart game"))
         }
     }
 
     internal fun restartGameFresh() {
         coldRestartGbaProcess(
-            message = "正在冷重启游戏...",
+            message = tr("emulator.cold_restart", "Cold-restarting game..."),
             restoreCleanState = false,
             applyCheatsAfterBoot = false
         )
@@ -698,7 +702,7 @@ class InternalGbaActivity : ComponentActivity() {
     }
 
     internal fun stateTime(file: File): String {
-        if (!file.exists()) return "空"
+        if (!file.exists()) return tr("emulator.state.empty", "Empty")
         return SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(file.lastModified()))
     }
 
@@ -731,8 +735,22 @@ class InternalGbaActivity : ComponentActivity() {
     }
 
     internal fun exitGame() {
+        exitInternalProcess("normal exit")
+    }
+
+    private fun exitInternalProcess(reason: String) {
+        Log.w(TAG, "exit internal gba process reason=$reason")
         suppressLifecycleSaveRam = true
+        stopAllTurbo()
+        controlsView?.releaseAll()
+        controlsView = null
         finish()
+        overridePendingTransition(0, 0)
+        turboHandler.postDelayed({
+            Log.w(TAG, "kill internal_gba process after exit")
+            Process.killProcess(Process.myPid())
+            exitProcess(0)
+        }, 260L)
     }
 
     internal fun pauseRetroForMenu() {
@@ -864,7 +882,7 @@ class InternalGbaActivity : ComponentActivity() {
             else -> 1
         }
         runCatching { retroView?.frameSpeed = fastForwardSpeed }
-        showToast("快进 ${fastForwardSpeed}x")
+        showToast(tr("emulator.fast_forward", "Fast Forward {speed}x", "speed" to fastForwardSpeed))
         controlsView?.invalidate()
     }
 
@@ -874,14 +892,14 @@ class InternalGbaActivity : ComponentActivity() {
         softReset: Boolean = false
     ) {
         val view = retroView ?: run {
-            if (showMessage) showToast("模拟器还没准备好")
+            if (showMessage) showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
             return
         }
         val active = buildActiveCheats()
         val signature = cheatSignature(active)
 
         if (!force && signature == appliedCheatSignature) {
-            if (showMessage) showToast(if (active.isEmpty()) "没有开启的金手指" else "金手指已是最新")
+            if (showMessage) showToast(if (active.isEmpty()) tr("emulator.cheat.none_active", "No active cheats") else tr("emulator.cheat.up_to_date", "Cheats are already up to date"))
             return
         }
 
@@ -927,14 +945,14 @@ class InternalGbaActivity : ComponentActivity() {
             if (showMessage) {
                 val activeLineCount = active.flatMap { cheatCodeLines(it.code) }.size
                 val msg = when {
-                    active.isEmpty() -> "已下发关闭金手指"
-                    softReset -> "已下发 ${active.size} 个金手指 / ${activeLineCount} 行并软重置"
-                    else -> "已下发 ${active.size} 个金手指 / ${activeLineCount} 行"
+                    active.isEmpty() -> tr("emulator.cheat.dispatched_close", "Disable cheat command sent")
+                    softReset -> tr("emulator.cheat.dispatched_reset", "Sent {count} cheats / {lines} lines and soft reset", "count" to active.size, "lines" to activeLineCount)
+                    else -> tr("emulator.cheat.dispatched", "Sent {count} cheats / {lines} lines", "count" to active.size, "lines" to activeLineCount)
                 }
                 showToast(msg)
             }
         }.onFailure {
-            if (showMessage) showToast("金手指应用失败：${it.message ?: "未知错误"}")
+            if (showMessage) showToast(tr("emulator.cheat.apply_failed", "Failed to apply cheats: {error}", "error" to (it.message ?: tr("common.unknown_error", "Unknown error"))))
             Log.e(TAG, "queue cheats failed", it)
         }
     }
@@ -945,7 +963,7 @@ class InternalGbaActivity : ComponentActivity() {
         Log.d(TAG, "cold refresh request reason=$reason active=${active.size} lines=${activeLines.size}")
 
         if (cheatRuntimeRefreshInProgress) {
-            if (showMessage) showToast("正在快速存档并重启游戏")
+            if (showMessage) showToast(tr("emulator.cheat.quick_save_restart", "Quick-saving and restarting game"))
             return
         }
         cheatRuntimeRefreshInProgress = true
@@ -956,16 +974,16 @@ class InternalGbaActivity : ComponentActivity() {
             val quickSaved = saveQuickStateBeforeCheatRestart()
             Log.d(TAG, "quick save before cheat restart result=$quickSaved reason=$reason")
             if (quickSaved) {
-                showToast("已快速存档，正在重启游戏关闭金手指")
+                showToast(tr("emulator.cheat.quick_saved_restart", "Quick save complete, restarting game to disable cheats"))
             } else if (showMessage) {
-                showToast("快速存档失败，继续重启游戏关闭金手指")
+                showToast(tr("emulator.cheat.quick_save_failed_restart", "Quick save failed, still restarting game to disable cheats"))
             }
 
             // v47/v48：日志确认 resetCheat + soft reset + clean state restore 都执行成功，
             // 但穿墙码仍然保留；说明这类 GameShark/CodeBreaker 会在当前 native core 内留下 patch。
             // 因此关闭/删除作弊码时冷重启 :internal_gba，重新创建 mGBA core。
             coldRestartGbaProcess(
-                message = if (active.isEmpty()) "已关闭金手指，正在重启当前游戏并快速读档" else "正在重启游戏、快速读档并应用剩余金手指",
+                message = if (active.isEmpty()) tr("emulator.cheat.restarting_cleanup", "Disabled cheats; restarting current game and quick-loading") else tr("emulator.cheat.restarting_apply_remaining", "Restarting, quick-loading, and applying remaining cheats"),
                 restoreCleanState = true,
                 applyCheatsAfterBoot = active.isNotEmpty(),
                 restoreQuickStateAfterCheatRestart = true
@@ -1005,7 +1023,7 @@ class InternalGbaActivity : ComponentActivity() {
     private fun scheduleCheatApplyAfterBoot() {
         val activeCount = buildActiveCheats().size
         Log.d(TAG, "schedule cheat apply after boot active=$activeCount")
-        showToast(if (activeCount > 0) "正在应用金手指..." else "正在关闭金手指...")
+        showToast(if (activeCount > 0) tr("emulator.cheat.applying", "Applying cheats...") else tr("emulator.cheat.closing", "Disabling cheats..."))
         listOf(650L, 1600L).forEachIndexed { index, delay ->
             turboHandler.postDelayed({
                 if (!isFinishing && retroView != null) {
@@ -1019,7 +1037,7 @@ class InternalGbaActivity : ComponentActivity() {
     private fun scheduleCheatApplyThenRestore(view: GLRetroView, storage: GameStorage) {
         val activeCount = buildActiveCheats().size
         Log.d(TAG, "schedule cheat apply then restore active=$activeCount")
-        showToast(if (activeCount > 0) "正在下发金手指并重置核心..." else "正在关闭金手指并重置核心...")
+        showToast(if (activeCount > 0) tr("emulator.cheat.sending_reset", "Sending cheats and resetting core...") else tr("emulator.cheat.closing_reset", "Disabling cheats and resetting core..."))
 
         // 第一步：先下发当前金手指，再软重置 core。穿墙这类代码在 mGBA 上通常需要 reset 后才挂上。
         turboHandler.postDelayed({
@@ -1064,7 +1082,7 @@ class InternalGbaActivity : ComponentActivity() {
             }
         }
         val completed = latch.await(1800L, TimeUnit.MILLISECONDS)
-        if (!completed) error("模拟器线程没有及时响应，请返回游戏后再试")
+        if (!completed) error(tr("emulator.cheat.thread_timeout", "Emulator thread did not respond in time. Return to the game and try again."))
         failure?.let { throw it }
     }
 
@@ -1206,7 +1224,7 @@ class InternalGbaActivity : ComponentActivity() {
                     val obj = array.getJSONObject(index)
                     CustomCheat(
                         id = obj.optString("id", "custom_$index"),
-                        name = obj.optString("name", "自定义${index + 1}"),
+                        name = obj.optString("name", tr("emulator.cheat.name_default", "Custom Cheat") + "${index + 1}"),
                         type = obj.optString("type", "CodeBreaker/GameShark"),
                         code = obj.optString("code", ""),
                         enabled = obj.optBoolean("enabled", false)
@@ -1215,7 +1233,7 @@ class InternalGbaActivity : ComponentActivity() {
             }.getOrDefault(mutableListOf())
         }
         val legacy = parseLegacyCustomCheatBlocks(raw).mapIndexed { index, code ->
-            CustomCheat("legacy_$index", "自定义${index + 1}", "CodeBreaker/GameShark", code, enabled = true)
+            CustomCheat("legacy_$index", tr("emulator.cheat.name_default", "Custom Cheat") + "${index + 1}", "CodeBreaker/GameShark", code, enabled = true)
         }.toMutableList()
         saveCustomCheats(legacy)
         return legacy
@@ -1243,18 +1261,18 @@ class InternalGbaActivity : ComponentActivity() {
             setPadding(padding, 0, padding, 0)
         }
         val nameInput = EditText(this).apply {
-            hint = "作弊码名称，例如：经验"
+            hint = tr("emulator.cheat.name_hint", "Cheat name, for example: EXP")
             inputType = InputType.TYPE_CLASS_TEXT
             setSingleLine(true)
         }
         val typeInput = EditText(this).apply {
-            hint = "作弊码类型，例如：CodeBreaker / GameShark"
+            hint = tr("emulator.cheat.type_hint", "Cheat type, for example: CodeBreaker / GameShark")
             inputType = InputType.TYPE_CLASS_TEXT
             setText("CodeBreaker/GameShark")
             setSingleLine(true)
         }
         val codeInput = EditText(this).apply {
-            hint = "作弊码，例如：\nXXXXXXXX YYYY\nXXXXXXXX YYYY"
+            hint = tr("emulator.cheat.code_hint", "Cheat code, for example:\nXXXXXXXX YYYY\nXXXXXXXX YYYY")
             minLines = 4
             maxLines = 8
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
@@ -1263,15 +1281,15 @@ class InternalGbaActivity : ComponentActivity() {
         layout.addView(typeInput)
         layout.addView(codeInput)
         AlertDialog.Builder(this)
-            .setTitle("添加作弊码")
+            .setTitle(tr("emulator.cheat.add_title", "Add Cheat Code"))
             .setView(layout)
-            .setNegativeButton("取消", null)
-            .setPositiveButton("保存") { _, _ ->
-                val name = nameInput.text?.toString()?.trim().orEmpty().ifBlank { "自定义作弊码" }
+            .setNegativeButton(tr("common.cancel", "Cancel"), null)
+            .setPositiveButton(tr("common.save", "Save")) { _, _ ->
+                val name = nameInput.text?.toString()?.trim().orEmpty().ifBlank { tr("emulator.cheat.name_default", "Custom Cheat") }
                 val type = typeInput.text?.toString()?.trim().orEmpty().ifBlank { "CodeBreaker/GameShark" }
                 val code = codeInput.text?.toString()?.trim().orEmpty()
                 if (normalizeCheatCode(code).isBlank()) {
-                    showToast("作弊码不能为空")
+                    showToast(tr("emulator.cheat.code_empty", "Cheat code cannot be empty"))
                     return@setPositiveButton
                 }
                 val list = loadCustomCheats()
@@ -1279,7 +1297,7 @@ class InternalGbaActivity : ComponentActivity() {
                 saveCustomCheats(list)
                 controlsView?.refreshCustomCheatIndex()
                 controlsView?.invalidate()
-                showToast("已添加：$name")
+                showToast(tr("emulator.cheat.added", "Added: {name}", "name" to name))
             }
             .show()
     }
@@ -1325,7 +1343,7 @@ class InternalGbaActivity : ComponentActivity() {
         saveCustomCheats(list)
         appliedCheatSignature = ""
         if (enabledNow) {
-            showToast("${item.name} 已开启，正在尝试即时下发")
+            showToast(tr("emulator.cheat.enabled_dispatch", "{name} enabled, trying to send instantly", "name" to item.name))
             val applyAction = {
                 applyConfiguredCheats(showMessage = false, force = true, softReset = false)
             }
@@ -1337,7 +1355,7 @@ class InternalGbaActivity : ComponentActivity() {
                 applyAction()
             }
         } else {
-            showToast("${item.name} 已关闭，正在彻底清理")
+            showToast(tr("emulator.cheat.disabled_cleanup", "{name} disabled, cleaning up completely", "name" to item.name))
             refreshCheatsWithCoreReset(showMessage = true, reason = "toggleOff:${item.name}")
         }
         controlsView?.invalidate()
@@ -1351,7 +1369,7 @@ class InternalGbaActivity : ComponentActivity() {
         appliedCheatSignature = ""
         controlsView?.refreshCustomCheatIndex()
         controlsView?.invalidate()
-        showToast("已删除：${removed.name}")
+        showToast(tr("emulator.cheat.deleted", "Deleted: {name}", "name" to removed.name))
         if (removed.enabled) refreshCheatsWithCoreReset(showMessage = true, reason = "delete:${removed.name}")
     }
 
@@ -1359,7 +1377,7 @@ class InternalGbaActivity : ComponentActivity() {
         val enabled = !settingsPrefs.getBoolean(key, false)
         settingsPrefs.edit().putBoolean(key, enabled).apply()
         appliedCheatSignature = ""
-        showToast("$label ${if (enabled) "已开启，正在尝试即时下发" else "已关闭，正在尝试即时下发"}")
+        showToast(tr("emulator.cheat.toggled", "{name} {state}, trying to send instantly", "name" to label, "state" to if (enabled) tr("emulator.cheat.state_enabled", "enabled") else tr("emulator.cheat.state_disabled", "disabled")))
         applyConfiguredCheats(showMessage = false, force = true, softReset = false)
         controlsView?.invalidate()
     }
@@ -1383,7 +1401,7 @@ class InternalGbaActivity : ComponentActivity() {
         private const val EXTRA_RESTORE_CHEAT_CLEAN_STATE_ON_BOOT = "restore_cheat_clean_state_on_boot"
         private const val EXTRA_RESTORE_QUICK_STATE_AFTER_CHEAT_RESTART = "restore_quick_state_after_cheat_restart"
         private const val CORE_FILE_NAME = "libmgba_libretro_android.so"
-        private const val TAG = "MD3E_GBA"
+        private const val TAG = "GameHub_GBA"
         private const val VIRTUAL_FAST_FORWARD = -100001
         private const val VIRTUAL_MENU = -100002
         private const val VIRTUAL_TURBO_A = -100003
@@ -1409,9 +1427,9 @@ class InternalGbaActivity : ComponentActivity() {
         private const val CHEAT_INF_PP = "cheat_inf_pp"
         private const val CHEAT_EXP_BOOST = "cheat_exp_boost"
         private const val LEAF_GREEN_V10_MASTER_CODE = "0000BE99+000A+1003DAE6+0007"
-        private val MAIN_MENU_ITEMS = listOf("存档", "虚拟按键设置", "作弊", "重置", "重启游戏", "退出游戏")
-        private val VIRTUAL_KEY_MENU_ITEMS = listOf("透明度设置", "虚拟键编辑")
-        private val VIRTUAL_EDITOR_ITEMS = listOf("添加自定键", "放大当前键", "缩小当前键", "保存并返回游戏", "重置布局", "取消编辑 / 返回游戏")
+        private val MAIN_MENU_ITEMS = listOf("Save States", "Virtual Buttons", "Cheats", "Reset", "Restart Game", "Exit Game")
+        private val VIRTUAL_KEY_MENU_ITEMS = listOf("Transparency", "Virtual Button Editor")
+        private val VIRTUAL_EDITOR_ITEMS = listOf("Add Custom Button", "Increase Button Size", "Decrease Button Size", "Save and Return", "Reset Layout", "Cancel / Return to Game")
         private val CHEAT_ITEMS = emptyList<CheatItem>()
     }
 }

@@ -252,7 +252,7 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\Ad
 	android:allowBackup
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:86:9-35
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-50
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-45
 provider#androidx.core.content.FileProvider
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:93:9-101:20
 	android:grantUriPermissions
@@ -280,7 +280,7 @@ ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:104:9-1
 	android:configChanges
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:110:13-133
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-54
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-49
 	android:name
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:105:13-61
 activity#com.bond.md3elauncher.emulator.fc.InternalFcActivity
@@ -294,7 +294,7 @@ ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:112:9-1
 	android:configChanges
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:118:13-133
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-54
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-49
 	android:name
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:113:13-59
 activity#com.bond.md3elauncher.MainActivity

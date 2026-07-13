@@ -67,3 +67,10 @@
 - 新增 `emulator/fc/FcExternalEmulatorProfiles.kt`。
 - 支持推荐 Nes.emu / Nostalgia.NES / John NESS / RetroArch。
 - 暂不内置 FC/NES core，后续如需要再接 FCEUmm / Nestopia。
+
+## v0.1.83
+- 修复 v0.1.82 中 GBA Activity 调用 i18n `tr(...)` 辅助函数但未定义导致的 Kotlin 编译失败。
+- 保持 v0.1.82 的 GBA/FC 模拟器文本 JSON 化改动不变。
+
+## v0.1.85
+- GBA / GB/GBC normal exit now closes the `:internal_gba` process after returning to launcher, so language changes from Settings do not keep stale emulator UI text.

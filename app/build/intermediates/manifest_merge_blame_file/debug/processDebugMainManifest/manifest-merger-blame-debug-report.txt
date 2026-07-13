@@ -1,8 +1,8 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.bond.md3elauncher"
-4    android:versionCode="77"
-5    android:versionName="0.1.77" >
+4    android:versionCode="87"
+5    android:versionName="0.1.87" >
 6
 7    <uses-sdk
 7-->INJECTED
@@ -251,8 +251,8 @@
 124-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:89:9-54
 125        android:supportsRtl="true"
 125-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:91:9-35
-126        android:theme="@style/Theme.MD3ELauncher" >
-126-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-50
+126        android:theme="@style/Theme.GameHub" >
+126-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-45
 127        <provider
 127-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:93:9-101:20
 128            android:name="androidx.core.content.FileProvider"
@@ -283,8 +283,8 @@
 141-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:107:13-44
 142            android:screenOrientation="sensorLandscape"
 142-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:108:13-56
-143            android:theme="@style/Theme.MD3ELauncher" />
-143-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-54
+143            android:theme="@style/Theme.GameHub" />
+143-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-49
 144        <activity
 144-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:112:9-118:136
 145            android:name="com.bond.md3elauncher.emulator.fc.InternalFcActivity"
@@ -297,8 +297,8 @@
 148-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:115:13-43
 149            android:screenOrientation="sensorLandscape"
 149-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:116:13-56
-150            android:theme="@style/Theme.MD3ELauncher" />
-150-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-54
+150            android:theme="@style/Theme.GameHub" />
+150-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-49
 151        <activity
 151-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:120:9-140:20
 152            android:name="com.bond.md3elauncher.MainActivity"

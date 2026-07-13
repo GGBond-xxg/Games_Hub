@@ -83,6 +83,7 @@ import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
 import com.bond.md3elauncher.emulator.InternalEmulators
 import com.bond.md3elauncher.emulator.fc.FcExternalEmulatorProfiles
+import com.bond.md3elauncher.i18n.I18n
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -99,6 +100,7 @@ internal fun SettingsBeaconScreen(
     safeMargins: SafeMarginSettings,
     scraperSettings: ScraperSettings,
     tabOrder: List<String>,
+    languageMode: String,
     isScanning: Boolean,
     onOpenPlatform: (PlatformConfig) -> Unit,
     onOpenAndroid: () -> Unit,
@@ -110,9 +112,11 @@ internal fun SettingsBeaconScreen(
     onSetSafeMargins: (SafeMarginSettings) -> Unit,
     onSaveScraperSettings: (ScraperSettings) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit,
+    onSetLanguageMode: (String) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
     onControllerShortcutCaptureHandlerChange: (((AndroidKeyEvent) -> Boolean)?) -> Unit
 ) {
+    val context = LocalContext.current
     var showDeferredSections by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         onLaunchSelectedChange(null)
@@ -141,7 +145,7 @@ internal fun SettingsBeaconScreen(
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 Text(
-                    "平台管理",
+                    I18n.t(context, "settings.title.platform_manager", "平台管理"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onBackground
@@ -152,10 +156,10 @@ internal fun SettingsBeaconScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("模拟器", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                        Text(I18n.t(context, "settings.title.emulator", "模拟器"), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Spacer(Modifier.weight(1f))
                         FilledTonalButton(onClick = { showEmulatorManager = false }, modifier = Modifier.height(34.dp)) {
-                            Text("返回")
+                            Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     Spacer(Modifier.height(8.dp))
@@ -181,40 +185,40 @@ internal fun SettingsBeaconScreen(
         }
 
         item(key = "appearance") {
-            SettingSection(title = "外观") {
+            SettingSection(title = I18n.t(context, "settings.section.appearance", "外观")) {
                 ToggleSettingRow(
-                    title = "跟随系统",
-                    subtitle = if (themeMode == ThemeMode.SYSTEM) "会跟随系统深色 / 浅色模式自动切换" else "当前使用手动外观设置",
+                    title = I18n.t(context, "settings.appearance.follow_system.title", "跟随系统"),
+                    subtitle = if (themeMode == ThemeMode.SYSTEM) I18n.t(context, "settings.appearance.follow_system.subtitle_on", "会跟随系统深色 / 浅色模式自动切换") else I18n.t(context, "settings.appearance.follow_system.subtitle_off", "当前使用手动外观设置"),
                     checked = themeMode == ThemeMode.SYSTEM,
                     onCheckedChange = { enabled -> onSetThemeMode(if (enabled) ThemeMode.SYSTEM else ThemeMode.LIGHT) }
                 )
                 Spacer(Modifier.height(8.dp))
                 ToggleSettingRow(
-                    title = "夜间模式",
+                    title = I18n.t(context, "settings.appearance.dark_mode.title", "夜间模式"),
                     subtitle = when (themeMode) {
-                        ThemeMode.SYSTEM -> "当前由系统外观控制"
-                        ThemeMode.DARK -> "当前使用高对比深色 MD3E 界面"
-                        ThemeMode.LIGHT -> "当前使用浅色 MD3E 界面"
+                        ThemeMode.SYSTEM -> I18n.t(context, "settings.appearance.dark_mode.system", "当前由系统外观控制")
+                        ThemeMode.DARK -> I18n.t(context, "settings.appearance.dark_mode.dark", "当前使用高对比深色 GameHub 界面")
+                        ThemeMode.LIGHT -> I18n.t(context, "settings.appearance.dark_mode.light", "当前使用浅色 GameHub 界面")
                     },
                     checked = themeMode == ThemeMode.DARK,
                     onCheckedChange = { enabled -> onSetThemeMode(if (enabled) ThemeMode.DARK else ThemeMode.LIGHT) }
                 )
                 Spacer(Modifier.height(8.dp))
                 ToggleSettingRow(
-                    title = "莫奈主题",
-                    subtitle = "跟随系统壁纸动态取色，Android 12 及以上效果更明显。",
+                    title = I18n.t(context, "settings.appearance.dynamic_color.title", "莫奈主题"),
+                    subtitle = I18n.t(context, "settings.appearance.dynamic_color.subtitle", "跟随系统壁纸动态取色，Android 12 及以上效果更明显。"),
                     checked = useDynamicColor,
                     onCheckedChange = onSetDynamicColor
                 )
                 Spacer(Modifier.height(10.dp))
-                Text("横屏方向", fontWeight = FontWeight.Black)
+                Text(I18n.t(context, "settings.appearance.orientation.title", "横屏方向"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
-                Text(landscapeMode.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(localizedLandscapeSubtitle(context, landscapeMode), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = landscapeMode == LandscapeMode.AUTO, onClick = { onSetLandscapeMode(LandscapeMode.AUTO) }, label = { Text("自动") })
-                    FilterChip(selected = landscapeMode == LandscapeMode.LEFT, onClick = { onSetLandscapeMode(LandscapeMode.LEFT) }, label = { Text("横屏 1") })
-                    FilterChip(selected = landscapeMode == LandscapeMode.RIGHT, onClick = { onSetLandscapeMode(LandscapeMode.RIGHT) }, label = { Text("横屏 2") })
+                    FilterChip(selected = landscapeMode == LandscapeMode.AUTO, onClick = { onSetLandscapeMode(LandscapeMode.AUTO) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.AUTO), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                    FilterChip(selected = landscapeMode == LandscapeMode.LEFT, onClick = { onSetLandscapeMode(LandscapeMode.LEFT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.LEFT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                    FilterChip(selected = landscapeMode == LandscapeMode.RIGHT, onClick = { onSetLandscapeMode(LandscapeMode.RIGHT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.RIGHT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 }
                 Spacer(Modifier.height(12.dp))
                 SafeMarginSetting(
@@ -233,12 +237,17 @@ internal fun SettingsBeaconScreen(
             }
 
             item(key = "system") {
-                SettingSection(title = "系统") {
-                    ActionSettingRow(title = "默认桌面", subtitle = "把本 App 设为系统 Home 桌面。", buttonText = "选择", onClick = onOpenHomeSettings)
+                SettingSection(title = I18n.t(context, "settings.section.system", "系统")) {
+                    LanguageSettingRow(
+                        currentMode = languageMode,
+                        onSetLanguageMode = onSetLanguageMode
+                    )
                     Spacer(Modifier.height(8.dp))
-                    ActionSettingRow(title = "手柄操作", subtitle = "设置内置模拟器通用快捷键，支持1~3键组合。", buttonText = "进入", onClick = { showControllerShortcuts = true })
+                    ActionSettingRow(title = I18n.t(context, "settings.system.default_home.title", "默认桌面"), subtitle = I18n.t(context, "settings.system.default_home.subtitle", "把本 App 设为系统 Home 桌面。"), buttonText = I18n.t(context, "common.select", "选择"), onClick = onOpenHomeSettings)
                     Spacer(Modifier.height(8.dp))
-                    ActionSettingRow(title = "重新扫描", subtitle = if (isScanning) "正在扫描，请稍等。" else "重新读取已配置平台的 ROM 文件夹。", buttonText = "扫描全部", onClick = onRescanAll)
+                    ActionSettingRow(title = I18n.t(context, "settings.system.controller_shortcut.title", "手柄操作"), subtitle = I18n.t(context, "settings.system.controller_shortcut.subtitle", "设置内置模拟器通用快捷键，支持1~3键组合。"), buttonText = I18n.t(context, "settings.system.controller_shortcut.enter", "进入"), onClick = { showControllerShortcuts = true })
+                    Spacer(Modifier.height(8.dp))
+                    ActionSettingRow(title = I18n.t(context, "settings.system.rescan.title", "重新扫描"), subtitle = if (isScanning) I18n.t(context, "settings.system.rescan.subtitle_scanning", "正在扫描，请稍等。") else I18n.t(context, "settings.system.rescan.subtitle_idle", "重新读取已配置平台的 ROM 文件夹。"), buttonText = I18n.t(context, "settings.system.rescan.button", "扫描全部"), onClick = onRescanAll)
                 }
             }
         }
@@ -289,14 +298,14 @@ private fun ControllerShortcutSettingsScreen(
         }
         val conflict = ControllerShortcutSettings.conflictAction(settings, action, keys)
         if (conflict != null) {
-            conflictText = "${ControllerShortcutSettings.comboLabel(keys)} 已经被“${conflict.title}”使用，请换一个按键组合。"
+            conflictText = I18n.t(context, "settings.controller.conflict_message", "{combo} 已经被“{action}”使用，请换一个按键组合。", "combo" to ControllerShortcutSettings.comboLabel(keys), "action" to conflict.localizedTitle(context))
             captureAction = null
             captureKeys = emptySet()
             onCaptureHandlerChange(null)
             return
         }
         settings = ControllerShortcutSettings.saveBinding(context, action, keys)
-        Toast.makeText(context, "${action.title} 已改为 ${ControllerShortcutSettings.comboLabel(keys)}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, I18n.t(context, "settings.controller.changed_toast", "{action} 已改为 {combo}", "action" to action.localizedTitle(context), "combo" to ControllerShortcutSettings.comboLabel(keys)), Toast.LENGTH_SHORT).show()
         captureAction = null
         captureKeys = emptySet()
         onCaptureHandlerChange(null)
@@ -386,18 +395,20 @@ private fun ControllerShortcutSettingsScreen(
         ) {
             item(key = "controllerHeader") {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("手柄操作", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
-                    TextButton(onClick = onBack) { Text("返回") }
+                    Text(I18n.t(context, "settings.controller.title", "手柄操作"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
                 Text(
-                    "设置内置模拟器通用快捷键，支持1~3键组合。",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    I18n.t(context, "settings.controller.description", "设置内置模拟器通用快捷键，支持1~3键组合。"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
             item(key = "controllerRowsTitle") {
                 Text(
-                    "快捷键",
+                    I18n.t(context, "settings.controller.list_title", "快捷键"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -408,9 +419,9 @@ private fun ControllerShortcutSettingsScreen(
             ControllerShortcutSettings.EDITABLE_ACTIONS.forEachIndexed { index, action ->
                 item(key = "controllerAction_${action.name}") {
                     ActionSettingRow(
-                        title = action.title,
-                        subtitle = "${action.subtitle} · 当前：${ControllerShortcutSettings.comboLabel(settings.keysFor(action))}",
-                        buttonText = "修改",
+                        title = action.localizedTitle(context),
+                        subtitle = "${action.localizedSubtitle(context)} · ${I18n.t(context, "settings.controller.current_prefix", "当前")}：${ControllerShortcutSettings.comboLabel(settings.keysFor(action))}",
+                        buttonText = I18n.t(context, "settings.controller.modify", "修改"),
                         selected = index == selectedIndex,
                         onClick = {
                             selectedIndex = index
@@ -425,19 +436,21 @@ private fun ControllerShortcutSettingsScreen(
                     TextButton(
                         onClick = {
                             settings = ControllerShortcutSettings.resetToDefault(context)
-                            Toast.makeText(context, "已恢复默认手柄快捷键", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, I18n.t(context, "settings.controller.restore_toast", "已恢复默认手柄快捷键"), Toast.LENGTH_SHORT).show()
                         }
-                    ) { Text("恢复默认") }
+                    ) { Text(I18n.t(context, "settings.controller.restore_default", "恢复默认"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
 
             item(key = "controllerTips") {
                 OutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp)) {
-                        Text("说明", fontWeight = FontWeight.Black)
+                        Text(I18n.t(context, "common.tip", "说明"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
-                            "默认：快速保存=L1，快速读取=R1，快进=R3，菜单=L2，退出=SELECT+X，连发A=X，连发B=Y。多键组合会优先于单键，例如 SELECT+X 会优先触发退出，不会触发 X 连发。",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            I18n.t(context, "settings.controller.default_tip", "默认：快速保存=L1，快速读取=R1，快进=R3，菜单=L2，退出=SELECT+X，连发A=X，连发B=Y。多键组合会优先于单键，例如 SELECT+X 会优先触发退出，不会触发 X 连发。"),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -455,17 +468,17 @@ private fun ControllerShortcutSettingsScreen(
                 tonalElevation = 8.dp
             ) {
                 Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("正在修改：${action.title}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(I18n.t(context, "settings.controller.capture_title", "正在修改：{action}", "action" to action.localizedTitle(context)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        if (captureKeys.isEmpty()) "请按下手柄按键" else "已读取：${ControllerShortcutSettings.comboLabel(captureKeys)}",
+                        if (captureKeys.isEmpty()) I18n.t(context, "settings.controller.press_key", "请按下手柄按键") else I18n.t(context, "settings.controller.read_key", "已读取：{combo}", "combo" to ControllerShortcutSettings.comboLabel(captureKeys)),
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Black
                     )
                     Spacer(Modifier.height(6.dp))
-                    Text("支持同时按 2 个或 3 个按键；停止输入约 360ms 后保存。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(I18n.t(context, "settings.controller.capture_hint", "支持同时按 2 个或 3 个按键；停止输入约 360ms 后保存。"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(10.dp))
-                    TextButton(onClick = { cancelCapture() }) { Text("取消") }
+                    TextButton(onClick = { cancelCapture() }) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -475,10 +488,10 @@ private fun ControllerShortcutSettingsScreen(
     if (conflict != null) {
         AlertDialog(
             onDismissRequest = { conflictText = null },
-            title = { Text("按键冲突") },
-            text = { Text(conflict) },
+            title = { Text(I18n.t(context, "settings.controller.conflict_title", "按键冲突"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            text = { Text(conflict, maxLines = 3, overflow = TextOverflow.Ellipsis) },
             confirmButton = {
-                FilledTonalButton(onClick = { conflictText = null }) { Text("知道了") }
+                FilledTonalButton(onClick = { conflictText = null }) { Text(I18n.t(context, "settings.controller.conflict_confirm", "知道了"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         )
     }
@@ -497,11 +510,14 @@ private fun PlatformManagerRows(
     onOpenEmulators: () -> Unit,
     onSaveTabOrder: (List<String>) -> Unit
 ) {
+    val context = LocalContext.current
     var sorting by rememberSaveable { mutableStateOf(false) }
     val groups = platformGroupOrder(tabOrder)
     Text(
-        if (sorting) "排序模式：使用上移 / 下移调整；完成后顶部导航会跟随变化。" else "单点进入配置，长按任意一项进入排序。",
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        if (sorting) I18n.t(context, "settings.platform.sorting_hint", "排序模式：使用上移 / 下移调整；完成后顶部导航会跟随变化。") else I18n.t(context, "settings.platform.normal_hint", "单点进入配置，长按任意一项进入排序。"),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
     )
     Spacer(Modifier.height(8.dp))
     groups.forEachIndexed { index, group ->
@@ -513,21 +529,21 @@ private fun PlatformManagerRows(
         when (group) {
             PlatformGroup.EMULATORS -> {
                 val emulators = emulatorTabs(tabOrder)
-                title = "模拟器"
+                title = I18n.t(context, "settings.platform.emulators.title", "模拟器")
                 subtitle = if (emulators.isEmpty()) {
-                    "未添加模拟器"
+                    I18n.t(context, "settings.platform.emulators.empty", "未添加模拟器")
                 } else {
-                    "${emulators.joinToString("、") { it.label }} · ${emulators.size} 个模拟器"
+                    I18n.t(context, "settings.platform.emulators.subtitle", "{names} · {count} 个模拟器", "names" to emulators.joinToString(" / ") { it.localizedLabel(context) }, "count" to emulators.size)
                 }
                 icon = Icons.Rounded.SportsEsports
-                actionText = "进入"
+                actionText = I18n.t(context, "common.enter", "进入")
                 openAction = onOpenEmulators
             }
             PlatformGroup.ANDROID_APPS -> {
-                title = "安卓应用"
-                subtitle = "${installedApps.size} 个应用 · 已标记游戏 ${androidGames.count { it.startsWith("app:") }} 个"
+                title = I18n.t(context, "settings.platform.android.title", "安卓应用")
+                subtitle = I18n.t(context, "settings.platform.android.subtitle", "{apps} 个应用 · 已标记游戏 {games} 个", "apps" to installedApps.size, "games" to androidGames.count { it.startsWith("app:") })
                 icon = Icons.Rounded.Apps
-                actionText = "管理"
+                actionText = I18n.t(context, "common.manage", "管理")
                 openAction = onOpenAndroid
             }
         }
@@ -565,7 +581,7 @@ private fun PlatformManagerRows(
                         }
                     },
                     enabled = index > 0
-                ) { Text("上移") }
+                ) { Text(I18n.t(context, "common.move_up", "上移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 TextButton(
                     onClick = {
                         if (index < groups.lastIndex) {
@@ -576,7 +592,7 @@ private fun PlatformManagerRows(
                         }
                     },
                     enabled = index < groups.lastIndex
-                ) { Text("下移") }
+                ) { Text(I18n.t(context, "common.move_down", "下移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             } else {
                 FilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text(actionText) }
             }
@@ -585,9 +601,22 @@ private fun PlatformManagerRows(
     }
     if (sorting) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text("完成排序") }
+            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
+}
+
+
+private fun localizedLandscapeTitle(context: android.content.Context, mode: LandscapeMode): String = when (mode) {
+    LandscapeMode.AUTO -> I18n.t(context, "settings.appearance.orientation.auto", "自动")
+    LandscapeMode.LEFT -> I18n.t(context, "settings.appearance.orientation.left", "横屏 1")
+    LandscapeMode.RIGHT -> I18n.t(context, "settings.appearance.orientation.right", "横屏 2")
+}
+
+private fun localizedLandscapeSubtitle(context: android.content.Context, mode: LandscapeMode): String = when (mode) {
+    LandscapeMode.AUTO -> I18n.t(context, "settings.appearance.orientation.auto_subtitle", "跟随设备方向，支持左右横屏反转")
+    LandscapeMode.LEFT -> I18n.t(context, "settings.appearance.orientation.left_subtitle", "锁定一个横屏方向")
+    LandscapeMode.RIGHT -> I18n.t(context, "settings.appearance.orientation.right_subtitle", "锁定反向横屏方向")
 }
 
 private enum class PlatformGroup { EMULATORS, ANDROID_APPS }
@@ -627,23 +656,26 @@ private fun tabOrderKeysWithEmulators(emulators: List<BeaconTab>, tabOrder: List
 }
 
 
-private fun platformEmulatorSubtitle(platform: PlatformConfig): String = when {
-    InternalEmulators.usesInternalGb(platform) -> "${InternalEmulators.GB_NAME} · ${platform.gameCount} 个游戏"
-    InternalEmulators.usesInternalGba(platform) -> "${InternalEmulators.GBA_NAME} · ${platform.gameCount} 个游戏"
-    InternalEmulators.usesInternalFc(platform) -> "${InternalEmulators.FC_NAME} · ${platform.gameCount} 个游戏"
-    platform.emulatorName.isNullOrBlank() -> "未绑定模拟器 · ${platform.gameCount} 个游戏"
-    else -> "${platform.emulatorName} · ${platform.gameCount} 个游戏"
+private fun internalEmulatorDisplayName(context: android.content.Context, platform: PlatformConfig): String = when {
+    InternalEmulators.usesInternalGb(platform) -> I18n.t(context, "platform.gb.name", "内置 GB/GBC 模拟器")
+    InternalEmulators.usesInternalGba(platform) -> I18n.t(context, "platform.gba.name", "内置 GBA 模拟器")
+    InternalEmulators.usesInternalFc(platform) -> I18n.t(context, "platform.fc.name", "内置 FC/NES 模拟器")
+    else -> platform.emulatorName.orEmpty()
+}
+
+private fun platformEmulatorSubtitle(context: android.content.Context, platform: PlatformConfig): String = when {
+    InternalEmulators.usesInternal(platform) -> I18n.t(context, "settings.platform.emulator_bound", "{name} · {count} 个游戏", "name" to internalEmulatorDisplayName(context, platform), "count" to platform.gameCount)
+    platform.emulatorName.isNullOrBlank() -> I18n.t(context, "settings.platform.emulator_unbound", "未绑定模拟器 · {count} 个游戏", "count" to platform.gameCount)
+    else -> I18n.t(context, "settings.platform.emulator_bound", "{name} · {count} 个游戏", "name" to platform.emulatorName, "count" to platform.gameCount)
 }
 
 private fun platformHasReadyEmulator(platform: PlatformConfig): Boolean =
     InternalEmulators.usesInternal(platform) || !platform.emulatorPackage.isNullOrBlank()
 
-private fun currentEmulatorLabel(platform: PlatformConfig): String = when {
-    InternalEmulators.usesInternalGb(platform) -> "当前：${InternalEmulators.GB_NAME}"
-    InternalEmulators.usesInternalGba(platform) -> "当前：${InternalEmulators.GBA_NAME}"
-    InternalEmulators.usesInternalFc(platform) -> "当前：${InternalEmulators.FC_NAME}"
-    platform.emulatorName.isNullOrBlank() -> "当前未绑定模拟器"
-    else -> "当前：${platform.emulatorName}"
+private fun currentEmulatorLabel(context: android.content.Context, platform: PlatformConfig): String = when {
+    InternalEmulators.usesInternal(platform) -> I18n.t(context, "settings.platform.current_emulator", "当前：{name}", "name" to internalEmulatorDisplayName(context, platform))
+    platform.emulatorName.isNullOrBlank() -> I18n.t(context, "settings.platform.current_unbound", "当前未绑定模拟器")
+    else -> I18n.t(context, "settings.platform.current_emulator", "当前：{name}", "name" to platform.emulatorName)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -654,11 +686,14 @@ private fun EmulatorManagerRows(
     onOpenPlatform: (PlatformConfig) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit
 ) {
+    val context = LocalContext.current
     var sorting by rememberSaveable { mutableStateOf(false) }
     val order = emulatorTabs(tabOrder)
     Text(
-        if (sorting) "排序模式：使用上移 / 下移调整模拟器顺序。" else "单点进入模拟器配置，长按任意一项进入排序。",
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        if (sorting) I18n.t(context, "settings.emulator.sorting_hint", "排序模式：使用上移 / 下移调整模拟器顺序。") else I18n.t(context, "settings.emulator.normal_hint", "单点进入模拟器配置，长按任意一项进入排序。"),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
     )
     Spacer(Modifier.height(8.dp))
 
@@ -671,8 +706,8 @@ private fun EmulatorManagerRows(
             BeaconTab.NES -> platforms.firstOrNull { it.kind == PlatformKind.NES }
             else -> null
         }
-        val title = tab.label
-        val subtitle = platform?.let { platformEmulatorSubtitle(it) } ?: "平台未创建"
+        val title = tab.localizedLabel(context)
+        val subtitle = platform?.let { platformEmulatorSubtitle(context, it) } ?: I18n.t(context, "settings.platform.not_created", "平台未创建")
         val icon = if (platform?.let { platformHasReadyEmulator(it) } == true) Icons.Rounded.CheckCircle else Icons.Rounded.FolderOpen
         val openAction: () -> Unit = { platform?.let(onOpenPlatform) }
 
@@ -709,7 +744,7 @@ private fun EmulatorManagerRows(
                         }
                     },
                     enabled = index > 0
-                ) { Text("上移") }
+                ) { Text(I18n.t(context, "common.move_up", "上移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 TextButton(
                     onClick = {
                         if (index < order.lastIndex) {
@@ -720,25 +755,25 @@ private fun EmulatorManagerRows(
                         }
                     },
                     enabled = index < order.lastIndex
-                ) { Text("下移") }
+                ) { Text(I18n.t(context, "common.move_down", "下移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             } else {
-                FilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text("配置") }
+                FilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text(I18n.t(context, "common.config", "配置"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         }
         Spacer(Modifier.height(8.dp))
     }
 
     PlatformPlaceholderRow(
-        title = "添加其他",
-        subtitle = "占位：后续可添加 SFC / MD / PS1 等模拟器",
-        actionText = "待添加",
+        title = I18n.t(context, "settings.emulator.add_other.title", "添加其他"),
+        subtitle = I18n.t(context, "settings.emulator.add_other.subtitle", "占位：后续可添加 SFC / MD / PS1 等模拟器"),
+        actionText = I18n.t(context, "settings.emulator.add_other.action", "待添加"),
         icon = Icons.Rounded.AddCircle
     )
 
     if (sorting) {
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text("完成排序") }
+            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
@@ -776,12 +811,15 @@ private fun TabOrderEditor(
     tabOrder: List<String>,
     onSaveTabOrder: (List<String>) -> Unit
 ) {
+    val context = LocalContext.current
     var sorting by rememberSaveable { mutableStateOf(false) }
     val order = normalizedTabOrder(tabOrder)
 
     Text(
-        if (sorting) "启动顺序：点击上移 / 下移调整，顶部导航会跟随变化。" else "启动顺序：长按任一项进入排序。",
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        if (sorting) I18n.t(context, "settings.tab_order.sorting_hint", "启动顺序：点击上移 / 下移调整，顶部导航会跟随变化。") else I18n.t(context, "settings.tab_order.normal_hint", "启动顺序：长按任一项进入排序。"),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
     )
     Spacer(Modifier.height(8.dp))
     order.forEachIndexed { index, tab ->
@@ -800,17 +838,9 @@ private fun TabOrderEditor(
             Text("${index + 1}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(tab.label, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                Text(tab.localizedLabel(context), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    when (tab) {
-                        BeaconTab.NS -> "NS / Switch 平台入口"
-                        BeaconTab.PSP -> "PSP 平台入口"
-                        BeaconTab.GBA -> "GBA / 内置模拟器平台入口"
-                        BeaconTab.GB -> "GB/GBC / 内置 mGBA 平台入口"
-                        BeaconTab.NES -> "FC/NES 内置 / 外部模拟器入口"
-                        BeaconTab.ANDROID -> "安卓应用入口"
-                        else -> ""
-                    },
+                    localizedTabOrderSubtitle(context, tab),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -825,7 +855,7 @@ private fun TabOrderEditor(
                         }
                     },
                     enabled = index > 0
-                ) { Text("上移") }
+                ) { Text(I18n.t(context, "common.move_up", "上移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 TextButton(
                     onClick = {
                         if (index < order.lastIndex) {
@@ -836,16 +866,27 @@ private fun TabOrderEditor(
                         }
                     },
                     enabled = index < order.lastIndex
-                ) { Text("下移") }
+                ) { Text(I18n.t(context, "common.move_down", "下移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         }
         Spacer(Modifier.height(6.dp))
     }
     if (sorting) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text("完成排序") }
+            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
+}
+
+
+private fun localizedTabOrderSubtitle(context: android.content.Context, tab: BeaconTab): String = when (tab) {
+    BeaconTab.NS -> I18n.t(context, "settings.tab_order.ns", "NS / Switch 平台入口")
+    BeaconTab.PSP -> I18n.t(context, "settings.tab_order.psp", "PSP 平台入口")
+    BeaconTab.GBA -> I18n.t(context, "settings.tab_order.gba", "GBA / 内置模拟器平台入口")
+    BeaconTab.GB -> I18n.t(context, "settings.tab_order.gb", "GB/GBC / 内置 mGBA 平台入口")
+    BeaconTab.NES -> I18n.t(context, "settings.tab_order.nes", "FC/NES 内置 / 外部模拟器入口")
+    BeaconTab.ANDROID -> I18n.t(context, "settings.tab_order.android", "安卓应用入口")
+    else -> ""
 }
 
 @Composable
@@ -862,9 +903,9 @@ private fun OrderedPlatformRows(
         when (tab) {
             BeaconTab.ANDROID -> {
                 PlatformSettingRow(
-                    title = "安卓应用",
-                    subtitle = "${installedApps.size} 个应用 · 已标记游戏 ${androidGames.count { it.startsWith("app:") }} 个",
-                    actionText = "管理",
+                    title = I18n.t(LocalContext.current, "settings.platform.android.title", "安卓应用"),
+                    subtitle = I18n.t(LocalContext.current, "settings.platform.android.subtitle", "{apps} 个应用 · 已标记游戏 {games} 个", "apps" to installedApps.size, "games" to androidGames.count { it.startsWith("app:") }),
+                    actionText = I18n.t(LocalContext.current, "common.manage", "管理"),
                     icon = Icons.Rounded.Apps,
                     onClick = onOpenAndroid
                 )
@@ -916,7 +957,9 @@ private fun SettingSection(title: String, content: @Composable () -> Unit) {
             title,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(Modifier.height(4.dp))
         ElevatedCard(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
@@ -927,12 +970,59 @@ private fun SettingSection(title: String, content: @Composable () -> Unit) {
     }
 }
 
+
+@Composable
+private fun LanguageSettingRow(
+    currentMode: String,
+    onSetLanguageMode: (String) -> Unit
+) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        Text(
+            I18n.t(context, "settings.language.title", "语言"),
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            I18n.t(context, "settings.language.subtitle", "选择界面语言，系统外语言默认显示英文。"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            I18n.SUPPORTED_LANGUAGE_MODES.forEach { mode ->
+                FilterChip(
+                    selected = currentMode == mode,
+                    onClick = { onSetLanguageMode(mode) },
+                    label = {
+                        Text(
+                            I18n.displayNameForMode(context, mode),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun PlatformSettingRow(platform: PlatformConfig, onOpenPlatform: (PlatformConfig) -> Unit) {
+    val context = LocalContext.current
     PlatformSettingRow(
         title = platformDisplayName(platform.kind.title),
-        subtitle = platformEmulatorSubtitle(platform),
-        actionText = "配置",
+        subtitle = platformEmulatorSubtitle(context, platform),
+        actionText = I18n.t(context, "common.config", "配置"),
         icon = if (platformHasReadyEmulator(platform)) Icons.Rounded.CheckCircle else Icons.Rounded.FolderOpen,
         onClick = { onOpenPlatform(platform) }
     )
@@ -960,10 +1050,10 @@ private fun PlatformSettingRow(
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-            Text(subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        FilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(actionText) }
+        FilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 }
 
@@ -980,32 +1070,35 @@ private fun SafeMarginSetting(
         onSetSafeMargins(safeMargins.copy(rightDp = value.coerceIn(SafeMarginSettings.MIN_DP, SafeMarginSettings.MAX_DP)))
     }
 
-    Text("左右安全边距", fontWeight = FontWeight.Black)
+    val context = LocalContext.current
+    Text(I18n.t(context, "settings.safe_margin.title", "左右安全边距"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
     Spacer(Modifier.height(4.dp))
     Text(
-        "用于避开挖孔屏、圆角或刘海遮挡。默认左右各预留 ${SafeMarginSettings.DEFAULT_DP}dp，可按设备单独微调。",
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        I18n.t(context, "settings.safe_margin.subtitle", "用于避开挖孔屏、圆角或刘海遮挡。默认左右各预留 {dp}dp，可按设备单独微调。", "dp" to SafeMarginSettings.DEFAULT_DP),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis
     )
     Spacer(Modifier.height(8.dp))
-    SafeMarginAdjustRow(label = "左边距", value = safeMargins.leftDp, onChange = ::setLeft)
+    SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.left", "左边距"), value = safeMargins.leftDp, onChange = ::setLeft)
     Spacer(Modifier.height(6.dp))
-    SafeMarginAdjustRow(label = "右边距", value = safeMargins.rightDp, onChange = ::setRight)
+    SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.right", "右边距"), value = safeMargins.rightDp, onChange = ::setRight)
     Spacer(Modifier.height(8.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
             selected = safeMargins.leftDp == SafeMarginSettings.DEFAULT_DP && safeMargins.rightDp == SafeMarginSettings.DEFAULT_DP,
             onClick = { onSetSafeMargins(SafeMarginSettings()) },
-            label = { Text("默认预留") }
+            label = { Text(I18n.t(context, "settings.safe_margin.default", "默认预留"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         )
         FilterChip(
             selected = safeMargins.leftDp == 0 && safeMargins.rightDp == 0,
             onClick = { onSetSafeMargins(SafeMarginSettings(leftDp = 0, rightDp = 0)) },
-            label = { Text("无边距") }
+            label = { Text(I18n.t(context, "settings.safe_margin.none", "无边距"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         )
         FilterChip(
             selected = safeMargins.leftDp == 40 && safeMargins.rightDp == 40,
             onClick = { onSetSafeMargins(SafeMarginSettings(leftDp = 40, rightDp = 40)) },
-            label = { Text("大挖孔") }
+            label = { Text(I18n.t(context, "settings.safe_margin.large_cutout", "大挖孔"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         )
     }
 }
@@ -1024,7 +1117,7 @@ private fun SafeMarginAdjustRow(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+        Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         TextButton(onClick = { onChange(value - 4) }, enabled = value > SafeMarginSettings.MIN_DP) { Text("−") }
         Text("${value}dp", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         TextButton(onClick = { onChange(value + 4) }, enabled = value < SafeMarginSettings.MAX_DP) { Text("+") }
@@ -1042,8 +1135,8 @@ private fun ToggleSettingRow(title: String, subtitle: String, checked: Boolean, 
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
@@ -1071,10 +1164,10 @@ private fun ActionSettingRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
-            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        FilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(buttonText) }
+        FilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(buttonText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 }
 
@@ -1083,16 +1176,17 @@ private fun ScraperSettingSection(
     scraperSettings: ScraperSettings,
     onSaveScraperSettings: (ScraperSettings) -> Unit
 ) {
+    val context = LocalContext.current
     var useLibretro by rememberSaveable(scraperSettings.useLibretro) { mutableStateOf(scraperSettings.useLibretro) }
     var steamGridKey by rememberSaveable(scraperSettings.steamGridDbApiKey) { mutableStateOf(scraperSettings.steamGridDbApiKey) }
     var theGamesDbKey by rememberSaveable(scraperSettings.theGamesDbApiKey) { mutableStateOf(scraperSettings.theGamesDbApiKey) }
     var screenUser by rememberSaveable(scraperSettings.screenScraperUser) { mutableStateOf(scraperSettings.screenScraperUser) }
     var screenPass by rememberSaveable(scraperSettings.screenScraperPassword) { mutableStateOf(scraperSettings.screenScraperPassword) }
 
-    SettingSection(title = "封面刮削") {
+    SettingSection(title = I18n.t(context, "settings.section.cover_scraper", "封面刮削")) {
         ToggleSettingRow(
-            title = "Libretro 缩略图",
-            subtitle = "免费免 Key，适合 PSP 等复古平台；命名匹配时可直接下载封面。",
+            title = I18n.t(context, "settings.cover.libretro.title", "Libretro 缩略图"),
+            subtitle = I18n.t(context, "settings.cover.libretro.subtitle", "免费免 Key，适合 PSP 等复古平台；命名匹配时可直接下载封面。"),
             checked = useLibretro,
             onCheckedChange = { useLibretro = it }
         )
@@ -1101,35 +1195,35 @@ private fun ScraperSettingSection(
             label = "SteamGridDB API Key",
             value = steamGridKey,
             onValueChange = { steamGridKey = it },
-            placeholder = "不填写就跳过 SteamGridDB"
+            placeholder = I18n.t(context, "settings.cover.steamgrid.placeholder", "不填写就跳过 SteamGridDB")
         )
         Spacer(Modifier.height(8.dp))
         ScraperTextField(
             label = "TheGamesDB API Key",
             value = theGamesDbKey,
             onValueChange = { theGamesDbKey = it },
-            placeholder = "不填写就跳过 TheGamesDB"
+            placeholder = I18n.t(context, "settings.cover.tgdb.placeholder", "不填写就跳过 TheGamesDB")
         )
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ScraperTextField(
-                label = "ScreenScraper 账号",
+                label = I18n.t(context, "settings.cover.screenscraper.user", "ScreenScraper 账号"),
                 value = screenUser,
                 onValueChange = { screenUser = it },
-                placeholder = "预留",
+                placeholder = I18n.t(context, "settings.cover.reserved", "预留"),
                 modifier = Modifier.weight(1f)
             )
             ScraperTextField(
-                label = "ScreenScraper 密码",
+                label = I18n.t(context, "settings.cover.screenscraper.password", "ScreenScraper 密码"),
                 value = screenPass,
                 onValueChange = { screenPass = it },
-                placeholder = "预留",
+                placeholder = I18n.t(context, "settings.cover.reserved", "预留"),
                 modifier = Modifier.weight(1f)
             )
         }
         Spacer(Modifier.height(8.dp))
         Text(
-            "未填写 Key / 账号的来源会自动跳过；长按游戏进入编辑后，可点“联网搜索封面”。",
+            I18n.t(context, "settings.cover.empty_source_tip", "未填写 Key / 账号的来源会自动跳过；长按游戏进入编辑后，可点“联网搜索封面”。"),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(8.dp))
@@ -1146,7 +1240,7 @@ private fun ScraperSettingSection(
                         )
                     )
                 }
-            ) { Text("保存刮削设置") }
+            ) { Text(I18n.t(context, "settings.cover.save", "保存刮削设置"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
@@ -1186,7 +1280,7 @@ private fun ScraperTextField(
             singleLine = true,
             readOnly = !editing,
             label = { Text(label) },
-            placeholder = { Text(if (editing) placeholder else "点右侧“编辑”后输入") },
+            placeholder = { Text(if (editing) placeholder else I18n.t(LocalContext.current, "settings.input.edit_first", "点右侧“编辑”后输入"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             shape = RoundedCornerShape(18.dp)
         )
         FilledTonalButton(
@@ -1200,7 +1294,7 @@ private fun ScraperTextField(
             },
             modifier = Modifier.height(40.dp)
         ) {
-            Text(if (editing) "保存" else "编辑")
+            Text(if (editing) I18n.t(LocalContext.current, "settings.input.save", "保存") else I18n.t(LocalContext.current, "settings.input.edit", "编辑"), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -1217,6 +1311,7 @@ internal fun PlatformSetupScreen(
     onUseInternalEmulator: () -> Unit,
     onScan: () -> Unit
 ) {
+    val context = LocalContext.current
     val hasFolder = !platform.folderUri.isNullOrBlank()
     val usesInternalGba = InternalEmulators.usesInternalGba(platform)
     val usesInternalGb = InternalEmulators.usesInternalGb(platform)
@@ -1224,7 +1319,7 @@ internal fun PlatformSetupScreen(
     val usesInternal = usesInternalGba || usesInternalGb || usesInternalFc
     val hasExternalEmulator = !platform.emulatorPackage.isNullOrBlank() && !usesInternal
     val displayApp = emulatorApp ?: InstalledApp(
-        label = platform.emulatorName ?: "已选择的模拟器",
+        label = platform.emulatorName ?: I18n.t(context, "settings.platform.selected_emulator", "已选择的模拟器"),
         packageName = platform.emulatorPackage.orEmpty()
     )
 
@@ -1236,56 +1331,56 @@ internal fun PlatformSetupScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("${platformDisplayName(platform.kind.title)} 平台设置", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
-            TextButton(onClick = onBack) { Text("返回") }
+            Text(I18n.t(context, "settings.platform.setup_title", "{platform} 平台设置", "platform" to platformDisplayName(platform.kind.title)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         ElevatedCard(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PlatformConfigRow(
-                    title = "ROM 文件夹",
-                    subtitle = if (hasFolder) "已选择 ROM 文件夹 · 支持 ${platform.kind.extensions.joinToString { it.uppercase() }}" else "还没有选择 ROM 文件夹",
-                    actionText = if (hasFolder) "更换" else "选择",
+                    title = I18n.t(context, "settings.platform.rom_folder.title", "ROM 文件夹"),
+                    subtitle = if (hasFolder) I18n.t(context, "settings.platform.rom_folder.selected", "已选择 ROM 文件夹 · 支持 {ext}", "ext" to platform.kind.extensions.joinToString { it.uppercase() }) else I18n.t(context, "settings.platform.rom_folder.empty", "还没有选择 ROM 文件夹"),
+                    actionText = if (hasFolder) I18n.t(context, "common.change", "更换") else I18n.t(context, "common.select", "选择"),
                     onClick = onPickFolder
                 )
                 if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) {
                     val internalTitle = when (platform.kind) {
-                        PlatformKind.GB -> "内置 GB/GBC 模拟器"
-                        PlatformKind.NES -> "内置 FC/NES 模拟器"
-                        else -> "内置 GBA 模拟器"
+                        PlatformKind.GB -> I18n.t(context, "platform.gb.name", "内置 GB/GBC 模拟器")
+                        PlatformKind.NES -> I18n.t(context, "platform.fc.name", "内置 FC/NES 模拟器")
+                        else -> I18n.t(context, "platform.gba.name", "内置 GBA 模拟器")
                     }
                     val internalSubtitle = when (platform.kind) {
-                        PlatformKind.GB -> "复用 mGBA libretro core，支持 .gb / .gbc 和普通 .zip 内 ROM。"
-                        PlatformKind.NES -> "基于 Nestopia libretro core，支持 .nes 和普通 .zip 内 ROM。"
-                        else -> "默认启动方式，不需要安装外部模拟器。"
+                        PlatformKind.GB -> I18n.t(context, "settings.platform.internal_gb.subtitle", "复用 mGBA libretro core，支持 .gb / .gbc 和普通 .zip 内 ROM。")
+                        PlatformKind.NES -> I18n.t(context, "settings.platform.internal_fc.subtitle", "基于 Nestopia libretro core，支持 .nes 和普通 .zip 内 ROM。")
+                        else -> I18n.t(context, "settings.platform.internal_gba.subtitle", "默认启动方式，不需要安装外部模拟器。")
                     }
                     PlatformConfigRow(
                         title = internalTitle,
                         subtitle = internalSubtitle,
-                        actionText = if (usesInternal) "使用中" else "使用",
+                        actionText = if (usesInternal) I18n.t(context, "common.using", "使用中") else I18n.t(context, "common.use", "使用"),
                         enabled = !usesInternal,
                         onClick = onUseInternalEmulator
                     )
                 }
                 PlatformConfigRow(
-                    title = "外部模拟器 App",
-                    subtitle = if (hasExternalEmulator) "${displayApp.label} · ${displayApp.packageName}" else externalEmulatorHelpText(platform.kind),
-                    actionText = if (hasExternalEmulator) "更换" else "选择",
+                    title = I18n.t(context, "settings.platform.external.title", "外部模拟器 App"),
+                    subtitle = if (hasExternalEmulator) "${displayApp.label} · ${displayApp.packageName}" else externalEmulatorHelpText(context, platform.kind),
+                    actionText = if (hasExternalEmulator) I18n.t(context, "common.change", "更换") else I18n.t(context, "common.select", "选择"),
                     leading = if (hasExternalEmulator) { { AppIcon(app = displayApp, size = 34) } } else null,
                     onClick = onPickEmulator
                 )
                 if (hasExternalEmulator) {
                     PlatformConfigRow(
-                        title = "清除外部模拟器",
-                        subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) "清除后会回到内置模拟器。" else "只清除绑定关系，不会删除模拟器 App。",
-                        actionText = "清除",
+                        title = I18n.t(context, "settings.platform.clear_external.title", "清除外部模拟器"),
+                        subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) I18n.t(context, "settings.platform.clear_external.internal_subtitle", "清除后会回到内置模拟器。") else I18n.t(context, "settings.platform.clear_external.subtitle", "只清除绑定关系，不会删除模拟器 App。"),
+                        actionText = I18n.t(context, "common.clear", "清除"),
                         onClick = onClearEmulator
                     )
                 }
                 PlatformConfigRow(
-                    title = "扫描游戏",
-                    subtitle = "${platform.gameCount} 个游戏 · ${if (hasFolder) "读取当前 ROM 文件夹" else "请先选择 ROM 文件夹"}",
-                    actionText = if (isScanning) "扫描中" else "扫描",
+                    title = I18n.t(context, "settings.platform.scan.title", "扫描游戏"),
+                    subtitle = I18n.t(context, "settings.platform.scan.subtitle", "{count} 个游戏 · {status}", "count" to platform.gameCount, "status" to if (hasFolder) I18n.t(context, "settings.platform.scan.ready", "读取当前 ROM 文件夹") else I18n.t(context, "settings.platform.scan.need_folder", "请先选择 ROM 文件夹")),
+                    actionText = if (isScanning) I18n.t(context, "common.scanning", "扫描中") else I18n.t(context, "common.scan", "扫描"),
                     enabled = hasFolder && !isScanning,
                     onClick = onScan
                 )
@@ -1294,9 +1389,9 @@ internal fun PlatformSetupScreen(
 
         OutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(14.dp)) {
-                Text("提示", fontWeight = FontWeight.Black)
+                Text(I18n.t(context, "common.tip", "提示"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    "GBA、GB/GBC 和 FC/NES 默认使用内置模拟器；PSP/FC/NES/GBA/GB/GBC 也可以改用外部模拟器。长按游戏可以自定义显示名称和图标。",
+                    I18n.t(context, "settings.platform.tip", "GBA、GB/GBC 和 FC/NES 默认使用内置模拟器；PSP/FC/NES/GBA/GB/GBC 也可以改用外部模拟器。长按游戏可以自定义显示名称和图标。"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1341,6 +1436,7 @@ internal fun SearchDialog(
     onClear: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.56f),
@@ -1349,21 +1445,21 @@ internal fun SearchDialog(
             tonalElevation = 6.dp
         ) {
             Column(Modifier.padding(18.dp)) {
-                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("输入名称 / 包名") },
+                    label = { Text(I18n.t(context, "settings.search.placeholder", "输入名称 / 包名"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     shape = RoundedCornerShape(20.dp)
                 )
                 Spacer(Modifier.height(12.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onClear) { Text("清空") }
+                    TextButton(onClick = onClear) { Text(I18n.t(context, "common.clear", "清空"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     Spacer(Modifier.width(8.dp))
-                    FilledTonalButton(onClick = onDismiss) { Text("完成") }
+                    FilledTonalButton(onClick = onDismiss) { Text(I18n.t(context, "common.done", "完成"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -1372,6 +1468,7 @@ internal fun SearchDialog(
 
 @Composable
 internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, onBack: () -> Unit, onSelect: (InstalledApp) -> Unit) {
+    val context = LocalContext.current
     var query by rememberSaveable(platform.id) { mutableStateOf("") }
     var showAll by rememberSaveable(platform.id) { mutableStateOf(false) }
     var showSearch by rememberSaveable(platform.id) { mutableStateOf(false) }
@@ -1399,24 +1496,24 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    "选择 ${platformDisplayName(platform.kind.title)} 模拟器",
+                    I18n.t(context, "settings.picker.title", "选择 {platform} 模拟器", "platform" to platformDisplayName(platform.kind.title)),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    currentEmulatorLabel(platform),
+                    currentEmulatorLabel(context, platform),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             IconButton(onClick = { showSearch = !showSearch }) {
-                Icon(if (showSearch) Icons.Rounded.Close else Icons.Rounded.Search, contentDescription = "搜索模拟器")
+                Icon(if (showSearch) Icons.Rounded.Close else Icons.Rounded.Search, contentDescription = I18n.t(context, "settings.picker.search_action", "搜索模拟器"))
             }
-            FilterChip(selected = !showAll, onClick = { showAll = false }, label = { Text("推荐") })
-            FilterChip(selected = showAll, onClick = { showAll = true }, label = { Text("全部") })
-            TextButton(onClick = onBack) { Text("返回") }
+            FilterChip(selected = !showAll, onClick = { showAll = false }, label = { Text(I18n.t(context, "common.recommended", "推荐"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+            FilterChip(selected = showAll, onClick = { showAll = true }, label = { Text(I18n.t(context, "common.all", "全部"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+            TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         if (showSearch) {
@@ -1426,12 +1523,12 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text(emulatorSearchHint(platform)) },
+                label = { Text(emulatorSearchHint(context, platform), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 shape = RoundedCornerShape(20.dp),
                 trailingIcon = {
                     if (query.isNotBlank()) {
                         IconButton(onClick = { query = "" }) {
-                            Icon(Icons.Rounded.Close, contentDescription = "清空搜索")
+                            Icon(Icons.Rounded.Close, contentDescription = I18n.t(context, "common.clear", "清空"))
                         }
                     }
                 }
@@ -1442,7 +1539,7 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
 
         if (pickerApps.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("没有找到推荐模拟器，可以点“全部”或搜索包名。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(I18n.t(context, "settings.picker.empty", "没有找到推荐模拟器，可以点“全部”或搜索包名。"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
         } else {
             LazyColumn(
@@ -1475,26 +1572,26 @@ private fun PickerAppCard(app: InstalledApp, recommended: Boolean, onClick: () -
             }
             if (recommended) {
                 Spacer(Modifier.width(8.dp))
-                AssistChip(onClick = {}, label = { Text("推荐") })
+                AssistChip(onClick = {}, label = { Text(I18n.t(LocalContext.current, "common.recommended", "推荐"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
             }
         }
     }
 }
 
-private fun emulatorSearchHint(platform: PlatformConfig): String = when (platform.kind) {
-    PlatformKind.PSP -> "搜索 PPSSPP / Rocket PSP / MYPSP / RetroArch / 包名"
-    PlatformKind.SWITCH -> "搜索 Yuzu / Suyu / Citron / 包名"
-    PlatformKind.GBA -> "搜索 My Boy / Pizza Boy / John GBA / GBA.emu / RetroArch / 包名"
-    PlatformKind.GB -> "搜索 My OldBoy / Pizza Boy C / GBC.emu / RetroArch / 包名"
-    PlatformKind.NES -> "搜索 Nes.emu / Nostalgia.NES / RetroArch / 包名"
+private fun emulatorSearchHint(context: android.content.Context, platform: PlatformConfig): String = when (platform.kind) {
+    PlatformKind.PSP -> I18n.t(context, "settings.picker.search.psp", "搜索 PPSSPP / Rocket PSP / MYPSP / RetroArch / 包名")
+    PlatformKind.SWITCH -> I18n.t(context, "settings.picker.search.switch", "搜索 Yuzu / Suyu / Citron / 包名")
+    PlatformKind.GBA -> I18n.t(context, "settings.picker.search.gba", "搜索 My Boy / Pizza Boy / John GBA / GBA.emu / RetroArch / 包名")
+    PlatformKind.GB -> I18n.t(context, "settings.picker.search.gb", "搜索 My OldBoy / Pizza Boy C / GBC.emu / RetroArch / 包名")
+    PlatformKind.NES -> I18n.t(context, "settings.picker.search.nes", "搜索 Nes.emu / Nostalgia.NES / RetroArch / 包名")
 }
 
-private fun externalEmulatorHelpText(kind: PlatformKind): String = when (kind) {
-    PlatformKind.GBA -> "可选：改用 My Boy / Pizza Boy / John GBA / RetroArch"
-    PlatformKind.GB -> "可选：改用 My OldBoy / Pizza Boy C / GBC.emu / RetroArch"
-    PlatformKind.PSP -> "请选择 PPSSPP / PPSSPP Gold / RetroArch 等 PSP 模拟器"
-    PlatformKind.NES -> "可选：改用 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 外部模拟器"
-    PlatformKind.SWITCH -> "请选择 Switch 外部模拟器；本项目不包含 keys / firmware"
+private fun externalEmulatorHelpText(context: android.content.Context, kind: PlatformKind): String = when (kind) {
+    PlatformKind.GBA -> I18n.t(context, "settings.platform.external.help.gba", "可选：改用 My Boy / Pizza Boy / John GBA / RetroArch")
+    PlatformKind.GB -> I18n.t(context, "settings.platform.external.help.gb", "可选：改用 My OldBoy / Pizza Boy C / GBC.emu / RetroArch")
+    PlatformKind.PSP -> I18n.t(context, "settings.platform.external.help.psp", "请选择 PPSSPP / PPSSPP Gold / RetroArch 等 PSP 模拟器")
+    PlatformKind.NES -> I18n.t(context, "settings.platform.external.help.nes", "可选：改用 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 外部模拟器")
+    PlatformKind.SWITCH -> I18n.t(context, "settings.platform.external.help.switch", "请选择 Switch 外部模拟器；本项目不包含 keys / firmware")
 }
 
 private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: InstalledApp): Boolean {

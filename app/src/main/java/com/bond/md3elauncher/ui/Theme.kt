@@ -50,7 +50,7 @@ private val FixedDarkScheme = darkColorScheme(
 )
 
 @Composable
-fun MD3ELauncherTheme(
+fun GameHubTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     useDynamicColor: Boolean = true,
     content: @Composable () -> Unit

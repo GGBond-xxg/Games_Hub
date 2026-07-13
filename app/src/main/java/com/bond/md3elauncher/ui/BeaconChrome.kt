@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import com.bond.md3elauncher.i18n.I18n
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,6 +60,7 @@ internal fun BeaconTopBar(
     onPrevious: () -> Unit,
     onNext: () -> Unit
 ) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -77,7 +80,7 @@ internal fun BeaconTopBar(
         ) {
             tabs.forEach { tab ->
                 TopTabPill(
-                    label = tab.label,
+                    label = tab.localizedLabel(context),
                     selected = selected == tab,
                     width = if (tab == BeaconTab.NOW) 34.dp else 68.dp,
                     onClick = { onSelect(tab) }
@@ -226,50 +229,69 @@ internal fun BeaconBottomBar(
     onLaunchSelected: (() -> Unit)?,
     centerText: String
 ) {
+    val context = LocalContext.current
+    val showBottomTexts = I18n.isChinese(context)
+    val keyGap = if (showBottomTexts) 12.dp else 8.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(42.dp)
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = if (showBottomTexts) 20.dp else 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BottomHint("Y", "设置", onSettings)
-        Spacer(Modifier.width(12.dp))
-        BottomHint("X", "搜索", onSearch)
-        Spacer(Modifier.width(12.dp))
-        BottomHint("L3", "上移", onMoveUp)
-        Spacer(Modifier.width(12.dp))
-        BottomHint("R3", "下移", onMoveDown)
-        Spacer(Modifier.width(12.dp))
-        BottomHint("B", bLabel, onBAction)
+        BottomHint("Y", I18n.short(context, "launcher.bottom.settings", "Settings", maxChars = 5), onSettings, showText = showBottomTexts)
+        Spacer(Modifier.width(keyGap))
+        BottomHint("X", I18n.short(context, "launcher.bottom.search", "Search", maxChars = 5), onSearch, showText = showBottomTexts)
+        Spacer(Modifier.width(keyGap))
+        BottomHint("L3", I18n.short(context, "launcher.bottom.move_up", "Up", maxChars = 5), onMoveUp, showText = showBottomTexts)
+        Spacer(Modifier.width(keyGap))
+        BottomHint("R3", I18n.short(context, "launcher.bottom.move_down", "Down", maxChars = 5), onMoveDown, showText = showBottomTexts)
+        Spacer(Modifier.width(keyGap))
+        BottomHint("B", I18n.ellipsize(bLabel, 5), onBAction, showText = showBottomTexts)
         Spacer(Modifier.weight(1f))
-        Text(centerText, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.width(18.dp))
+        Text(
+            centerText,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.width(if (showBottomTexts) 18.dp else 12.dp))
         TextButton(
             onClick = { onLaunchSelected?.invoke() },
             enabled = onLaunchSelected != null,
-            contentPadding = PaddingValues(horizontal = 2.dp)
+            modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 0.dp),
+            contentPadding = PaddingValues(horizontal = if (showBottomTexts) 2.dp else 0.dp)
         ) {
             KeyBubble("A", enabled = onLaunchSelected != null)
-            Spacer(Modifier.width(6.dp))
-            Text("启动", fontWeight = FontWeight.Bold)
+            if (showBottomTexts) {
+                Spacer(Modifier.width(6.dp))
+                Text(I18n.short(context, "launcher.bottom.launch", "Launch", maxChars = 5), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }
 
 @Composable
-private fun BottomHint(key: String, text: String, onClick: (() -> Unit)?) {
+private fun BottomHint(key: String, text: String, onClick: (() -> Unit)?, showText: Boolean = true) {
     val enabled = onClick != null
-    TextButton(onClick = { onClick?.invoke() }, enabled = enabled, contentPadding = PaddingValues(horizontal = 2.dp)) {
+    TextButton(
+        onClick = { onClick?.invoke() },
+        enabled = enabled,
+        modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 0.dp),
+        contentPadding = PaddingValues(horizontal = if (showText) 2.dp else 0.dp)
+    ) {
         KeyBubble(key, enabled = enabled)
-        Spacer(Modifier.width(6.dp))
-        Text(
-            text,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        if (showText) {
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

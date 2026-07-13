@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bond.md3elauncher.MainActivity
 import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
+import com.bond.md3elauncher.i18n.I18n
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.GLRetroViewData
 import com.swordfish.libretrodroid.LibretroDroid
@@ -66,6 +67,9 @@ private data class FcCoreChoice(
 )
 
 class InternalFcActivity : ComponentActivity() {
+    private fun tr(key: String, fallback: String, vararg args: Pair<String, Any?>): String =
+        I18n.t(this, key, fallback, *args)
+
     private var retroView: GLRetroView? = null
     private var controlsView: FcTouchControlsView? = null
     private var loadingText: TextView? = null
@@ -111,7 +115,7 @@ class InternalFcActivity : ComponentActivity() {
         touchControlsAlpha = settingsPrefs.getFloat(PREF_TOUCH_CONTROLS_ALPHA, DEFAULT_TOUCH_CONTROLS_ALPHA).coerceIn(0f, 1f)
         hardwareControlsAlpha = settingsPrefs.getFloat(PREF_HARDWARE_CONTROLS_ALPHA, DEFAULT_HARDWARE_CONTROLS_ALPHA).coerceIn(0f, 1f)
 
-        showLoading("正在启动内置 FC/NES 模拟器...")
+        showLoading(tr("emulator.loading.fc", "Starting built-in FC/NES emulator..."))
         configureWindow()
 
         val romUri = intent.getStringExtra(EXTRA_ROM_URI)?.let(Uri::parse)
@@ -119,7 +123,7 @@ class InternalFcActivity : ComponentActivity() {
         val title = intent.getStringExtra(EXTRA_TITLE).orEmpty().ifBlank { fileName }
 
         if (romUri == null) {
-            finishWithMessage("没有收到 FC/NES ROM")
+            finishWithMessage(tr("emulator.no_rom", "No {platform} ROM received", "platform" to "FC/NES"))
             return
         }
 
@@ -128,7 +132,7 @@ class InternalFcActivity : ComponentActivity() {
                 runCatching { prepareRomFile(romUri, fileName) }
             }
             val romFile = result.getOrElse {
-                finishWithMessage("读取 ROM 失败：${it.message ?: "未知错误"}")
+                finishWithMessage(tr("emulator.read_rom_failed", "Failed to read ROM: {error}", "error" to (it.message ?: tr("common.unknown_error", "Unknown error"))))
                 return@launch
             }
             startRetroView(romFile, title)
@@ -282,7 +286,7 @@ class InternalFcActivity : ComponentActivity() {
     private fun startRetroView(romFile: File, title: String) {
         val coreChoice = chooseFcCore()
         if (!coreChoice.file.exists()) {
-            finishWithMessage("内置 FC/NES 核心不存在：${coreChoice.file.absolutePath}")
+            finishWithMessage(tr("emulator.core_missing", "Built-in {platform} core is missing: {path}", "platform" to "FC/NES", "path" to coreChoice.file.absolutePath))
             return
         }
 
@@ -362,14 +366,14 @@ class InternalFcActivity : ComponentActivity() {
         val lower = safeName.lowercase(Locale.ROOT)
 
         if (lower.endsWith(".7z")) {
-            error("内置 FC/NES 暂不支持直接读取 7z，请解压为 .nes，或继续使用 Nes.emu / RetroArch 外部模拟器")
+            error(tr("emulator.unsupported_7z", "Built-in {platform} does not support direct 7z loading yet. Extract it first, or use an external emulator.", "platform" to "FC/NES"))
         }
         if (lower.endsWith(".zip")) {
             extractFcFromZip(uri, dir, safeName)?.let { extracted ->
                 preparedRomHeaderInfo = analyzeFcRomHeader(extracted)
                 return extracted
             }
-            error("ZIP 中没有找到可用的 .nes / .fds / .unf / .unif ROM")
+            error(tr("emulator.zip_no_rom", "No supported ROM found in ZIP"))
         }
 
         // v0.1.65：不要把中文/特殊字符文件名直接传给 libretro core。
@@ -379,7 +383,7 @@ class InternalFcActivity : ComponentActivity() {
         preparedRomStorageSeed = originalRomStorageName(safeName, extension)
         val outFile = File(dir, asciiRomCacheName("rom", "${uri}|${safeName}", extension))
         contentResolver.openInputStream(uri).use { input ->
-            requireNotNull(input) { "无法打开 ROM 输入流" }
+            requireNotNull(input) { tr("emulator.rom_input_failed", "Unable to open ROM input stream") }
             FileOutputStream(outFile).use { output -> input.copyTo(output) }
         }
         preparedRomHeaderInfo = analyzeFcRomHeader(outFile)
@@ -388,7 +392,7 @@ class InternalFcActivity : ComponentActivity() {
 
     private fun extractFcFromZip(uri: Uri, dir: File, archiveName: String): File? {
         contentResolver.openInputStream(uri).use { input ->
-            requireNotNull(input) { "无法打开 ZIP 输入流" }
+            requireNotNull(input) { tr("emulator.zip_input_failed", "Unable to open ZIP input stream") }
             ZipInputStream(input).use { zip ->
                 while (true) {
                     val entry = zip.nextEntry ?: break
@@ -422,7 +426,7 @@ class InternalFcActivity : ComponentActivity() {
                         prgKb = 0,
                         chrKb = 0,
                         isNes2 = false,
-                        warning = "FC/NES：ROM 头信息不完整，内置 Nestopia 可能无法启动；可继续用 Nes.emu 外部模拟器。",
+                        warning = tr("emulator.warning.short_header", "ROM header is incomplete. Built-in core may fail to start; try an external emulator if needed."),
                         isRiskyHack = true
                     )
                 }
@@ -433,7 +437,7 @@ class InternalFcActivity : ComponentActivity() {
                     prgKb = 0,
                     chrKb = 0,
                     isNes2 = false,
-                    warning = "FC/NES：不是标准 iNES/NES2 ROM 头，内置 Nestopia 可能无法启动；可继续用 Nes.emu 外部模拟器。",
+                    warning = tr("emulator.warning.not_ines", "Not a standard iNES/NES2 ROM header. Built-in core may fail to start; try an external emulator if needed."),
                     isRiskyHack = true
                 )
             }
@@ -446,10 +450,10 @@ class InternalFcActivity : ComponentActivity() {
             val chrKb = (header[5].toInt() and 0xFF) * 8
             val isRiskyHack = mapper == 115 || (mapper >= 0 && mapper !in FC_COMMON_MAPPERS) || isNes2 || file.length() > 2L * 1024L * 1024L
             val warning = when {
-                mapper == 115 -> "FC/NES：检测到 Mapper 115 汉化/改版 ROM。已改为干净启动并使用 Nestopia core。"
-                isNes2 && mapper >= 256 -> "FC/NES：检测到 NES2.0 高 Mapper($mapper) 改版 ROM。已使用 Nestopia core 干净启动。"
-                mapper >= 0 && mapper !in FC_COMMON_MAPPERS -> "FC/NES：检测到非普通 Mapper($mapper) ROM。已干净启动；如果无法启动，建议用 Nes.emu，或后续加入更兼容 NES core。"
-                file.length() > 2L * 1024L * 1024L -> "FC/NES：检测到大容量改版 ROM。已干净启动；如果无法启动，建议继续用 Nes.emu。"
+                mapper == 115 -> tr("emulator.warning.mapper115", "Mapper 115 translation/hack ROM detected. Starting cleanly with Nestopia core.")
+                isNes2 && mapper >= 256 -> tr("emulator.warning.nes2_high_mapper", "NES2.0 high mapper ({mapper}) ROM detected. Starting cleanly with Nestopia core.", "mapper" to mapper)
+                mapper >= 0 && mapper !in FC_COMMON_MAPPERS -> tr("emulator.warning.uncommon_mapper", "Uncommon mapper ({mapper}) ROM detected. Starting cleanly; use an external emulator if it still fails.", "mapper" to mapper)
+                file.length() > 2L * 1024L * 1024L -> tr("emulator.warning.large_rom", "Large hack ROM detected. Starting cleanly; use an external emulator if it still fails.")
                 else -> null
             }
             Log.d(TAG, "NES header mapper=$mapper nes2=$isNes2 prg=${prgKb}KB chr=${chrKb}KB size=${file.length()} risky=$isRiskyHack")
@@ -493,7 +497,7 @@ class InternalFcActivity : ComponentActivity() {
             delay(4500L)
             if (firstFrameRendered || isFinishing || isDestroyed) return@launch
             val header = preparedRomHeaderInfo
-            val mapperText = header?.takeIf { it.mapper >= 0 }?.let { "Mapper ${it.mapper}" } ?: "未知 Mapper"
+            val mapperText = header?.takeIf { it.mapper >= 0 }?.let { "Mapper ${it.mapper}" } ?: tr("emulator.unknown_mapper", "Unknown Mapper")
             // v0.1.71：只记录黑屏/无首帧信息，不再反复弹窗。
             Log.w(TAG, "no frame rendered for FC/NES title=$title core=$coreName mapper=$mapperText header=$header")
         }
@@ -501,8 +505,8 @@ class InternalFcActivity : ComponentActivity() {
 
     private suspend fun restoreInitialState(view: GLRetroView, storage: FcGameStorage) {
         val candidates = listOf(
-            "快捷存档" to storage.quickStateFile,
-            "存档 1" to storage.slotStateFile(1)
+            tr("emulator.state.quick_label", "Quick Save") to storage.quickStateFile,
+            tr("emulator.state.slot_label", "Save {slot}", "slot" to 1) to storage.slotStateFile(1)
         ).filter { it.second.exists() && it.second.length() > 0L }
 
         for ((label, file) in candidates) {
@@ -510,7 +514,7 @@ class InternalFcActivity : ComponentActivity() {
             if (bytes == null || bytes.isEmpty()) continue
             val ok = unserializeStateWithBootRetries(view, bytes, label)
             if (ok) {
-                Toast.makeText(this, "已自动读取 $label", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, tr("emulator.state.auto_loaded", "Auto-loaded {label}", "label" to label), Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -534,83 +538,83 @@ class InternalFcActivity : ComponentActivity() {
     }
 
     internal fun saveQuickState() {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        saveStateToFile(storage.quickStateFile, "快捷存档")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        saveStateToFile(storage.quickStateFile, tr("emulator.state.quick_label", "Quick Save"))
     }
 
     internal fun loadQuickState(hideMenuAfterLoad: Boolean) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        loadStateFromFile(storage.quickStateFile, "快捷存档", hideMenuAfterLoad)
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        loadStateFromFile(storage.quickStateFile, tr("emulator.state.quick_label", "Quick Save"), hideMenuAfterLoad)
     }
 
     internal fun saveSlotState(slot: Int) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        saveStateToFile(storage.slotStateFile(slot), "存档 $slot")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        saveStateToFile(storage.slotStateFile(slot), tr("emulator.state.slot_label", "Save {slot}", "slot" to slot))
     }
 
     internal fun loadSlotState(slot: Int, hideMenuAfterLoad: Boolean = true) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        loadStateFromFile(storage.slotStateFile(slot), "存档 $slot", hideMenuAfterLoad)
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        loadStateFromFile(storage.slotStateFile(slot), tr("emulator.state.slot_label", "Save {slot}", "slot" to slot), hideMenuAfterLoad)
     }
 
     internal fun deleteSlotState(slot: Int) {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        deleteStateFile(storage.slotStateFile(slot), "存档 $slot")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        deleteStateFile(storage.slotStateFile(slot), tr("emulator.state.slot_label", "Save {slot}", "slot" to slot))
     }
 
     internal fun deleteQuickState() {
-        val storage = gameStorage ?: return showToast("游戏存档目录未准备好")
-        deleteStateFile(storage.quickStateFile, "快捷存档")
+        val storage = gameStorage ?: return showToast(tr("emulator.state.storage_not_ready", "Save-state storage is not ready"))
+        deleteStateFile(storage.quickStateFile, tr("emulator.state.quick_label", "Quick Save"))
     }
 
     private fun deleteStateFile(file: File, label: String) {
         if (!file.exists()) {
-            showToast("$label 已经是空的")
+            showToast(tr("emulator.state.no_state", "No {label}", "label" to label))
             return
         }
         val ok = runCatching { file.delete() }.getOrDefault(false)
-        showToast(if (ok) "$label 已删除" else "$label 删除失败")
+        showToast(if (ok) tr("emulator.state.deleted", "Deleted {label}", "label" to label) else tr("emulator.state.delete_failed", "Failed to delete {label}", "label" to label))
         controlsView?.invalidate()
     }
 
     private fun saveStateToFile(file: File, label: String) {
-        val view = retroView ?: return showToast("模拟器还没准备好")
+        val view = retroView ?: return showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     file.parentFile?.mkdirs()
                     val state = view.serializeState()
-                    require(state.isNotEmpty()) { "状态数据为空" }
+                    require(state.isNotEmpty()) { tr("emulator.state.data_empty", "State data is empty") }
                     file.writeBytes(state)
                 }
             }
             result.onSuccess {
                 controlsView?.invalidate()
-                showToast("$label 保存成功")
+                showToast(tr("emulator.state.saved", "{label} saved", "label" to label))
             }.onFailure {
-                showToast("保存 $label 失败：${it.message ?: "未知错误"}")
+                showToast(tr("emulator.state.save_failed", "Failed to save {label}: {error}", "label" to label, "error" to (it.message ?: tr("common.unknown_error", "Unknown error"))))
             }
         }
     }
 
     private fun loadStateFromFile(file: File, label: String, hideMenuAfterLoad: Boolean) {
-        val view = retroView ?: return showToast("模拟器还没准备好")
+        val view = retroView ?: return showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
         if (!file.exists() || file.length() <= 0L) {
-            showToast("没有 $label")
+            showToast(tr("emulator.state.no_state", "No {label}", "label" to label))
             return
         }
         lifecycleScope.launch {
             val bytes = withContext(Dispatchers.IO) { runCatching { file.readBytes() }.getOrNull() }
             if (bytes == null || bytes.isEmpty()) {
-                showToast("读取 $label 失败")
+                showToast(tr("emulator.state.load_failed", "Failed to load {label}", "label" to label))
                 return@launch
             }
             val ok = runCatching { view.unserializeState(bytes) }.getOrDefault(false)
             if (ok) {
-                showToast("已读取 $label")
+                showToast(tr("emulator.state.loaded", "Loaded {label}", "label" to label))
                 if (hideMenuAfterLoad) controlsView?.hideMenu()
             } else {
-                showToast("读取 $label 失败")
+                showToast(tr("emulator.state.load_failed", "Failed to load {label}", "label" to label))
             }
         }
     }
@@ -625,7 +629,7 @@ class InternalFcActivity : ComponentActivity() {
     }
 
     internal fun softRestartGameNoExit() {
-        val view = retroView ?: return showToast("模拟器还没准备好")
+        val view = retroView ?: return showToast(tr("emulator.ready_not_yet", "Emulator is not ready yet"))
         stopAllTurbo()
         controlsView?.releaseAll()
         controlsView?.hideMenu()
@@ -635,15 +639,15 @@ class InternalFcActivity : ComponentActivity() {
                     .onFailure { Log.e(TAG, "soft reset FC/NES core failed", it) }
             }
         }.onSuccess {
-            showToast("已重启当前 FC/NES 游戏")
+            showToast(tr("emulator.restart_done", "Restarted current {platform} game", "platform" to "FC/NES"))
         }.onFailure {
             Log.e(TAG, "queue soft reset FC/NES failed", it)
-            showToast("重启游戏失败")
+            showToast(tr("emulator.restart_failed", "Failed to restart game"))
         }
     }
 
     internal fun restartGameFresh() {
-        showToast("正在重启 FC/NES 游戏...")
+        showToast(tr("emulator.cold_restart", "Cold-restarting game..."))
         suppressLifecycleSaveRam = true
         stopAllTurbo()
         controlsView?.releaseAll()
@@ -691,7 +695,7 @@ class InternalFcActivity : ComponentActivity() {
     }
 
     internal fun stateTime(file: File): String {
-        if (!file.exists()) return "空"
+        if (!file.exists()) return tr("emulator.state.empty", "Empty")
         return SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(file.lastModified()))
     }
 
@@ -722,8 +726,22 @@ class InternalFcActivity : ComponentActivity() {
     }
 
     internal fun exitGame() {
+        exitInternalProcess("normal exit")
+    }
+
+    private fun exitInternalProcess(reason: String) {
+        Log.w(TAG, "exit internal fc process reason=$reason")
         suppressLifecycleSaveRam = true
+        stopAllTurbo()
+        controlsView?.releaseAll()
+        controlsView = null
         finish()
+        overridePendingTransition(0, 0)
+        turboHandler.postDelayed({
+            Log.w(TAG, "kill internal_fc process after exit")
+            Process.killProcess(Process.myPid())
+            exitProcess(0)
+        }, 260L)
     }
 
     internal fun pauseRetroForMenu() {
@@ -849,7 +867,7 @@ class InternalFcActivity : ComponentActivity() {
             else -> 1
         }
         runCatching { retroView?.frameSpeed = fastForwardSpeed }
-        showToast("快进 ${fastForwardSpeed}x")
+        showToast(tr("emulator.fast_forward", "Fast Forward {speed}x", "speed" to fastForwardSpeed))
         controlsView?.invalidate()
     }
 
@@ -859,7 +877,7 @@ class InternalFcActivity : ComponentActivity() {
         const val EXTRA_TITLE = "title"
         const val EXTRA_AUTO_RESTORE_STATE = "auto_restore_state"
         private const val NESTOPIA_CORE_FILE_NAME = "libnestopia_libretro_android.so"
-        private const val TAG = "MD3E_FC"
+        private const val TAG = "GameHub_FC"
         private const val PREF_TOUCH_CONTROLS_ALPHA = "touch_controls_alpha"
         private const val PREF_HARDWARE_CONTROLS_ALPHA = "hardware_controls_alpha"
         private const val DEFAULT_TOUCH_CONTROLS_ALPHA = 0.70f

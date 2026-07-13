@@ -10,5 +10,5 @@ mipmap ic_launcher_foreground
 mipmap ic_launcher_monochrome
 mipmap ic_launcher_round
 string app_name
-style Theme_MD3ELauncher
+style Theme_GameHub
 xml file_paths

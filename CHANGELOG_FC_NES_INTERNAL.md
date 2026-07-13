@@ -1,3 +1,15 @@
+
+## v0.1.80
+- App UI：继续补充 JSON I18N，新增设置 > 系统 > 语言切换。
+- App UI：非中文语言下底部操作栏只显示 Y / X / L3 / R3 / B / A 按键圆点。
+- App UI：补齐设置、平台配置、模拟器选择、封面刮削、主界面空状态等常见文本翻译。
+
+## v0.1.78
+- 新增 JSON 文本读取模块 `I18n`，用户可见文本开始按 key 管理，方便后续国际化。
+- 内置模拟器公共菜单 / 提示接入 `assets/i18n/zh.json`。
+- FC/NES 公共虚拟按键短文本接入 JSON，并保留短文本省略保护。
+- README 补充国际化和长文本防溢出规范。
+
 # FC/NES Internal Emulator Changelog
 
 ## v0.1.73 Nestopia only
@@ -111,3 +123,6 @@
 
 - 设置 > 系统 移除「FC/NES 模拟核心」。FC/NES 仍固定使用 Nestopia core。
 - 启动器底部新增 `L3 上移`、`R3 下移`，用于调整当前游戏 / 应用列表顺序。
+
+## v0.1.85
+- FC/NES normal exit now closes the `:internal_fc` process after returning to launcher, matching GBA lifecycle and avoiding stale i18n state.

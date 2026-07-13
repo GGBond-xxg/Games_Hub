@@ -52,12 +52,20 @@ internal data class CommonTouchKeyMap(
     val exit: Int
 )
 
+internal data class CommonTouchLabels(
+    val quickSave: String = "Save",
+    val quickLoad: String = "Load",
+    val fastForward: String = "Fast",
+    val exit: String = "Exit"
+)
+
 internal object CommonTouchLayoutBuilder {
     fun buildGbaStyleLayout(
         width: Float,
         height: Float,
         density: Float,
         keys: CommonTouchKeyMap,
+        labels: CommonTouchLabels = CommonTouchLabels(),
         customButtons: List<CommonTouchButtonSpec> = emptyList()
     ): CommonTouchLayout {
         fun dp(value: Float) = value * density
@@ -111,10 +119,10 @@ internal object CommonTouchLayoutBuilder {
         val bottomPillY = safeH - margin - smallPillH / 2f
         pillButton("start", "START", keys.start, safeW / 2f + dp(62f), bottomPillY, dp(88f), smallPillH)
         pillButton("select", "SELECT", keys.select, safeW / 2f - dp(62f), bottomPillY, dp(92f), smallPillH)
-        pillButton("quick_save", "快存", keys.quickSave, margin + shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
-        pillButton("quick_load", "快读", keys.quickLoad, safeW - margin - shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
-        pillButton("fast_forward", "快进", keys.fastForward, safeW - margin - shoulderW / 2f, shoulderY + (smallPillH + dp(8f)) * 2f, dp(76f), smallPillH)
-        pillButton("exit", "退出", keys.exit, safeW / 2f, shoulderY, dp(86f), smallPillH)
+        pillButton("quick_save", labels.quickSave, keys.quickSave, margin + shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
+        pillButton("quick_load", labels.quickLoad, keys.quickLoad, safeW - margin - shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
+        pillButton("fast_forward", labels.fastForward, keys.fastForward, safeW - margin - shoulderW / 2f, shoulderY + (smallPillH + dp(8f)) * 2f, dp(76f), smallPillH)
+        pillButton("exit", labels.exit, keys.exit, safeW / 2f, shoulderY, dp(86f), smallPillH)
 
         buttons += customButtons
 

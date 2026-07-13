@@ -53,10 +53,12 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.InstalledApp
 import com.bond.md3elauncher.data.ItemOverride
 import com.bond.md3elauncher.data.PlatformConfig
+import com.bond.md3elauncher.i18n.I18n
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -107,9 +109,11 @@ internal fun FavoritesBeaconScreen(
     onLaunchAndroidApp: (InstalledApp) -> Unit,
     onToggleAndroidFavorite: (InstalledApp) -> Unit
 ) {
+    val context = LocalContext.current
+    val lang = I18n.languageFor(context)
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val entries = remember(games, installedApps, favorites, query, itemOverrides, itemOrder) {
+    val entries = remember(games, installedApps, favorites, query, itemOverrides, itemOrder, lang) {
         val base = buildList {
             games.filter { it.id in favorites }.forEach { game ->
                 add(
@@ -129,7 +133,7 @@ internal fun FavoritesBeaconScreen(
                         key = key,
                         title = itemTitle(itemOverrides, key, app.label),
                         subtitle = app.packageName,
-                        typeLabel = if (app.isLikelyEmulator) "模拟器" else "安卓",
+                        typeLabel = if (app.isLikelyEmulator) I18n.t(context, "launcher.type.emulator", "模拟器") else I18n.t(context, "launcher.type.android", "安卓"),
                         app = app
                     )
                 )
@@ -148,8 +152,8 @@ internal fun FavoritesBeaconScreen(
     PublishFavoriteLaunchAction(selected, onLaunchSelectedChange, onLaunchGame, onLaunchAndroidApp)
     PublishFavoriteToggleAction(selected, onToggleSelectedChange, onToggleFavorite, onToggleAndroidFavorite)
     PublishFavoriteEditAction(selected, itemOverrides, onEditSelectedChange, onEdit)
-    LaunchedEffect(selected?.key) {
-        onBottomBLabelChange(if (selected != null) "取消收藏" else "收藏")
+    LaunchedEffect(selected?.key, lang) {
+        onBottomBLabelChange(if (selected != null) I18n.t(context, "launcher.bottom.unfavorite", "取消收藏") else I18n.t(context, "launcher.bottom.favorite", "收藏"))
     }
 
     val listState = rememberLazyListState()
@@ -177,8 +181,8 @@ internal fun FavoritesBeaconScreen(
 
     if (entries.isEmpty()) {
         EmptyBeaconState(
-            title = if (query.isBlank()) "还没有收藏" else "没有匹配的收藏",
-            subtitle = if (query.isBlank()) "进入设置里的平台管理，或进入安卓应用列表后点击星标收藏。" else "按 X 修改搜索内容，或清空搜索。",
+            title = if (query.isBlank()) I18n.t(context, "launcher.empty.favorites.title", "还没有收藏") else I18n.t(context, "launcher.empty.favorites.search_title", "没有匹配的收藏"),
+            subtitle = if (query.isBlank()) I18n.t(context, "launcher.empty.favorites.subtitle", "进入设置里的平台管理，或进入安卓应用列表后点击星标收藏。") else I18n.t(context, "launcher.empty.search_subtitle", "按 X 修改搜索内容，或清空搜索。"),
             onLaunchSelectedChange = onLaunchSelectedChange
         )
     } else {
@@ -203,7 +207,7 @@ internal fun FavoritesBeaconScreen(
                             }
                         },
                         onLongClick = {
-                            onEdit(entry.toEditTarget(itemOverrides))
+                            onEdit(entry.toEditTarget(itemOverrides, context))
                         },
                         onToggle = {
                             entry.game?.let(onToggleFavorite)
@@ -224,8 +228,9 @@ private fun PublishFavoriteEditAction(
     onEditSelectedChange: ((() -> Unit)?) -> Unit,
     onEdit: (EditTarget) -> Unit
 ) {
-    LaunchedEffect(selected?.key, itemOverrides) {
-        val edit: (() -> Unit)? = selected?.let { entry -> { onEdit(entry.toEditTarget(itemOverrides)) } }
+    val context = LocalContext.current
+    LaunchedEffect(selected?.key, itemOverrides, I18n.languageFor(context)) {
+        val edit: (() -> Unit)? = selected?.let { entry -> { onEdit(entry.toEditTarget(itemOverrides, context)) } }
         onEditSelectedChange(edit)
     }
 }
@@ -250,8 +255,9 @@ private fun PublishAndroidEditAction(
     onEditSelectedChange: ((() -> Unit)?) -> Unit,
     onEdit: (EditTarget) -> Unit
 ) {
-    LaunchedEffect(selected?.packageName, itemOverrides) {
-        val edit: (() -> Unit)? = selected?.let { app -> { onEdit(app.toEditTarget(itemOverrides)) } }
+    val context = LocalContext.current
+    LaunchedEffect(selected?.packageName, itemOverrides, I18n.languageFor(context)) {
+        val edit: (() -> Unit)? = selected?.let { app -> { onEdit(app.toEditTarget(itemOverrides, context)) } }
         onEditSelectedChange(edit)
     }
 }
@@ -321,6 +327,8 @@ internal fun PlatformBeaconScreen(
     onLaunchGame: (GameItem) -> Unit,
     onToggleFavorite: (GameItem) -> Unit
 ) {
+    val context = LocalContext.current
+    val lang = I18n.languageFor(context)
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     val visible = remember(games, query, itemOverrides, itemOrder) {
         val base = games.filter {
@@ -336,9 +344,9 @@ internal fun PlatformBeaconScreen(
     PublishGameLaunchAction(selected, onLaunchSelectedChange, onLaunchGame)
     PublishGameToggleAction(selected, onToggleSelectedChange, onToggleFavorite)
     PublishGameEditAction(selected, itemOverrides, onEditSelectedChange, onEdit)
-    LaunchedEffect(selected?.id, favorites) {
+    LaunchedEffect(selected?.id, favorites, lang) {
         val isFavorite = selected?.let { it.id in favorites } == true
-        onBottomBLabelChange(if (isFavorite) "取消收藏" else "收藏")
+        onBottomBLabelChange(if (isFavorite) I18n.t(context, "launcher.bottom.unfavorite", "取消收藏") else I18n.t(context, "launcher.bottom.favorite", "收藏"))
     }
 
     val listState = rememberLazyListState()
@@ -365,14 +373,14 @@ internal fun PlatformBeaconScreen(
     }
 
     if (platform == null) {
-        EmptyBeaconState("平台不存在", "没有找到这个平台配置。", onLaunchSelectedChange)
+        EmptyBeaconState(I18n.t(context, "launcher.empty.platform_missing.title", "平台不存在"), I18n.t(context, "launcher.empty.platform_missing.subtitle", "没有找到这个平台配置。"), onLaunchSelectedChange)
         return
     }
 
     if (visible.isEmpty()) {
         EmptyBeaconState(
-            title = if (query.isBlank()) "没有扫描到 ${platformDisplayName(platform.kind.title)} 游戏" else "没有匹配的 ${platformDisplayName(platform.kind.title)} 游戏",
-            subtitle = if (query.isBlank()) "进入“设置”里的平台管理，选择 ROM 文件夹和模拟器后再扫描。" else "按 X 修改搜索内容，或清空搜索。",
+            title = if (query.isBlank()) I18n.t(context, "launcher.empty.platform.no_games", "没有扫描到 {platform} 游戏", "platform" to platformDisplayName(platform.kind.title)) else I18n.t(context, "launcher.empty.platform.no_match", "没有匹配的 {platform} 游戏", "platform" to platformDisplayName(platform.kind.title)),
+            subtitle = if (query.isBlank()) I18n.t(context, "launcher.empty.platform.subtitle_setup", "进入“设置”里的平台管理，选择 ROM 文件夹和模拟器后再扫描。") else I18n.t(context, "launcher.empty.search_subtitle", "按 X 修改搜索内容，或清空搜索。"),
             onLaunchSelectedChange = onLaunchSelectedChange
         )
     } else {
@@ -450,6 +458,8 @@ internal fun AndroidBeaconScreen(
     onToggleAndroidTag: (InstalledApp) -> Unit,
     onlyTagged: Boolean
 ) {
+    val context = LocalContext.current
+    val lang = I18n.languageFor(context)
     var selectedPackage by rememberSaveable { mutableStateOf<String?>(null) }
     val visible = remember(apps, query, itemOverrides, itemOrder) {
         val base = apps.filter { app ->
@@ -467,12 +477,12 @@ internal fun AndroidBeaconScreen(
         PublishAndroidTagAction(selected, onToggleSelectedChange, onToggleAndroidTag)
     }
     PublishAndroidEditAction(selected, itemOverrides, onEditSelectedChange, onEdit)
-    LaunchedEffect(selected?.packageName, favorites, taggedApps, onlyTagged) {
+    LaunchedEffect(selected?.packageName, favorites, taggedApps, onlyTagged, lang) {
         val key = selected?.let { "app:${it.packageName}" }
         val label = if (onlyTagged) {
-            if (key != null && key in favorites) "取消收藏" else "收藏"
+            if (key != null && key in favorites) I18n.t(context, "launcher.bottom.unfavorite", "取消收藏") else I18n.t(context, "launcher.bottom.favorite", "收藏")
         } else {
-            if (key != null && key in taggedApps) "取消添加" else "添加"
+            if (key != null && key in taggedApps) I18n.t(context, "launcher.bottom.remove_add", "取消添加") else I18n.t(context, "launcher.bottom.add", "添加")
         }
         onBottomBLabelChange(label)
     }
@@ -504,14 +514,14 @@ internal fun AndroidBeaconScreen(
     if (visible.isEmpty()) {
         EmptyBeaconState(
             title = if (query.isBlank()) {
-                if (onlyTagged) "还没有安卓游戏" else "没有应用"
+                if (onlyTagged) I18n.t(context, "launcher.empty.android.no_games", "还没有安卓游戏") else I18n.t(context, "launcher.empty.android.no_apps", "没有应用")
             } else {
-                if (onlyTagged) "没有匹配的安卓游戏" else "没有匹配的应用"
+                if (onlyTagged) I18n.t(context, "launcher.empty.android.no_match_games", "没有匹配的安卓游戏") else I18n.t(context, "launcher.empty.android.no_match_apps", "没有匹配的应用")
             },
             subtitle = if (query.isBlank()) {
-                if (onlyTagged) "按 B 进入全部应用列表，把想显示在主页安卓里的应用标记为游戏。" else "当前没有读取到可启动的安卓应用。"
+                if (onlyTagged) I18n.t(context, "launcher.empty.android.subtitle_tag", "按 B 进入全部应用列表，把想显示在主页安卓里的应用标记为游戏。") else I18n.t(context, "launcher.empty.android.subtitle_empty", "当前没有读取到可启动的安卓应用。")
             } else {
-                "按 X 修改搜索内容，或清空搜索。"
+                I18n.t(context, "launcher.empty.search_subtitle", "按 X 修改搜索内容，或清空搜索。")
             },
             onLaunchSelectedChange = onLaunchSelectedChange
         )
@@ -538,7 +548,7 @@ internal fun AndroidBeaconScreen(
                             if (isSelected) onLaunchAndroidApp(app) else selectedPackage = app.packageName
                         },
                         onLongClick = {
-                            onEdit(app.toEditTarget(itemOverrides))
+                            onEdit(app.toEditTarget(itemOverrides, context))
                         },
                         onToggleFavorite = { onToggleAndroidFavorite(app) },
                         onToggleTag = { onToggleAndroidTag(app) }
@@ -610,7 +620,7 @@ private fun FavoriteRow(entry: FavoriteEntry, selected: Boolean, onFocus: () -> 
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(entry.title, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
-            IconButton(onClick = onToggle, modifier = Modifier.focusProperties { canFocus = false }) { Icon(Icons.Rounded.Star, contentDescription = "取消收藏") }
+            IconButton(onClick = onToggle, modifier = Modifier.focusProperties { canFocus = false }) { Icon(Icons.Rounded.Star, contentDescription = I18n.t(LocalContext.current, "launcher.bottom.unfavorite", "取消收藏")) }
         }
     }
 }
@@ -648,7 +658,7 @@ private fun GameRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(itemTitle(itemOverrides, game.id, game.title), modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
-            IconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = "收藏") }
+            IconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = I18n.t(LocalContext.current, "launcher.bottom.favorite", "收藏")) }
         }
     }
 }
@@ -696,14 +706,14 @@ private fun AndroidAppRow(
                 IconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) {
                     Icon(
                         if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                        contentDescription = "收藏"
+                        contentDescription = I18n.t(LocalContext.current, "launcher.bottom.favorite", "收藏")
                     )
                 }
             } else {
                 IconButton(onClick = onToggleTag, modifier = Modifier.focusProperties { canFocus = false }) {
                     Icon(
                         if (tagged) Icons.Rounded.SportsEsports else Icons.Outlined.SportsEsports,
-                        contentDescription = "标记为游戏"
+                        contentDescription = I18n.t(LocalContext.current, "launcher.action.mark_as_game", "标记为游戏")
                     )
                 }
             }
@@ -755,14 +765,14 @@ private fun FavoritePreview(entry: FavoriteEntry?, itemOverrides: Map<String, It
     when {
         entry?.game != null -> GamePreview(game = entry.game, itemOverrides = itemOverrides)
         entry?.app != null -> AndroidAppPreview(app = entry.app, itemOverrides = itemOverrides)
-        else -> PreviewPlaceholder("选择一个收藏")
+        else -> PreviewPlaceholder(I18n.t(LocalContext.current, "launcher.preview.select_favorite", "选择一个收藏"))
     }
 }
 
 @Composable
 private fun GamePreview(game: GameItem?, itemOverrides: Map<String, ItemOverride>) {
     if (game == null) {
-        PreviewPlaceholder("选择一个游戏")
+        PreviewPlaceholder(I18n.t(LocalContext.current, "launcher.preview.select_game", "选择一个游戏"))
         return
     }
     PreviewFrame {
@@ -777,7 +787,7 @@ private fun GamePreview(game: GameItem?, itemOverrides: Map<String, ItemOverride
 @Composable
 private fun AndroidAppPreview(app: InstalledApp?, itemOverrides: Map<String, ItemOverride>) {
     if (app == null) {
-        PreviewPlaceholder("选择一个安卓应用")
+        PreviewPlaceholder(I18n.t(LocalContext.current, "launcher.preview.select_android_app", "选择一个安卓应用"))
         return
     }
     PreviewFrame {
@@ -825,9 +835,9 @@ internal fun EmptyBeaconState(title: String, subtitle: String, onLaunchSelectedC
     Box(modifier = Modifier.fillMaxSize().padding(18.dp), contentAlignment = Alignment.Center) {
         OutlinedCard(shape = RoundedCornerShape(24.dp)) {
             androidx.compose.foundation.layout.Column(Modifier.padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
-                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -842,19 +852,19 @@ private fun GameItem.toEditTarget(overrides: Map<String, ItemOverride>): EditTar
         typeLabel = platformDisplayName(platformTitle)
     )
 
-private fun InstalledApp.toEditTarget(overrides: Map<String, ItemOverride>): EditTarget {
+private fun InstalledApp.toEditTarget(overrides: Map<String, ItemOverride>, context: android.content.Context): EditTarget {
     val key = "app:$packageName"
     return EditTarget(
         key = key,
         defaultTitle = label,
         currentTitle = itemTitle(overrides, key, label),
         currentImagePath = itemImagePath(overrides, key),
-        typeLabel = "安卓应用"
+        typeLabel = I18n.t(context, "launcher.type.android_app", "安卓应用")
     )
 }
 
-private fun FavoriteEntry.toEditTarget(overrides: Map<String, ItemOverride>): EditTarget {
+private fun FavoriteEntry.toEditTarget(overrides: Map<String, ItemOverride>, context: android.content.Context): EditTarget {
     game?.let { return it.toEditTarget(overrides) }
-    app?.let { return it.toEditTarget(overrides) }
+    app?.let { return it.toEditTarget(overrides, context) }
     return EditTarget(key = key, defaultTitle = title, currentTitle = title, currentImagePath = itemImagePath(overrides, key), typeLabel = typeLabel)
 }

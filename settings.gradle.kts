@@ -15,5 +15,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MD3ELauncher"
+rootProject.name = "GameHub"
 include(":app")

@@ -11,6 +11,7 @@ import android.os.StrictMode
 import android.provider.DocumentsContract
 import android.provider.Settings
 import android.widget.Toast
+import com.bond.md3elauncher.i18n.I18n
 import androidx.core.content.FileProvider
 import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.PlatformConfig
@@ -24,7 +25,7 @@ class ExternalLauncher(private val context: Context) {
     fun launchAndroidApp(packageName: String) {
         val intent = context.packageManager.getLaunchIntentForPackage(packageName)
         if (intent == null) {
-            Toast.makeText(context, "找不到这个 App", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, I18n.t(context, "toast.app_not_found", "找不到这个 App"), Toast.LENGTH_SHORT).show()
             return
         }
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -33,7 +34,7 @@ class ExternalLauncher(private val context: Context) {
     fun launchGame(game: GameItem, platform: PlatformConfig) {
         val emulatorPackage = platform.emulatorPackage
         if (emulatorPackage.isNullOrBlank()) {
-            Toast.makeText(context, "请先给 ${platform.kind.title} 选择模拟器 App", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, I18n.t(context, "toast.select_emulator_first", "请先给 {platform} 选择模拟器 App", "platform" to platform.kind.title), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -772,11 +773,11 @@ class ExternalLauncher(private val context: Context) {
             context.startActivity(fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             Toast.makeText(
                 context,
-                message ?: "已打开模拟器；如果没有直接进入游戏，需要继续适配该模拟器的专用启动参数",
+                message ?: I18n.t(context, "toast.external_opened", "已打开模拟器；如果没有直接进入游戏，需要继续适配该模拟器的专用启动参数"),
                 Toast.LENGTH_LONG
             ).show()
         } else {
-            Toast.makeText(context, "无法打开所选模拟器", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, I18n.t(context, "toast.open_emulator_failed", "无法打开所选模拟器"), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -788,7 +789,7 @@ class ExternalLauncher(private val context: Context) {
             val defaultAppsIntent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             runCatching { context.startActivity(defaultAppsIntent) }
-                .onFailure { Toast.makeText(context, "请在系统设置里手动选择默认桌面 App", Toast.LENGTH_LONG).show() }
+                .onFailure { Toast.makeText(context, I18n.t(context, "toast.choose_home_manually", "请在系统设置里手动选择默认桌面 App"), Toast.LENGTH_LONG).show() }
         }
     }
 

@@ -15,5 +15,5 @@ internal object GbaNativeCheatBridge {
     fun isNativeBackendAvailable(): Boolean = false
 
     fun explainStatus(): String =
-        "当前仍是 LibretroDroid 后端；My Boy! 式即时开关需要接入 native mGBA CheatManager。"
+        "Still using the LibretroDroid backend; seamless My Boy!-style toggles need a native mGBA CheatManager."
 }

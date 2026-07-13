@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import com.bond.md3elauncher.data.CoverCandidate
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.system.CoverScraper
+import com.bond.md3elauncher.i18n.I18n
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -83,12 +84,13 @@ internal fun EditItemPage(
     onFooterTextChange: (String) -> Unit = {},
     onSave: (title: String, imageUriString: String?) -> Unit
 ) {
+    val context = LocalContext.current
     var title by rememberSaveable(target.key) { mutableStateOf(target.currentTitle) }
     var selectedImageUri by rememberSaveable(target.key) { mutableStateOf<String?>(null) }
     var showScraper by rememberSaveable(target.key) { mutableStateOf(false) }
 
-    LaunchedEffect(showScraper, scraperSettings) {
-        onFooterTextChange(if (showScraper) compactSourceText(scraperSettings) else "编辑显示信息")
+    LaunchedEffect(showScraper, scraperSettings, I18n.languageFor(context)) {
+        onFooterTextChange(if (showScraper) compactSourceText(context, scraperSettings) else I18n.t(context, "edit.title", "编辑显示信息"))
     }
 
     if (showScraper) {
@@ -165,9 +167,9 @@ private fun EditInfoPage(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = "返回") }
+            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
             Text(
-                "编辑显示信息",
+                I18n.t(context, "edit.title", "编辑显示信息"),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.onSurface
@@ -182,12 +184,12 @@ private fun EditInfoPage(
                 fontWeight = FontWeight.Bold
             )
             if (previewBitmap != null) {
-                TextButton(onClick = onRemoveImage) { Text("移除封面") }
+                TextButton(onClick = onRemoveImage) { Text(I18n.t(context, "edit.remove_cover", "移除封面"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 Spacer(Modifier.width(6.dp))
             }
-            OutlinedButton(onClick = onBack) { Text("取消") }
+            OutlinedButton(onClick = onBack) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             Spacer(Modifier.width(8.dp))
-            FilledTonalButton(onClick = onSave, enabled = title.isNotBlank()) { Text("保存") }
+            FilledTonalButton(onClick = onSave, enabled = title.isNotBlank()) { Text(I18n.t(context, "common.save", "保存"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -219,15 +221,15 @@ private fun EditInfoPage(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                FilledTonalButton(onClick = onSearchCover, modifier = Modifier.fillMaxWidth()) { Text("联网搜索封面") }
-                FilledTonalButton(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("设备选择封面") }
+                FilledTonalButton(onClick = onSearchCover, modifier = Modifier.fillMaxWidth()) { Text(I18n.t(context, "edit.search_cover", "联网搜索封面"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                FilledTonalButton(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text(I18n.t(context, "edit.pick_cover", "设备选择封面"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 FilledTonalButton(
                     onClick = {
                         draftTitle = title.ifBlank { target.defaultTitle }
                         showNameDialog = true
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("编辑显示名称") }
+                ) { Text(I18n.t(context, "edit.edit_display_name", "编辑显示名称"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -235,10 +237,12 @@ private fun EditInfoPage(
                     shape = RoundedCornerShape(18.dp)
                 ) {
                     Text(
-                        "封面建议使用竖版 3:4 图片，推荐 600×800 px；PNG/JPG 都可以，过大图片会自动适配显示。",
+                        I18n.t(context, "edit.cover_hint", "封面建议使用竖版 3:4 图片，推荐 600×800 px；PNG/JPG 都可以，过大图片会自动适配显示。"),
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
@@ -256,7 +260,7 @@ private fun EditInfoPage(
 
         AlertDialog(
             onDismissRequest = { showNameDialog = false },
-            title = { Text("编辑显示名称", fontWeight = FontWeight.Bold) },
+            title = { Text(I18n.t(context, "edit.edit_display_name", "编辑显示名称"), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -266,11 +270,11 @@ private fun EditInfoPage(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                         singleLine = true,
-                        label = { Text("显示名称") },
+                        label = { Text(I18n.t(context, "edit.display_name", "显示名称"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         shape = RoundedCornerShape(18.dp)
                     )
                     Text(
-                        "名称过长会在顶部和列表中自动以 ... 省略显示。",
+                        I18n.t(context, "edit.name_length_hint", "名称过长会在顶部和列表中自动以 ... 省略显示。"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -286,7 +290,7 @@ private fun EditInfoPage(
                         }
                     },
                     enabled = draftTitle.isNotBlank()
-                ) { Text("确定") }
+                ) { Text(I18n.t(context, "edit.confirm", "确定"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             },
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -296,8 +300,8 @@ private fun EditInfoPage(
                             onRestoreName()
                             showNameDialog = false
                         }
-                    ) { Text("还原默认") }
-                    TextButton(onClick = { showNameDialog = false }) { Text("取消") }
+                    ) { Text(I18n.t(context, "common.restore_default", "还原默认"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    TextButton(onClick = { showNameDialog = false }) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         )
@@ -342,7 +346,7 @@ private fun CoverScrapePage(
             debugText = scraper.lastReport
             errorText = result.exceptionOrNull()?.message
             if (candidates.isEmpty() && errorText == null) {
-                errorText = "没有找到封面。可以换关键词，例如“星之卡比”或“Kirby and the Forgotten Land”。"
+                errorText = I18n.t(context, "edit.no_cover_found", "没有找到封面。可以换关键词，例如“星之卡比”或“Kirby and the Forgotten Land”。")
             }
             isLoading = false
         }
@@ -357,15 +361,15 @@ private fun CoverScrapePage(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = "返回") }
+            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
             Column(Modifier.weight(1f)) {
-                Text("联网搜索封面", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                Text(I18n.t(context, "edit.search_cover", "联网搜索封面"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(target.typeLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = { showSearchField = !showSearchField }) {
-                Icon(Icons.Rounded.Search, contentDescription = "搜索关键词")
+                Icon(Icons.Rounded.Search, contentDescription = I18n.t(context, "common.search", "搜索"))
             }
-            FilledTonalButton(onClick = { search() }, enabled = !isLoading) { Text(if (isLoading) "搜索中" else "搜索") }
+            FilledTonalButton(onClick = { search() }, enabled = !isLoading) { Text(if (isLoading) I18n.t(context, "common.searching", "搜索中") else I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         if (showSearchField) {
@@ -381,7 +385,7 @@ private fun CoverScrapePage(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else if (candidates.isEmpty()) {
                 Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
-                    Text(errorText ?: "没有封面候选", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(errorText ?: I18n.t(context, "edit.no_cover_candidate", "没有封面候选"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     if (!debugText.isNullOrBlank()) {
                         Spacer(Modifier.height(10.dp))
                         Text(
@@ -409,7 +413,7 @@ private fun CoverScrapePage(
                                     isLoading = true
                                     val path = withContext(Dispatchers.IO) { scraper.downloadCandidate(candidate, target.key) }
                                     isLoading = false
-                                    if (path != null) onSelected(path) else errorText = "下载封面失败"
+                                    if (path != null) onSelected(path) else errorText = I18n.t(context, "edit.download_cover_failed", "下载封面失败")
                                 }
                             }
                         )
@@ -426,6 +430,7 @@ private fun CompactSearchField(
     onValueChange: (String) -> Unit,
     onSearch: () -> Unit
 ) {
+    val context = LocalContext.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -452,7 +457,7 @@ private fun CompactSearchField(
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
                         if (value.isBlank()) {
                             Text(
-                                "输入中文名 / 英文名 / 日文罗马音",
+                                I18n.t(context, "edit.search_placeholder", "输入中文名 / 英文名 / 日文罗马音"),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -464,13 +469,13 @@ private fun CompactSearchField(
             )
             Spacer(Modifier.width(10.dp))
             FilledTonalButton(onClick = onSearch, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
-                Text("搜索")
+                Text(I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
 }
 
-private fun compactSourceText(settings: ScraperSettings): String {
+private fun compactSourceText(context: android.content.Context, settings: ScraperSettings): String {
     val sources = buildList {
         add("Libretro")
         if (settings.steamGridDbApiKey.isNotBlank()) add("SteamGridDB")
@@ -478,7 +483,7 @@ private fun compactSourceText(settings: ScraperSettings): String {
     }
     val visible = sources.take(3).joinToString(" / ")
     val suffix = if (sources.size > 3) " / ..." else ""
-    return "来源：$visible$suffix"
+    return I18n.t(context, "edit.source_prefix", "来源：{sources}", "sources" to (visible + suffix))
 }
 
 @Composable

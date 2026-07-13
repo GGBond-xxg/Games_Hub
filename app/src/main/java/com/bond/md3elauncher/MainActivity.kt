@@ -17,6 +17,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.Toast
+import com.bond.md3elauncher.i18n.I18n
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,7 +42,7 @@ import com.bond.md3elauncher.emulator.InternalEmulators
 import com.bond.md3elauncher.emulator.gba.InternalGbaActivity
 import com.bond.md3elauncher.emulator.fc.InternalFcActivity
 import com.bond.md3elauncher.ui.LauncherApp
-import com.bond.md3elauncher.ui.MD3ELauncherTheme
+import com.bond.md3elauncher.ui.GameHubTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
     private var scraperSettings by mutableStateOf(ScraperSettings())
     private var tabOrder by mutableStateOf<List<String>>(emptyList())
     private var itemOrders by mutableStateOf<Map<String, List<String>>>(emptyMap())
+    private var languageMode by mutableStateOf(I18n.LANG_SYSTEM)
     private var isDefaultHome by mutableStateOf(false)
     private var isScanning by mutableStateOf(false)
     private var showHomePrompt by mutableStateOf(false)
@@ -109,6 +111,8 @@ class MainActivity : ComponentActivity() {
         scraperSettings = store.loadScraperSettings()
         tabOrder = store.loadTabOrder()
         itemOrders = store.loadItemOrders()
+        languageMode = store.loadLanguageMode()
+        I18n.setLanguageOverride(this, languageMode)
         applyLandscapeMode(landscapeMode)
         platforms = store.loadPlatforms()
         games = store.loadGames()
@@ -121,7 +125,7 @@ class MainActivity : ComponentActivity() {
         isDefaultHome = isDefaultHomeLauncher()
 
         setContent {
-            MD3ELauncherTheme(themeMode = themeMode, useDynamicColor = useDynamicColor) {
+            GameHubTheme(themeMode = themeMode, useDynamicColor = useDynamicColor) {
                 LauncherApp(
                     platforms = platforms,
                     games = games,
@@ -137,6 +141,7 @@ class MainActivity : ComponentActivity() {
                     scraperSettings = scraperSettings,
                     tabOrder = tabOrder,
                     itemOrders = itemOrders,
+                    languageMode = languageMode,
                     isScanning = isScanning,
                     showHomePrompt = showHomePrompt,
                     onPickFolder = { platform ->
@@ -238,6 +243,11 @@ class MainActivity : ComponentActivity() {
                     onSaveItemOrder = { scope, order ->
                         store.saveItemOrder(scope, order)
                         itemOrders = store.loadItemOrders()
+                    },
+                    onSetLanguageMode = { mode ->
+                        languageMode = mode
+                        store.saveLanguageMode(mode)
+                        I18n.setLanguageOverride(this, mode)
                     },
                     isDefaultHome = isDefaultHome,
                     onExitApp = { finish() },
@@ -417,7 +427,7 @@ class MainActivity : ComponentActivity() {
                     it.copy(gameCount = scanned.size, lastScanAt = System.currentTimeMillis())
                 }
             }.onFailure { error ->
-                Toast.makeText(this@MainActivity, "扫描失败：${error.message ?: "未知错误"}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, I18n.t(this@MainActivity, "toast.scan_failed", "扫描失败：{error}", "error" to (error.message ?: I18n.t(this@MainActivity, "common.unknown_error", "未知错误"))), Toast.LENGTH_LONG).show()
             }
             isScanning = false
         }
@@ -441,7 +451,7 @@ class MainActivity : ComponentActivity() {
                 }
                 store.savePlatforms(platforms)
             }.onFailure { error ->
-                Toast.makeText(this@MainActivity, "重新扫描失败：${error.message ?: "未知错误"}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, I18n.t(this@MainActivity, "toast.rescan_failed", "重新扫描失败：{error}", "error" to (error.message ?: I18n.t(this@MainActivity, "common.unknown_error", "未知错误"))), Toast.LENGTH_LONG).show()
             }
             isScanning = false
         }

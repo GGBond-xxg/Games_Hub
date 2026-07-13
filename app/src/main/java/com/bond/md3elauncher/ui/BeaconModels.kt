@@ -1,17 +1,31 @@
 package com.bond.md3elauncher.ui
 
+import android.content.Context
 import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.InstalledApp
+import com.bond.md3elauncher.i18n.I18n
 
 internal enum class BeaconTab(val label: String) {
     NOW("★"),
-    ANDROID("安卓"),
+    ANDROID("Android"),
     NS("NS"),
     PSP("PSP"),
     GBA("GBA"),
     GB("GB"),
     NES("FC"),
-    SETTINGS("设置")
+    SETTINGS("Settings")
+}
+
+
+internal fun BeaconTab.localizedLabel(context: Context): String = when (this) {
+    BeaconTab.NOW -> "★"
+    BeaconTab.ANDROID -> I18n.t(context, "tab.android", "安卓")
+    BeaconTab.NS -> "NS"
+    BeaconTab.PSP -> "PSP"
+    BeaconTab.GBA -> "GBA"
+    BeaconTab.GB -> "GB"
+    BeaconTab.NES -> "FC"
+    BeaconTab.SETTINGS -> I18n.t(context, "tab.settings", "设置")
 }
 
 internal val emulatorTabsDefault: List<BeaconTab> = listOf(BeaconTab.PSP, BeaconTab.NS, BeaconTab.GBA, BeaconTab.GB, BeaconTab.NES)

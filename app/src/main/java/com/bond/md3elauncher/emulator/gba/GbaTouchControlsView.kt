@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 import com.bond.md3elauncher.emulator.common.CommonEmulatorUiSpec
+import com.bond.md3elauncher.i18n.I18n
 import java.io.File
 import java.util.Locale
 import kotlin.math.max
@@ -90,6 +91,22 @@ internal class GbaTouchControlsView(
     private var lastEditY = 0f
     private val customButtons = mutableListOf<CustomTouchButton>()
     private val layoutOverrides = mutableMapOf<String, RectF>()
+
+
+    private fun tr(key: String, fallback: String, vararg args: Pair<String, Any?>): String =
+        I18n.t(context, key, fallback, *args)
+
+    private fun trShort(key: String, fallback: String, maxChars: Int = 8, vararg args: Pair<String, Any?>): String =
+        I18n.short(context, key, fallback, maxChars = maxChars, *args)
+
+    private fun virtualEditorItems(): List<String> = listOf(
+        tr("emulator.virtual.item.add", "Add Custom Button"),
+        tr("emulator.virtual.item.increase", "Increase Button Size"),
+        tr("emulator.virtual.item.decrease", "Decrease Button Size"),
+        tr("emulator.virtual.item.save_return", "Save and Return to Game"),
+        tr("emulator.virtual.item.reset_layout", "Reset Layout"),
+        tr("emulator.virtual.item.cancel_return", "Cancel / Return to Game")
+    )
 
     init {
         customButtons.addAll(loadCustomButtons())
@@ -315,7 +332,7 @@ internal class GbaTouchControlsView(
     private fun exitVirtualEditor(save: Boolean) {
         if (save) {
             saveLayoutOverrides(width.toFloat(), height.toFloat())
-            activity.showToast("虚拟键布局已保存")
+            activity.showToast(tr("emulator.virtual.saved", "Virtual button layout saved"))
         } else {
             customButtons.clear()
             customButtons.addAll(loadCustomButtons())
@@ -337,10 +354,10 @@ internal class GbaTouchControlsView(
 
     private fun confirmReturnFromVirtualEditor() {
         AlertDialog.Builder(activity)
-            .setTitle("返回游戏？")
-            .setMessage("是否放弃本次未保存的虚拟键位置和大小修改，并返回游戏？")
-            .setNegativeButton("不是", null)
-            .setPositiveButton("是") { _, _ -> exitVirtualEditor(save = false) }
+            .setTitle(tr("emulator.virtual.return_title", "Return to Game?"))
+            .setMessage(tr("emulator.virtual.return_message", "Discard unsaved virtual button position/size changes and return to the game?"))
+            .setNegativeButton(tr("emulator.virtual.no", "No"), null)
+            .setPositiveButton(tr("emulator.virtual.yes", "Yes")) { _, _ -> exitVirtualEditor(save = false) }
             .show()
     }
 
@@ -504,7 +521,7 @@ internal class GbaTouchControlsView(
     }.coerceIn(0f, 1f)
 
     private fun currentCount(): Int = when (menuPage) {
-        MenuPage.MAIN -> MAIN_MENU_ITEMS.size
+        MenuPage.MAIN -> CommonEmulatorUiSpec.mainMenuItems(context).size
         MenuPage.SAVE -> MAX_STATE_SLOTS + 1
         MenuPage.LOAD -> MAX_STATE_SLOTS
         MenuPage.DELETE_SAVE -> MAX_STATE_SLOTS + 1
@@ -558,7 +575,7 @@ internal class GbaTouchControlsView(
         when (menuPage) {
             MenuPage.VIRTUAL_ALPHA -> {
                 activity.hardwareControlsAlpha = (activity.hardwareControlsAlpha + delta * 0.05f).coerceIn(0f, 1f)
-                activity.showToast("虚拟按键透明度 ${(activity.hardwareControlsAlpha * 100).roundToInt()}%")
+                activity.showToast(tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()))
             }
             MenuPage.VIRTUAL_EDITOR -> resizeSelectedEditable(delta)
             MenuPage.VIRTUAL_KEYS,
@@ -589,7 +606,7 @@ internal class GbaTouchControlsView(
                 if (file != null && file.exists() && file.length() > 0L) {
                     activity.loadSlotState(loadSlotIndex + 1, hideMenuAfterLoad = true)
                 } else {
-                    activity.showToast("存档 ${loadSlotIndex + 1} 为空")
+                    activity.showToast(tr("emulator.state.slot_empty", "Save {slot} is empty", "slot" to (loadSlotIndex + 1)))
                 }
             }
             MenuPage.DELETE_SAVE -> deleteLegacyDeleteState()
@@ -602,14 +619,14 @@ internal class GbaTouchControlsView(
                 0 -> showAddCustomButtonDialog()
                 1 -> resizeSelectedEditable(1)
                 2 -> resizeSelectedEditable(-1)
-                3 -> { saveLayoutOverrides(width.toFloat(), height.toFloat()); activity.showToast("虚拟键布局已保存") }
+                3 -> { saveLayoutOverrides(width.toFloat(), height.toFloat()); activity.showToast(tr("emulator.virtual.saved", "Virtual button layout saved")) }
                 4 -> resetVirtualKeyLayout()
                 5 -> confirmReturnFromVirtualEditor()
             }
             MenuPage.CHEATS -> {
                 val custom = activity.loadCustomCheats()
                 if (custom.isEmpty()) {
-                    activity.showToast("先在右上角添加自定义作弊码")
+                    activity.showToast(tr("emulator.cheat.add_first", "Add a custom cheat in the top-right first"))
                 } else {
                     activity.toggleCustomCheat(cheatIndex.coerceIn(0, custom.lastIndex))
                 }
@@ -623,7 +640,7 @@ internal class GbaTouchControlsView(
             MenuPage.CUSTOM_CHEAT_DELETE -> {
                 val custom = activity.loadCustomCheats()
                 if (custom.isEmpty()) {
-                    activity.showToast("没有自定义作弊码")
+                    activity.showToast(tr("emulator.cheat.none", "No custom cheats"))
                 } else {
                     activity.deleteCustomCheat(deleteCustomCheatIndex.coerceIn(0, custom.lastIndex))
                 }
@@ -711,7 +728,7 @@ internal class GbaTouchControlsView(
         if (file != null && file.exists() && file.length() > 0L) {
             activity.loadSlotState(slot, hideMenuAfterLoad = true)
         } else {
-            activity.showToast("存档 $slot 为空")
+            activity.showToast(tr("emulator.state.slot_empty", "Save {slot} is empty", "slot" to slot))
         }
     }
 
@@ -740,11 +757,11 @@ internal class GbaTouchControlsView(
                 if (file != null && file.exists() && file.length() > 0L) {
                     activity.loadSlotState(slot, hideMenuAfterLoad = true)
                 } else {
-                    activity.showToast("存档 $slot 为空")
+                    activity.showToast(tr("emulator.state.slot_empty", "Save {slot} is empty", "slot" to slot))
                 }
             }
             MenuPage.CHEATS -> {
-                activity.showToast("已取消应用重载；A 可即时开关，native 引擎开发中")
+                activity.showToast(tr("emulator.cheat.reload_cancelled", "Reload was cancelled; A toggles instantly, native engine is still in development"))
             }
             else -> Unit
         }
@@ -939,7 +956,7 @@ internal class GbaTouchControlsView(
                 val dy = y - button.rect.centerY()
                 dx * dx + dy * dy <= button.rect.width() * button.rect.width() / 4f
             } else button.rect.contains(x, y)
-        }?.let { return it.id }
+         }?.let { return it.id }
         if (rightStickOuter.contains(x, y)) return "right_stick"
         if (leftStickOuter.contains(x, y)) return "left_stick"
         if (dpadOuter.contains(x, y)) return "dpad"
@@ -967,7 +984,7 @@ internal class GbaTouchControlsView(
     }
 
     private fun resizeSelectedEditable(delta: Int) {
-        val id = selectedEditId ?: return activity.showToast("先在屏幕上选择一个虚拟键")
+        val id = selectedEditId ?: return activity.showToast(tr("emulator.virtual.select_first", "Select a virtual button on the screen first"))
         val rect = editableRect(id) ?: return
         val scale = if (delta > 0) 1.08f else 0.92f
         val cx = rect.centerX()
@@ -1051,7 +1068,7 @@ internal class GbaTouchControlsView(
         if (!editorMode) activity.settingsPrefs.edit().remove(PREF_TOUCH_LAYOUT_RECTS).apply()
         selectedEditId = null
         rebuildLayout(width.toFloat(), height.toFloat())
-        activity.showToast("已恢复默认虚拟键布局")
+        activity.showToast(tr("emulator.virtual.reset_done", "Default virtual button layout restored"))
         invalidate()
     }
 
@@ -1062,32 +1079,32 @@ internal class GbaTouchControlsView(
             setPadding((20f * dp).roundToInt(), (8f * dp).roundToInt(), (20f * dp).roundToInt(), 0)
         }
         val nameInput = EditText(activity).apply {
-            hint = "按键显示名称，例如：A+B"
+            hint = tr("emulator.virtual.add_name_hint", "Button label, for example: A+B")
             setSingleLine(true)
         }
         val styleInput = EditText(activity).apply {
-            hint = "样式：circle 或 pill"
+            hint = tr("emulator.virtual.add_style_hint", "Style: circle or pill")
             setText("circle")
             setSingleLine(true)
         }
         val methodInput = EditText(activity).apply {
-            hint = "方法：A+B / SELECT+X / 快存 / 快读 / 快进 / 退出"
+            hint = tr("emulator.virtual.add_method_hint", "Method: A+B / SELECT+X / Save / Load / Fast / Exit")
             setSingleLine(true)
         }
         layout.addView(nameInput)
         layout.addView(styleInput)
         layout.addView(methodInput)
         AlertDialog.Builder(activity)
-            .setTitle("添加自定虚拟键")
-            .setMessage("添加后会先放到屏幕中间，可在虚拟键编辑里拖动位置，左右键调整大小。")
+            .setTitle(tr("emulator.virtual.add_title", "Add Custom Virtual Button"))
+            .setMessage(tr("emulator.virtual.add_message", "After adding, the button appears in the center. Drag it in the editor and use left/right to resize."))
             .setView(layout)
-            .setNegativeButton("取消", null)
-            .setPositiveButton("添加") { _, _ ->
-                val label = nameInput.text?.toString()?.trim().orEmpty().ifBlank { "自定" }
+            .setNegativeButton(tr("common.cancel", "Cancel"), null)
+            .setPositiveButton(tr("common.add", "Add")) { _, _ ->
+                val label = nameInput.text?.toString()?.trim().orEmpty().ifBlank { tr("emulator.virtual.custom_default", "Custom") }
                 val style = styleInput.text?.toString()?.trim()?.lowercase(Locale.ROOT).orEmpty()
                 val keys = parseTouchMethod(methodInput.text?.toString().orEmpty())
                 if (keys.isEmpty()) {
-                    activity.showToast("方法无法识别")
+                    activity.showToast(tr("emulator.virtual.method_unknown", "Method not recognized"))
                 } else {
                     val id = "custom_${System.currentTimeMillis()}"
                     val isCircle = style.contains("circle") || style.contains("圆")
@@ -1096,7 +1113,7 @@ internal class GbaTouchControlsView(
                     val h = if (isCircle) 56f * resources.displayMetrics.density else 42f * resources.displayMetrics.density
                     buttons += TouchButton(id, label.take(8), keys, RectF(width / 2f - w / 2f, height / 2f - h / 2f, width / 2f + w / 2f, height / 2f + h / 2f), isCircle)
                     selectedEditId = id
-                    activity.showToast("已添加自定键：$label")
+                    activity.showToast(tr("emulator.virtual.added", "Added custom button: {name}", "name" to label))
                     invalidate()
                 }
             }
@@ -1176,10 +1193,10 @@ internal class GbaTouchControlsView(
         val bottomPillY = height - margin - smallPillH / 2f
         pillButton("start", "START", KeyEvent.KEYCODE_BUTTON_START, width / 2f + dp(62f), bottomPillY, dp(88f), smallPillH)
         pillButton("select", "SELECT", KeyEvent.KEYCODE_BUTTON_SELECT, width / 2f - dp(62f), bottomPillY, dp(92f), smallPillH)
-        pillButton("quick_save", "快存", VIRTUAL_QUICK_SAVE, margin + shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
-        pillButton("quick_load", "快读", VIRTUAL_QUICK_LOAD, width - margin - shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
-        pillButton("fast_forward", "快进", VIRTUAL_FAST_FORWARD, width - margin - shoulderW / 2f, shoulderY + (smallPillH + dp(8f)) * 2f, dp(76f), smallPillH)
-        pillButton("exit", "退出", VIRTUAL_EXIT, width / 2f, shoulderY, dp(86f), smallPillH)
+        pillButton("quick_save", trShort("emulator.short.quick_save", "Save", 4), VIRTUAL_QUICK_SAVE, margin + shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
+        pillButton("quick_load", trShort("emulator.short.quick_load", "Load", 4), VIRTUAL_QUICK_LOAD, width - margin - shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
+        pillButton("fast_forward", trShort("emulator.short.fast_forward", "Fast", 4), VIRTUAL_FAST_FORWARD, width - margin - shoulderW / 2f, shoulderY + (smallPillH + dp(8f)) * 2f, dp(76f), smallPillH)
+        pillButton("exit", trShort("emulator.short.exit", "Exit", 4), VIRTUAL_EXIT, width / 2f, shoulderY, dp(86f), smallPillH)
         customButtons.forEach { custom ->
             val w = if (custom.circle) dp(56f) else dp(82f)
             val h = if (custom.circle) dp(56f) else smallPillH
@@ -1272,12 +1289,12 @@ internal class GbaTouchControlsView(
         textPaint.textSize = 14f * dp
         textPaint.color = Color.WHITE
         val ballY = editorBallRect.centerY() - (textPaint.descent() + textPaint.ascent()) / 2f
-        canvas.drawText("编辑", editorBallRect.centerX(), ballY, textPaint)
+        canvas.drawText(trShort("emulator.virtual.editor_fab", "Edit", 4), editorBallRect.centerX(), ballY, textPaint)
 
         if (!editorPanelOpen) return
 
         val panelW = min(360f * dp, width.toFloat() - 28f * dp)
-        val desiredPanelH = 96f * dp + VIRTUAL_EDITOR_ITEMS.size * 37f * dp + 18f * dp
+        val desiredPanelH = 96f * dp + virtualEditorItems().size * 37f * dp + 18f * dp
         val panelH = min(desiredPanelH, height.toFloat() - 28f * dp)
         var left = editorBallRect.left - panelW - 10f * dp
         if (left < 14f * dp) left = editorBallRect.right + 10f * dp
@@ -1297,7 +1314,7 @@ internal class GbaTouchControlsView(
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = 16f * dp
         textPaint.color = Color.WHITE
-        canvas.drawText("虚拟键编辑", editorPanelRect.left + 16f * dp, editorPanelRect.top + 32f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.editor_title", "Virtual Button Editor"), editorPanelRect.left + 16f * dp, editorPanelRect.top + 32f * dp, textPaint)
 
         fillPaint.color = Color.argb(70, 255, 255, 255)
         strokePaint.color = Color.argb(165, 255, 255, 255)
@@ -1312,18 +1329,18 @@ internal class GbaTouchControlsView(
         textPaint.textSize = 10.5f * dp
         textPaint.typeface = Typeface.DEFAULT
         textPaint.color = Color.argb(210, 255, 255, 255)
-        val selectedName = selectedEditId ?: "未选择"
+        val selectedName = selectedEditId ?: tr("emulator.virtual.not_selected", "Not Selected")
         val selectedRect = editableRect(selectedEditId)
         val selectedSizeText = if (selectedRect != null) " · ${selectedRect.width().roundToInt()}×${selectedRect.height().roundToInt()}" else ""
-        canvas.drawText("拖动任意虚拟键；当前：$selectedName$selectedSizeText", editorPanelRect.left + 16f * dp, editorPanelRect.top + 54f * dp, textPaint)
-        canvas.drawText("可点放大/缩小，也可手柄左右调大小；点 × 收起面板。", editorPanelRect.left + 16f * dp, editorPanelRect.top + 72f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.editor_status", "Drag any virtual button. Current: {name}{size}", "name" to selectedName, "size" to selectedSizeText), editorPanelRect.left + 16f * dp, editorPanelRect.top + 54f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.editor_tip", "Tap increase/decrease, or use left/right on a controller; tap × to collapse this panel."), editorPanelRect.left + 16f * dp, editorPanelRect.top + 72f * dp, textPaint)
 
         editorPanelRows.clear()
         val rowTop = editorPanelRect.top + 88f * dp
         val available = (editorPanelRect.bottom - rowTop - 12f * dp).coerceAtLeast(1f)
         val gap = min(6f * dp, max(3f * dp, available * 0.018f))
-        val rowH = ((available - gap * (VIRTUAL_EDITOR_ITEMS.size - 1)) / VIRTUAL_EDITOR_ITEMS.size).coerceIn(30f * dp, 38f * dp)
-        VIRTUAL_EDITOR_ITEMS.forEachIndexed { index, label ->
+        val rowH = ((available - gap * (virtualEditorItems().size - 1)) / virtualEditorItems().size).coerceIn(30f * dp, 38f * dp)
+        virtualEditorItems().forEachIndexed { index, label ->
             val rect = RectF(editorPanelRect.left + 14f * dp, rowTop + index * (rowH + gap), editorPanelRect.right - 14f * dp, rowTop + index * (rowH + gap) + rowH)
             if (rect.bottom > editorPanelRect.bottom - 12f * dp) return@forEachIndexed
             editorPanelRows += MenuRow(index, rect)
@@ -1364,7 +1381,7 @@ internal class GbaTouchControlsView(
         }
 
         when (menuPage) {
-            MenuPage.MAIN -> drawList(canvas, MAIN_MENU_ITEMS, menuIndex, menuPanelRect.top + 64f * dp) { index, _ -> subtitleForMain(index) }
+            MenuPage.MAIN -> drawList(canvas, CommonEmulatorUiSpec.mainMenuItems(context), menuIndex, menuPanelRect.top + 64f * dp) { index, _ -> subtitleForMain(index) }
             MenuPage.SAVE -> drawSaveManager(canvas)
             MenuPage.LOAD -> drawSlotList(canvas, loadSlotIndex, mode = SlotListMode.LOAD)
             MenuPage.DELETE_SAVE -> drawSlotList(canvas, deleteSlotIndex, mode = SlotListMode.DELETE)
@@ -1382,40 +1399,40 @@ internal class GbaTouchControlsView(
     }
 
     private fun menuTitle(): String = when (menuPage) {
-        MenuPage.MAIN -> "内置 GBA 菜单"
-        MenuPage.SAVE -> "存档"
-        MenuPage.LOAD -> "读档"
-        MenuPage.DELETE_SAVE -> "删除存档"
-        MenuPage.VIRTUAL_KEYS -> "虚拟按键设置"
-        MenuPage.VIRTUAL_ALPHA -> "透明度设置"
-        MenuPage.VIRTUAL_EDITOR -> "虚拟键编辑"
-        MenuPage.CHEATS -> "作弊 / 金手指"
-        MenuPage.CUSTOM_CHEATS -> "自定义作弊码"
-        MenuPage.CUSTOM_CHEAT_DELETE -> "删除作弊码"
-        MenuPage.RESET_CONFIRM -> "重置游戏"
+        MenuPage.MAIN -> tr("emulator.menu.title", "Built-in {platform} Menu", "platform" to "GBA")
+        MenuPage.SAVE -> tr("emulator.menu.save", "Save States")
+        MenuPage.LOAD -> tr("emulator.menu.load", "Load State")
+        MenuPage.DELETE_SAVE -> tr("emulator.menu.delete_save", "Delete Save")
+        MenuPage.VIRTUAL_KEYS -> tr("emulator.menu.virtual_keys", "Virtual Buttons")
+        MenuPage.VIRTUAL_ALPHA -> tr("emulator.menu.transparency", "Transparency")
+        MenuPage.VIRTUAL_EDITOR -> tr("emulator.menu.virtual_editor", "Virtual Button Editor")
+        MenuPage.CHEATS -> tr("emulator.menu.cheat", "Cheats")
+        MenuPage.CUSTOM_CHEATS -> tr("emulator.menu.cheats_custom", "Custom Cheats")
+        MenuPage.CUSTOM_CHEAT_DELETE -> tr("emulator.menu.cheat_delete", "Delete Cheat")
+        MenuPage.RESET_CONFIRM -> tr("emulator.menu.reset_game", "Reset Game")
     }
 
     private fun menuHint(): String = when (menuPage) {
         MenuPage.MAIN -> CommonEmulatorUiSpec.mainMenuHint(activity)
-        MenuPage.SAVE -> CommonEmulatorUiSpec.saveMenuHint()
-        MenuPage.LOAD -> "上下选择槽位，A 读取并关闭菜单，B 返回。"
-        MenuPage.DELETE_SAVE -> "上下选择，A 删除，B 返回；可删除快捷存档。"
-        MenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeysHint()
-        MenuPage.VIRTUAL_ALPHA -> "连接手柄时虚拟按键默认透明。左右调整透明度，B 返回。"
-        MenuPage.VIRTUAL_EDITOR -> "触摸拖动按键；点放大/缩小或手柄左右调大小，保存后生效。"
+        MenuPage.SAVE -> CommonEmulatorUiSpec.saveMenuHint(context)
+        MenuPage.LOAD -> tr("emulator.hint.load", "Up/Down select a slot, A load and close menu, B back.")
+        MenuPage.DELETE_SAVE -> tr("emulator.hint.delete", "Up/Down select, A delete, B back. Quick save can also be deleted.")
+        MenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeysHint(context)
+        MenuPage.VIRTUAL_ALPHA -> tr("emulator.hint.virtual_alpha", "Controller-mode opacity. Left/right adjust, B back.")
+        MenuPage.VIRTUAL_EDITOR -> tr("emulator.hint.virtual_editor", "Drag buttons; tap increase/decrease or use left/right to resize, then save.")
         MenuPage.CHEATS -> ""
-        MenuPage.CUSTOM_CHEATS -> "A 添加/开关，B 返回；右下角删除可触屏删除。"
-        MenuPage.CUSTOM_CHEAT_DELETE -> "上下选择，A 删除，B 返回。"
-        MenuPage.RESET_CONFIRM -> CommonEmulatorUiSpec.resetHint()
+        MenuPage.CUSTOM_CHEATS -> tr("emulator.hint.custom_cheats", "A add/toggle, B back; use the delete button to remove cheats.")
+        MenuPage.CUSTOM_CHEAT_DELETE -> tr("emulator.hint.delete_cheat", "Up/Down select, A delete, B back.")
+        MenuPage.RESET_CONFIRM -> CommonEmulatorUiSpec.resetHint(context)
     }
 
     private fun subtitleForMain(index: Int): String = when (index) {
-        0 -> "统一管理存档 / 读档 / 删除，含快捷存档"
-        1 -> "透明度、位置、大小和自定义组合键"
-        2 -> "自定义金手指代码管理"
-        3 -> CommonEmulatorUiSpec.resetHint()
-        4 -> CommonEmulatorUiSpec.restartHint()
-        5 -> "退出到启动器"
+        0 -> tr("emulator.subtitle.save", "Manage saves, loads, deletes, and quick save")
+        1 -> tr("emulator.subtitle.virtual", "Opacity, position, size, and custom combo buttons")
+        2 -> tr("emulator.subtitle.cheat", "Manage custom cheat codes")
+        3 -> CommonEmulatorUiSpec.resetHint(context)
+        4 -> CommonEmulatorUiSpec.restartHint(context)
+        5 -> tr("emulator.subtitle.exit", "Exit to launcher")
         else -> ""
     }
 
@@ -1479,9 +1496,9 @@ internal class GbaTouchControlsView(
             textPaint.textSize = 10f * dp
             textPaint.color = Color.argb(175, 255, 255, 255)
             val hint = when {
-                startIndex == 0 -> "更多 ↓"
-                startIndex + visibleCount >= labels.size -> "↑ 更多"
-                else -> "↑ 更多 ↓"
+                startIndex == 0 -> tr("emulator.list.more_down", "More ↓")
+                startIndex + visibleCount >= labels.size -> tr("emulator.list.more_up", "↑ More")
+                else -> tr("emulator.list.more_both", "↑ More ↓")
             }
             canvas.drawText(hint, right - 8f * dp, menuPanelRect.bottom - 8f * dp, textPaint)
         }
@@ -1495,8 +1512,8 @@ internal class GbaTouchControlsView(
 
         val entries = (1..MAX_STATE_SLOTS).map { slot ->
             val time = activity.stateTime(activity.gameStorage?.slotStateFile(slot) ?: File("/__md3e_missing_slot_state__"))
-            "存档 $slot    $time"
-        } + listOf("快捷存档    ${activity.stateTime(activity.gameStorage?.quickStateFile ?: File("/__md3e_missing_quick_state__"))}")
+            "${tr("emulator.state.slot_label", "Save {slot}", "slot" to slot)}    $time"
+        } + listOf("${tr("emulator.state.quick_label", "Quick Save")}    ${activity.stateTime(activity.gameStorage?.quickStateFile ?: File("/__md3e_missing_quick_state__"))}")
 
         val left = menuPanelRect.left + 20f * dp
         val right = menuPanelRect.right - 20f * dp
@@ -1575,9 +1592,9 @@ internal class GbaTouchControlsView(
             textPaint.textSize = 10f * dp
             textPaint.color = Color.argb(175, 255, 255, 255)
             val hint = when {
-                startIndex == 0 -> "更多 ↓"
-                startIndex + visibleCount >= entries.size -> "↑ 更多"
-                else -> "↑ 更多 ↓"
+                startIndex == 0 -> tr("emulator.list.more_down", "More ↓")
+                startIndex + visibleCount >= entries.size -> tr("emulator.list.more_up", "↑ More")
+                else -> tr("emulator.list.more_both", "↑ More ↓")
             }
             canvas.drawText(hint, right - 8f * dp, listBottom - 4f * dp, textPaint)
         }
@@ -1595,38 +1612,38 @@ internal class GbaTouchControlsView(
         stateSaveButtonRect.set(actionLeft, actionBottom - actionH, actionLeft + actionW, actionBottom)
         stateDeleteButtonRect.set(stateSaveButtonRect.right + actionGap, actionBottom - actionH, stateSaveButtonRect.right + actionGap + actionW, actionBottom)
         stateLoadButtonRect.set(stateDeleteButtonRect.right + actionGap, actionBottom - actionH, actionRight, actionBottom)
-        drawSmallMenuButton(canvas, stateSaveButtonRect, "A 存档", enabled = true)
-        drawSmallMenuButton(canvas, stateDeleteButtonRect, "X 删除存档", enabled = hasState)
-        drawSmallMenuButton(canvas, stateLoadButtonRect, "Y 读档", enabled = hasState)
+        drawSmallMenuButton(canvas, stateSaveButtonRect, tr("emulator.state.button_save", "A Save"), enabled = true)
+        drawSmallMenuButton(canvas, stateDeleteButtonRect, tr("emulator.state.button_delete", "X Delete"), enabled = hasState)
+        drawSmallMenuButton(canvas, stateLoadButtonRect, tr("emulator.state.button_load", "Y Load"), enabled = hasState)
     }
 
     private fun drawSlotList(canvas: Canvas, selected: Int, mode: SlotListMode) {
         val dp = resources.displayMetrics.density
         val labels = when (mode) {
-            SlotListMode.DELETE -> listOf("快捷存档    ${activity.stateTime(activity.gameStorage?.quickStateFile ?: File("/__md3e_missing_quick_state__"))}") +
+            SlotListMode.DELETE -> listOf("${tr("emulator.state.quick_label", "Quick Save")}    ${activity.stateTime(activity.gameStorage?.quickStateFile ?: File("/__md3e_missing_quick_state__"))}") +
                 (1..MAX_STATE_SLOTS).map { slot ->
                     val time = activity.stateTime(activity.gameStorage?.slotStateFile(slot) ?: File("/__md3e_missing_slot_state__"))
-                    "存档 $slot    $time"
+                    "${tr("emulator.state.slot_label", "Save {slot}", "slot" to slot)}    $time"
                 }
             SlotListMode.SAVE,
             SlotListMode.LOAD -> (1..MAX_STATE_SLOTS).map { slot ->
                 val time = activity.stateTime(activity.gameStorage?.slotStateFile(slot) ?: File("/__md3e_missing_slot_state__"))
-                "存档 $slot    $time"
+                "${tr("emulator.state.slot_label", "Save {slot}", "slot" to slot)}    $time"
             }
         }
         drawList(canvas, labels, selected, menuPanelRect.top + 64f * dp) { index, _ ->
             when (mode) {
-                SlotListMode.SAVE -> "A 保存"
-                SlotListMode.LOAD -> "A 读取"
-                SlotListMode.DELETE -> if (index == 0) "A 删除快捷存档" else "A 删除存档 $index"
+                SlotListMode.SAVE -> tr("emulator.state.button_save", "A Save")
+                SlotListMode.LOAD -> tr("emulator.state.button_load", "Y Load")
+                SlotListMode.DELETE -> if (index == 0) tr("emulator.state.delete_quick", "A Delete Quick Save") else tr("emulator.state.delete_slot", "A Delete Save {slot}", "slot" to index)
             }
         }
     }
 
     private fun drawVirtualSettings(canvas: Canvas) {
         val dp = resources.displayMetrics.density
-        drawList(canvas, VIRTUAL_KEY_MENU_ITEMS, virtualSettingsIndex, menuPanelRect.top + 72f * dp) { index, _ ->
-            if (index == 0) "调整真实手柄连接时虚拟键透明度" else "拖动按键位置，左右调大小，可添加组合键"
+        drawList(canvas, CommonEmulatorUiSpec.virtualKeyMenuItems(context), virtualSettingsIndex, menuPanelRect.top + 72f * dp) { index, _ ->
+            if (index == 0) tr("emulator.virtual.subtitle.transparency", "Adjust controller-mode virtual button opacity") else tr("emulator.virtual.subtitle.editor", "Drag button positions, resize with left/right, add combo buttons")
         }
     }
 
@@ -1639,7 +1656,7 @@ internal class GbaTouchControlsView(
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = 15f * dp
         textPaint.color = Color.WHITE
-        canvas.drawText("真实手柄模式虚拟按键透明度：${(activity.hardwareControlsAlpha * 100).roundToInt()}%", left, top, textPaint)
+        canvas.drawText(tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()), left, top, textPaint)
 
         val cy = top + 42f * dp
         strokePaint.strokeWidth = 5f * dp
@@ -1655,26 +1672,26 @@ internal class GbaTouchControlsView(
         textPaint.typeface = Typeface.DEFAULT
         textPaint.textSize = 12f * dp
         textPaint.color = Color.argb(205, 255, 255, 255)
-        canvas.drawText("← 变透明    → 变明显", left, cy + 36f * dp, textPaint)
-        canvas.drawText("默认 0%，连接真实手柄后不挡屏幕；需要触屏辅助时调高。", left, cy + 58f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.alpha_left_right", "← More Transparent    → More Visible"), left, cy + 36f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.alpha_note", "Default is 0%. Raise it only if you need touch assistance while using a controller."), left, cy + 58f * dp, textPaint)
     }
 
     private fun drawVirtualEditor(canvas: Canvas) {
         val dp = resources.displayMetrics.density
-        val selectedName = selectedEditId ?: "未选择"
+        val selectedName = selectedEditId ?: tr("emulator.virtual.not_selected", "Not Selected")
         textPaint.textAlign = Paint.Align.LEFT
         textPaint.typeface = Typeface.DEFAULT
         textPaint.textSize = 10.5f * dp
         textPaint.color = Color.argb(210, 255, 255, 255)
-        canvas.drawText("当前：$selectedName；触摸拖动按键，左右键调整大小。", menuPanelRect.left + 20f * dp, menuPanelRect.top + 74f * dp, textPaint)
-        drawList(canvas, VIRTUAL_EDITOR_ITEMS, editorIndex, menuPanelRect.top + 84f * dp) { index, _ ->
+        canvas.drawText(tr("emulator.virtual.selected", "Current: {name}; drag buttons to move them, use left/right to resize.", "name" to selectedName), menuPanelRect.left + 20f * dp, menuPanelRect.top + 74f * dp, textPaint)
+        drawList(canvas, virtualEditorItems(), editorIndex, menuPanelRect.top + 84f * dp) { index, _ ->
             when (index) {
-                0 -> "填写显示名称、样式和方法，添加到屏幕中间"
-                1 -> "放大当前选中的虚拟键"
-                2 -> "缩小当前选中的虚拟键"
-                3 -> "保存当前全部虚拟键位置和大小，并返回游戏"
-                4 -> "恢复默认按键位置"
-                else -> "放弃未保存修改并返回游戏"
+                0 -> tr("emulator.virtual.editor_sub.add", "Enter a label, style, and method, then place it on the screen center")
+                1 -> tr("emulator.virtual.editor_sub.increase", "Increase the selected virtual button size")
+                2 -> tr("emulator.virtual.editor_sub.decrease", "Decrease the selected virtual button size")
+                3 -> tr("emulator.virtual.editor_sub.save", "Save all virtual button positions and sizes, then return to game")
+                4 -> tr("emulator.virtual.editor_sub.reset", "Restore default button positions")
+                else -> tr("emulator.virtual.editor_sub.cancel", "Discard unsaved changes and return to game")
             }
         }
     }
@@ -1692,7 +1709,7 @@ internal class GbaTouchControlsView(
             menuPanelRect.right - 20f * dp,
             menuPanelRect.top + 15f * dp + buttonH
         )
-        drawSmallMenuButton(canvas, cheatAddButtonRect, "自定义作弊码", enabled = true)
+        drawSmallMenuButton(canvas, cheatAddButtonRect, tr("emulator.cheat.add_custom", "Custom Cheat"), enabled = true)
 
         textPaint.textAlign = Paint.Align.LEFT
         textPaint.typeface = Typeface.DEFAULT
@@ -1700,10 +1717,10 @@ internal class GbaTouchControlsView(
         textPaint.color = Color.argb(172, 255, 255, 255)
         val noteX = menuPanelRect.left + 20f * dp
         val noteMaxW = menuPanelRect.width() - 40f * dp
-        drawFittedText(canvas, "关闭：先快存，重启后自动快读。", noteX, menuPanelRect.top + 56f * dp, noteMaxW, textPaint)
-        drawFittedText(canvas, "当前为稳定方案；无感关闭需后续 native CheatManager。", noteX, menuPanelRect.top + 72f * dp, noteMaxW, textPaint)
+        drawFittedText(canvas, tr("emulator.cheat.close_note", "Disable: quick-save first, restart, then auto quick-load."), noteX, menuPanelRect.top + 56f * dp, noteMaxW, textPaint)
+        drawFittedText(canvas, tr("emulator.cheat.stable_note", "This is the stable path; seamless disable needs a native CheatManager later."), noteX, menuPanelRect.top + 72f * dp, noteMaxW, textPaint)
         textPaint.color = Color.argb(230, 255, 230, 120)
-        drawFittedText(canvas, "提示：穿墙和闪光同时开启可能会失效，建议最好只开一个。", noteX, menuPanelRect.top + 88f * dp, noteMaxW, textPaint)
+        drawFittedText(canvas, tr("emulator.cheat.conflict_tip", "Tip: Walk-through-walls and shiny may conflict when both are enabled; use one at a time if needed."), noteX, menuPanelRect.top + 88f * dp, noteMaxW, textPaint)
 
         if (custom.isEmpty()) {
             cheatEnableButtonRect.setEmpty()
@@ -1713,16 +1730,16 @@ internal class GbaTouchControlsView(
             textPaint.typeface = Typeface.DEFAULT_BOLD
             textPaint.textSize = 15f * dp
             textPaint.color = Color.argb(220, 255, 255, 255)
-            canvas.drawText("暂无作弊码", menuPanelRect.centerX(), menuPanelRect.centerY() + 2f * dp, textPaint)
+            canvas.drawText(tr("emulator.cheat.no_cheats", "No Cheats"), menuPanelRect.centerX(), menuPanelRect.centerY() + 2f * dp, textPaint)
             textPaint.typeface = Typeface.DEFAULT
             textPaint.textSize = 12f * dp
             textPaint.color = Color.argb(175, 255, 255, 255)
-            canvas.drawText("点击右上角“自定义作弊码”添加", menuPanelRect.centerX(), menuPanelRect.centerY() + 28f * dp, textPaint)
+            canvas.drawText(tr("emulator.cheat.add_tip", "Tap Custom Cheat to add one"), menuPanelRect.centerX(), menuPanelRect.centerY() + 28f * dp, textPaint)
         } else {
-            val labels = custom.map { item -> "${item.name}：${if (item.enabled) "开" else "关"}" }
+            val labels = custom.map { item -> "${item.name}: ${if (item.enabled) tr("emulator.cheat.status_on", "On") else tr("emulator.cheat.status_off", "Off")}" }
             drawList(canvas, labels, selected, menuPanelRect.top + 100f * dp) { index, _ ->
                 val item = custom.getOrNull(index)
-                if (item == null) "" else "${item.type} · ${cheatPreview(item.code)} 作弊码"
+                if (item == null) "" else tr("emulator.cheat.type_preview", "{type} · {code} Cheat Code", "type" to item.type, "code" to cheatPreview(item.code))
             }
         }
 
@@ -1737,8 +1754,8 @@ internal class GbaTouchControlsView(
         cheatResetButtonRect.setEmpty()
         cheatDeleteButtonRect.set(cheatEnableButtonRect.right + actionGap, bottom - actionH, actionRight, bottom)
         val enabledLabel = custom.getOrNull(selected)?.enabled == true
-        drawSmallMenuButton(canvas, cheatEnableButtonRect, if (enabledLabel) "A 关闭" else "A 启用", enabled = hasSelection)
-        drawSmallMenuButton(canvas, cheatDeleteButtonRect, "X 删除", enabled = hasSelection)
+        drawSmallMenuButton(canvas, cheatEnableButtonRect, if (enabledLabel) tr("emulator.cheat.disable", "A Disable") else tr("emulator.cheat.enable", "A Enable"), enabled = hasSelection)
+        drawSmallMenuButton(canvas, cheatDeleteButtonRect, tr("emulator.cheat.delete", "X Delete"), enabled = hasSelection)
     }
 
     private fun drawSmallMenuButton(canvas: Canvas, rect: RectF, label: String, enabled: Boolean) {
@@ -1757,14 +1774,14 @@ internal class GbaTouchControlsView(
     private fun drawCustomCheatList(canvas: Canvas) {
         val dp = resources.displayMetrics.density
         val custom = activity.loadCustomCheats()
-        val labels = mutableListOf("添加作弊码")
-        custom.forEach { item -> labels += "${item.name}：${if (item.enabled) "开" else "关"}" }
+        val labels = mutableListOf(tr("emulator.cheat.add", "Add Cheat"))
+        custom.forEach { item -> labels += "${item.name}: ${if (item.enabled) tr("emulator.cheat.status_on", "On") else tr("emulator.cheat.status_off", "Off")}" }
         drawList(canvas, labels, customCheatIndex.coerceIn(0, max(0, labels.size - 1)), menuPanelRect.top + 64f * dp) { index, _ ->
             when (index) {
-                0 -> "输入名称、类型、作弊码后保存"
+                0 -> tr("emulator.cheat.add_subtitle", "Enter name, type, and code, then save")
                 else -> {
                     val item = custom.getOrNull(index - 1)
-                    if (item == null) "" else "${item.type} · ${cheatPreview(item.code)} 作弊码"
+                    if (item == null) "" else tr("emulator.cheat.type_preview", "{type} · {code} Cheat Code", "type" to item.type, "code" to cheatPreview(item.code))
                 }
             }
         }
@@ -1785,16 +1802,16 @@ internal class GbaTouchControlsView(
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = 12f * dp
         textPaint.color = Color.WHITE
-        canvas.drawText("删除", customDeleteButtonRect.centerX(), customDeleteButtonRect.centerY() - (textPaint.descent() + textPaint.ascent()) / 2f, textPaint)
+        canvas.drawText(tr("emulator.cheat.delete_short", "Delete"), customDeleteButtonRect.centerX(), customDeleteButtonRect.centerY() - (textPaint.descent() + textPaint.ascent()) / 2f, textPaint)
     }
 
     private fun drawCustomCheatDeleteList(canvas: Canvas) {
         val dp = resources.displayMetrics.density
         val custom = activity.loadCustomCheats()
-        val labels = if (custom.isEmpty()) listOf("没有自定义作弊码") else custom.map { "删除：${it.name}" }
+        val labels = if (custom.isEmpty()) listOf(tr("emulator.cheat.no_custom", "No custom cheats")) else custom.map { tr("emulator.cheat.delete_prefix", "Delete: {name}", "name" to it.name) }
         drawList(canvas, labels, deleteCustomCheatIndex.coerceIn(0, max(0, labels.size - 1)), menuPanelRect.top + 64f * dp) { index, _ ->
             val item = custom.getOrNull(index)
-            if (item == null) "先添加作弊码" else "A 删除 · ${item.type} · ${cheatPreview(item.code)}"
+            if (item == null) tr("emulator.cheat.add_first", "Add a custom cheat in the top-right first") else tr("emulator.cheat.delete_subtitle", "A Delete · {type} · {code}", "type" to item.type, "code" to cheatPreview(item.code))
         }
     }
 
@@ -1812,7 +1829,7 @@ internal class GbaTouchControlsView(
 
     private fun drawResetConfirm(canvas: Canvas) {
         val dp = resources.displayMetrics.density
-        val labels = listOf("A：确认重载游戏", "B：取消返回")
+        val labels = listOf(tr("emulator.reset.confirm", "A: Confirm reload game"), tr("emulator.reset.cancel", "B: Cancel and return"))
         drawList(canvas, labels, menuIndex.coerceIn(0, 1), menuPanelRect.top + 92f * dp) { _, _ -> "" }
     }
 

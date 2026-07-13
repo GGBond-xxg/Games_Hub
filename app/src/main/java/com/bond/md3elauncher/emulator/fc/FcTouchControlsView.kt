@@ -11,7 +11,9 @@ import android.view.MotionEvent
 import android.view.View
 import com.bond.md3elauncher.emulator.common.CommonEmulatorUiSpec
 import com.bond.md3elauncher.emulator.common.CommonTouchKeyMap
+import com.bond.md3elauncher.emulator.common.CommonTouchLabels
 import com.bond.md3elauncher.emulator.common.CommonTouchLayoutBuilder
+import com.bond.md3elauncher.i18n.I18n
 import java.io.File
 import kotlin.math.hypot
 import kotlin.math.max
@@ -73,6 +75,12 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         style = Paint.Style.FILL
     }
 
+    private fun tr(key: String, fallback: String, vararg args: Pair<String, Any?>): String =
+        I18n.t(context, key, fallback, *args)
+
+    private fun trShort(key: String, fallback: String, maxChars: Int = 8, vararg args: Pair<String, Any?>): String =
+        I18n.short(context, key, fallback, maxChars = maxChars, *args)
+
     init {
         isClickable = true
         isFocusable = false
@@ -100,6 +108,12 @@ internal class FcTouchControlsView(context: Context) : View(context) {
                 quickLoad = FC_VIRTUAL_QUICK_LOAD,
                 fastForward = FC_VIRTUAL_FAST_FORWARD,
                 exit = FC_VIRTUAL_EXIT
+            ),
+            labels = CommonTouchLabels(
+                quickSave = I18n.short(context, "emulator.short.quick_save", "Save", maxChars = 4),
+                quickLoad = I18n.short(context, "emulator.short.quick_load", "Load", maxChars = 4),
+                fastForward = I18n.short(context, "emulator.short.fast_forward", "Fast", maxChars = 4),
+                exit = I18n.short(context, "emulator.short.exit", "Exit", maxChars = 4)
             )
         )
 
@@ -409,7 +423,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     }
 
     private fun currentCount(): Int = when (menuPage) {
-        FcMenuPage.MAIN -> CommonEmulatorUiSpec.MAIN_MENU_ITEMS.size
+        FcMenuPage.MAIN -> CommonEmulatorUiSpec.mainMenuItems(context).size
         FcMenuPage.SAVE -> CommonEmulatorUiSpec.MAX_STATE_SLOTS + 1
         FcMenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.VIRTUAL_KEY_MENU_ITEMS.size
         FcMenuPage.VIRTUAL_ALPHA -> 1
@@ -451,12 +465,12 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         when (menuPage) {
             FcMenuPage.VIRTUAL_ALPHA -> {
                 activity.hardwareControlsAlpha = (activity.hardwareControlsAlpha + delta * 0.05f).coerceIn(0f, 1f)
-                activity.showToast("真实手柄透明度 ${(activity.hardwareControlsAlpha * 100).roundToInt()}%")
+                activity.showToast(tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()))
             }
             FcMenuPage.VIRTUAL_EDITOR -> {
                 if (virtualSelected == 0) {
                     activity.touchControlsAlpha = (activity.touchControlsAlpha + delta * 0.05f).coerceIn(0f, 1f)
-                    activity.showToast("触屏虚拟键透明度 ${(activity.touchControlsAlpha * 100).roundToInt()}%")
+                    activity.showToast(tr("emulator.virtual.touch_alpha_title", "Touch Virtual Button Opacity: {percent}%", "percent" to (activity.touchControlsAlpha * 100).roundToInt()))
                 } else {
                     moveSelection(delta)
                 }
@@ -484,11 +498,11 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             FcMenuPage.VIRTUAL_EDITOR -> when (virtualSelected) {
                 0 -> {
                     activity.touchControlsAlpha = (activity.touchControlsAlpha + 0.1f).let { if (it > 1f) 0.35f else it }.coerceIn(0f, 1f)
-                    activity.showToast("触屏虚拟键透明度 ${(activity.touchControlsAlpha * 100).roundToInt()}%")
+                    activity.showToast(tr("emulator.virtual.touch_alpha_title", "Touch Virtual Button Opacity: {percent}%", "percent" to (activity.touchControlsAlpha * 100).roundToInt()))
                 }
-                1 -> activity.showToast("FC/NES 虚拟键位置编辑下一步接入公共编辑器")
+                1 -> activity.showToast(tr("emulator.hint.fc_virtual_editor", "Touch opacity is available; position editing will use the common editor later."))
             }
-            FcMenuPage.CHEATS -> activity.showToast("FC/NES 内置作弊暂未接入")
+            FcMenuPage.CHEATS -> activity.showToast(tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later."))
             FcMenuPage.RESET_CONFIRM -> {
                 if (resetSelected == 0) activity.restartGameFresh() else backFromMenu()
             }
@@ -531,7 +545,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         if (file != null && file.exists() && file.length() > 0L) {
             activity.loadSlotState(slot, hideMenuAfterLoad = true)
         } else {
-            activity.showToast("存档 $slot 为空")
+            activity.showToast(tr("emulator.state.slot_empty", "Save {slot} is empty", "slot" to slot))
         }
     }
 
@@ -635,13 +649,13 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         }
 
         when (menuPage) {
-            FcMenuPage.MAIN -> drawList(canvas, CommonEmulatorUiSpec.MAIN_MENU_ITEMS, menuSelected, menuPanelRect.top + 64f * dp) { index -> subtitleForMain(index) }
+            FcMenuPage.MAIN -> drawList(canvas, CommonEmulatorUiSpec.mainMenuItems(context), menuSelected, menuPanelRect.top + 64f * dp) { index -> subtitleForMain(index) }
             FcMenuPage.SAVE -> drawSaveManager(canvas)
-            FcMenuPage.VIRTUAL_KEYS -> drawList(canvas, CommonEmulatorUiSpec.VIRTUAL_KEY_MENU_ITEMS, virtualSelected, menuPanelRect.top + 64f * dp) { index -> virtualSubtitle(index) }
+            FcMenuPage.VIRTUAL_KEYS -> drawList(canvas, CommonEmulatorUiSpec.virtualKeyMenuItems(context), virtualSelected, menuPanelRect.top + 64f * dp) { index -> virtualSubtitle(index) }
             FcMenuPage.VIRTUAL_ALPHA -> drawVirtualAlphaSettings(canvas)
             FcMenuPage.VIRTUAL_EDITOR -> drawList(canvas, virtualEditorLabels(), virtualSelected, menuPanelRect.top + 64f * dp) { index -> virtualEditorSubtitle(index) }
-            FcMenuPage.CHEATS -> drawList(canvas, listOf("FC/NES 内置作弊暂未接入"), 0, menuPanelRect.top + 76f * dp) { _ -> "目前可继续用外部模拟器的作弊功能。" }
-            FcMenuPage.RESET_CONFIRM -> drawList(canvas, listOf("确认重置", "返回"), resetSelected, menuPanelRect.top + 92f * dp) { index -> if (index == 0) "冷重载当前 ROM" else "取消重置" }
+            FcMenuPage.CHEATS -> drawList(canvas, listOf(tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later.")), 0, menuPanelRect.top + 76f * dp) { _ -> tr("emulator.hint.fc_cheats_external", "You can still use cheat features in an external emulator.") }
+            FcMenuPage.RESET_CONFIRM -> drawList(canvas, listOf(tr("emulator.reset.confirm", "A: Confirm reload game"), tr("common.back", "Back")), resetSelected, menuPanelRect.top + 92f * dp) { index -> if (index == 0) CommonEmulatorUiSpec.resetHint(context) else tr("emulator.reset.cancel", "B: Cancel and return") }
         }
         textPaint.textAlign = Paint.Align.CENTER
     }
@@ -655,9 +669,9 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         val entries = buildList {
             for (slot in 1..FC_MAX_STATE_SLOTS) {
                 val file = activity.gameStorage?.slotStateFile(slot)
-                add("存档 $slot    ${stateLabel(file)}")
+                add("${tr("emulator.state.slot_label", "Save {slot}", "slot" to slot)}    ${stateLabel(file)}")
             }
-            add("快捷存档    ${stateLabel(activity.gameStorage?.quickStateFile)}")
+            add("${tr("emulator.state.quick_label", "Quick Save")}    ${stateLabel(activity.gameStorage?.quickStateFile)}")
         }
 
         val left = menuPanelRect.left + 20f * dp
@@ -740,9 +754,9 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             textPaint.textSize = 10f * dp
             textPaint.color = Color.argb(175, 255, 255, 255)
             val hint = when {
-                startIndex == 0 -> "更多 ↓"
-                startIndex + visibleCount >= entries.size -> "↑ 更多"
-                else -> "↑ 更多 ↓"
+                startIndex == 0 -> tr("emulator.list.more_down", "More ↓")
+                startIndex + visibleCount >= entries.size -> tr("emulator.list.more_up", "↑ More")
+                else -> tr("emulator.list.more_both", "↑ More ↓")
             }
             canvas.drawText(hint, right - 8f * dp, listBottom - 4f * dp, textPaint)
         }
@@ -758,9 +772,9 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         stateSaveButtonRect.set(left, actionBottom - actionH, left + buttonW, actionBottom)
         stateLoadButtonRect.set(stateSaveButtonRect.right + actionGap, actionBottom - actionH, stateSaveButtonRect.right + actionGap + buttonW, actionBottom)
         stateDeleteButtonRect.set(stateLoadButtonRect.right + actionGap, actionBottom - actionH, right, actionBottom)
-        drawPanelButton(canvas, stateSaveButtonRect, "A 存档", true)
-        drawPanelButton(canvas, stateLoadButtonRect, "Y 读档", hasState)
-        drawPanelButton(canvas, stateDeleteButtonRect, "X 删除", hasState)
+        drawPanelButton(canvas, stateSaveButtonRect, tr("emulator.state.button_save", "A Save"), true)
+        drawPanelButton(canvas, stateLoadButtonRect, tr("emulator.state.button_load", "Y Load"), hasState)
+        drawPanelButton(canvas, stateDeleteButtonRect, tr("emulator.state.button_delete", "X Delete"), hasState)
     }
 
     private fun drawList(
@@ -830,9 +844,9 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             textPaint.textSize = 10f * dp
             textPaint.color = Color.argb(175, 255, 255, 255)
             val hint = when {
-                startIndex == 0 -> "更多 ↓"
-                startIndex + visibleCount >= labels.size -> "↑ 更多"
-                else -> "↑ 更多 ↓"
+                startIndex == 0 -> tr("emulator.list.more_down", "More ↓")
+                startIndex + visibleCount >= labels.size -> tr("emulator.list.more_up", "↑ More")
+                else -> tr("emulator.list.more_both", "↑ More ↓")
             }
             canvas.drawText(hint, right - 8f * dp, menuPanelRect.bottom - 8f * dp, textPaint)
         }
@@ -853,49 +867,49 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     }
 
     private fun menuTitle(): String = when (menuPage) {
-        FcMenuPage.MAIN -> "内置 FC/NES 菜单"
-        FcMenuPage.SAVE -> "存档"
-        FcMenuPage.VIRTUAL_KEYS -> "虚拟按键设置"
-        FcMenuPage.VIRTUAL_ALPHA -> "透明度设置"
-        FcMenuPage.VIRTUAL_EDITOR -> "虚拟键编辑"
-        FcMenuPage.CHEATS -> "作弊"
-        FcMenuPage.RESET_CONFIRM -> "重置游戏"
+        FcMenuPage.MAIN -> tr("emulator.menu.title", "Built-in {platform} Menu", "platform" to "FC/NES")
+        FcMenuPage.SAVE -> tr("emulator.menu.save", "Save States")
+        FcMenuPage.VIRTUAL_KEYS -> tr("emulator.menu.virtual_keys", "Virtual Buttons")
+        FcMenuPage.VIRTUAL_ALPHA -> tr("emulator.menu.transparency", "Transparency")
+        FcMenuPage.VIRTUAL_EDITOR -> tr("emulator.menu.virtual_editor", "Virtual Button Editor")
+        FcMenuPage.CHEATS -> tr("emulator.menu.cheat", "Cheats")
+        FcMenuPage.RESET_CONFIRM -> tr("emulator.menu.reset_game", "Reset Game")
     }
 
     private fun menuHint(): String = when (menuPage) {
         FcMenuPage.MAIN -> CommonEmulatorUiSpec.mainMenuHint(activity)
-        FcMenuPage.SAVE -> CommonEmulatorUiSpec.saveMenuHint()
-        FcMenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeysHint()
-        FcMenuPage.VIRTUAL_ALPHA -> "真实手柄模式透明度。左右调整，B 返回。"
-        FcMenuPage.VIRTUAL_EDITOR -> "触屏虚拟键透明度已接入；位置编辑下一步接公共编辑器。"
-        FcMenuPage.CHEATS -> "FC/NES 内置作弊先预留入口。"
-        FcMenuPage.RESET_CONFIRM -> CommonEmulatorUiSpec.resetHint()
+        FcMenuPage.SAVE -> CommonEmulatorUiSpec.saveMenuHint(context)
+        FcMenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeysHint(context)
+        FcMenuPage.VIRTUAL_ALPHA -> tr("emulator.hint.virtual_alpha", "Controller-mode opacity. Left/right adjust, B back.")
+        FcMenuPage.VIRTUAL_EDITOR -> tr("emulator.hint.fc_virtual_editor", "Touch opacity is available; position editing will use the common editor later.")
+        FcMenuPage.CHEATS -> tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later.")
+        FcMenuPage.RESET_CONFIRM -> CommonEmulatorUiSpec.resetHint(context)
     }
 
     private fun subtitleForMain(index: Int): String = when (index) {
-        0 -> "统一管理存档 / 读档 / 删除，含快捷存档"
-        1 -> "透明度与手柄模式隐藏虚拟键"
-        2 -> "FC/NES 金手指入口预留"
-        3 -> CommonEmulatorUiSpec.resetHint()
-        4 -> CommonEmulatorUiSpec.restartHint()
-        5 -> "退出到启动器"
+        0 -> tr("emulator.subtitle.save", "Manage saves, loads, deletes, and quick save")
+        1 -> tr("emulator.subtitle.fc_virtual", "Opacity and controller-mode virtual button hiding")
+        2 -> tr("emulator.subtitle.fc_cheat", "FC/NES cheat entry reserved")
+        3 -> CommonEmulatorUiSpec.resetHint(context)
+        4 -> CommonEmulatorUiSpec.restartHint(context)
+        5 -> tr("emulator.subtitle.exit", "Exit to launcher")
         else -> ""
     }
 
     private fun virtualSubtitle(index: Int): String = when (index) {
-        0 -> "真实手柄透明度设置：${(activity.hardwareControlsAlpha * 100).roundToInt()}%"
-        1 -> "触屏透明度与位置大小编辑"
+        0 -> tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt())
+        1 -> tr("emulator.virtual.subtitle.editor", "Drag button positions, resize with left/right, add combo buttons")
         else -> ""
     }
 
     private fun virtualEditorLabels(): List<String> = listOf(
-        "虚拟键透明度设置 ${(activity.touchControlsAlpha * 100).roundToInt()}%",
-        "虚拟键大小位置编辑"
+        tr("emulator.virtual.touch_alpha_title", "Touch Virtual Button Opacity: {percent}%", "percent" to (activity.touchControlsAlpha * 100).roundToInt()),
+        tr("emulator.menu.virtual_editor", "Virtual Button Editor")
     )
 
     private fun virtualEditorSubtitle(index: Int): String = when (index) {
-        0 -> "A 循环调整，左右微调触屏虚拟键透明度"
-        1 -> "公共编辑器预留入口，后续和 GBA 共用拖动/缩放逻辑"
+        0 -> tr("emulator.virtual.editor_sub.touch_alpha", "A cycles opacity; left/right fine-tunes touch button opacity")
+        1 -> tr("emulator.virtual.editor_sub.common_editor_pending", "Common editor entry reserved; later it will share GBA drag/resize logic")
         else -> ""
     }
 
@@ -908,7 +922,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = 15f * dp
         textPaint.color = Color.WHITE
-        canvas.drawText("真实手柄模式虚拟按键透明度：${(activity.hardwareControlsAlpha * 100).roundToInt()}%", left, top, textPaint)
+        canvas.drawText(tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()), left, top, textPaint)
 
         val cy = top + 42f * dp
         strokePaint.strokeWidth = 5f * dp
@@ -924,11 +938,11 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         textPaint.typeface = Typeface.DEFAULT
         textPaint.textSize = 12f * dp
         textPaint.color = Color.argb(205, 255, 255, 255)
-        canvas.drawText("← 变透明    → 变明显", left, cy + 36f * dp, textPaint)
-        canvas.drawText("默认 0%，连接真实手柄后不挡屏幕；需要触屏辅助时调高。", left, cy + 58f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.alpha_left_right", "← More Transparent    → More Visible"), left, cy + 36f * dp, textPaint)
+        canvas.drawText(tr("emulator.virtual.alpha_note", "Default is 0%. Raise it only if you need touch assistance while using a controller."), left, cy + 58f * dp, textPaint)
     }
 
-    private fun stateLabel(file: File?): String = if (file != null && file.exists() && file.length() > 0L) activity.stateTime(file) else "空"
+    private fun stateLabel(file: File?): String = if (file != null && file.exists() && file.length() > 0L) activity.stateTime(file) else tr("emulator.state.empty", "Empty")
 
     private fun drawCenteredText(canvas: Canvas, label: String, rect: RectF, pressed: Boolean, alpha: Float) {
         textPaint.color = if (pressed) Color.argb((255 * alpha).roundToInt(), 160, 210, 255) else alphaColor(255, alpha)
