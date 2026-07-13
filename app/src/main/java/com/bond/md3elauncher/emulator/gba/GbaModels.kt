@@ -1,6 +1,7 @@
 package com.bond.md3elauncher.emulator.gba
 
 import android.graphics.RectF
+import com.bond.md3elauncher.emulator.common.CommonEmulatorUiSpec
 import java.io.File
 
 internal enum class MenuPage { MAIN, SAVE, LOAD, DELETE_SAVE, VIRTUAL_KEYS, VIRTUAL_ALPHA, VIRTUAL_EDITOR, CHEATS, CUSTOM_CHEATS, CUSTOM_CHEAT_DELETE, RESET_CONFIRM }
@@ -58,8 +59,8 @@ internal const val VIRTUAL_QUICK_LOAD = -100006
 internal const val VIRTUAL_EXIT = -100007
 internal const val MAX_STATE_SLOTS = 5
 
-internal val MAIN_MENU_ITEMS = listOf("存档", "虚拟按键设置", "作弊", "重置", "退出游戏")
-internal val VIRTUAL_KEY_MENU_ITEMS = listOf("透明度设置", "虚拟键编辑")
+internal val MAIN_MENU_ITEMS = CommonEmulatorUiSpec.MAIN_MENU_ITEMS
+internal val VIRTUAL_KEY_MENU_ITEMS = CommonEmulatorUiSpec.VIRTUAL_KEY_MENU_ITEMS
 internal val VIRTUAL_EDITOR_ITEMS = listOf("添加自定键", "放大当前键", "缩小当前键", "保存并返回游戏", "重置布局", "取消编辑 / 返回游戏")
 
 internal const val PREF_CUSTOM_TOUCH_BUTTONS = "custom_touch_buttons"

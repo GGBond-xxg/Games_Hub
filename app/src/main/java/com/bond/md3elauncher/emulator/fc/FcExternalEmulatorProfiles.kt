@@ -1,12 +1,11 @@
 package com.bond.md3elauncher.emulator.fc
 
 /**
- * FC/NES is currently implemented as an external-emulator platform.
+ * FC/NES now has an internal FCEUmm Phase 1, while external emulator launch
+ * remains available as an alternative.
  *
- * This object keeps FC/NES specific package names, search keywords and
- * RetroArch core names out of the launcher UI code, so the platform can be
- * upgraded to an internal libretro core later without spreading constants
- * throughout the project.
+ * This object keeps FC/NES external package names, search keywords and
+ * RetroArch core names out of the launcher UI code.
  */
 object FcExternalEmulatorProfiles {
     val retroArchCoreNames: List<String> = listOf(

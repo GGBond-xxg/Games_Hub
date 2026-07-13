@@ -9,11 +9,12 @@ internal enum class BeaconTab(val label: String) {
     NS("NS"),
     PSP("PSP"),
     GBA("GBA"),
+    GB("GB"),
     NES("FC"),
     SETTINGS("设置")
 }
 
-internal val emulatorTabsDefault: List<BeaconTab> = listOf(BeaconTab.PSP, BeaconTab.NS, BeaconTab.GBA, BeaconTab.NES)
+internal val emulatorTabsDefault: List<BeaconTab> = listOf(BeaconTab.PSP, BeaconTab.NS, BeaconTab.GBA, BeaconTab.GB, BeaconTab.NES)
 
 internal val sortableTabs: List<BeaconTab> = emulatorTabsDefault + BeaconTab.ANDROID
 

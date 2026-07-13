@@ -221,6 +221,8 @@ internal fun BeaconBottomBar(
     bLabel: String,
     onSettings: () -> Unit,
     onSearch: (() -> Unit)?,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
     onLaunchSelected: (() -> Unit)?,
     centerText: String
 ) {
@@ -234,6 +236,10 @@ internal fun BeaconBottomBar(
         BottomHint("Y", "设置", onSettings)
         Spacer(Modifier.width(12.dp))
         BottomHint("X", "搜索", onSearch)
+        Spacer(Modifier.width(12.dp))
+        BottomHint("L3", "上移", onMoveUp)
+        Spacer(Modifier.width(12.dp))
+        BottomHint("R3", "下移", onMoveDown)
         Spacer(Modifier.width(12.dp))
         BottomHint("B", bLabel, onBAction)
         Spacer(Modifier.weight(1f))

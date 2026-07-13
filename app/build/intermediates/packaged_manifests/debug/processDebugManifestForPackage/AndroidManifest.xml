@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bond.md3elauncher"
-    android:versionCode="63"
-    android:versionName="0.1.63" >
+    android:versionCode="76"
+    android:versionName="0.1.76" >
 
     <uses-sdk
         android:minSdkVersion="23"
@@ -80,6 +80,16 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
 
+            <data android:mimeType="application/x-gameboy-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+
+            <data android:mimeType="application/x-gameboy-color-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+
             <data android:mimeType="application/x-nes-rom" />
         </intent>
         <intent>
@@ -129,6 +139,13 @@
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
             android:exported="false"
             android:process=":internal_gba"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.MD3ELauncher" />
+        <activity
+            android:name="com.bond.md3elauncher.emulator.fc.InternalFcActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:process=":internal_fc"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.MD3ELauncher" />
         <activity

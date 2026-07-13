@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
+import com.bond.md3elauncher.emulator.common.CommonEmulatorUiSpec
 import java.io.File
 import java.util.Locale
 import kotlin.math.max
@@ -201,9 +202,7 @@ internal class GbaTouchControlsView(
         val keyCode = event.keyCode
         val isMenuKey = keyCode == KeyEvent.KEYCODE_BUTTON_MODE ||
             keyCode == KeyEvent.KEYCODE_MENU ||
-            keyCode == KeyEvent.KEYCODE_BACK ||
-            keyCode == KeyEvent.KEYCODE_BUTTON_L2 ||
-            keyCode == KeyEvent.KEYCODE_BUTTON_THUMBL
+            keyCode == KeyEvent.KEYCODE_BACK
 
         if (event.action == KeyEvent.ACTION_DOWN) markHardwareControllerUsed()
 
@@ -236,9 +235,7 @@ internal class GbaTouchControlsView(
             KeyEvent.KEYCODE_BUTTON_X -> deleteSelectionIfAvailable()
             KeyEvent.KEYCODE_BUTTON_Y -> loadSelectionIfAvailable()
             KeyEvent.KEYCODE_BUTTON_MODE,
-            KeyEvent.KEYCODE_MENU,
-            KeyEvent.KEYCODE_BUTTON_L2,
-            KeyEvent.KEYCODE_BUTTON_THUMBL -> if (event.repeatCount == 0) hideMenu()
+            KeyEvent.KEYCODE_MENU -> if (event.repeatCount == 0) hideMenu()
             else -> return true
         }
         invalidate()
@@ -270,13 +267,17 @@ internal class GbaTouchControlsView(
                 invalidate()
             }
             KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK -> confirmReturnFromVirtualEditor()
-            KeyEvent.KEYCODE_BUTTON_MODE, KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_BUTTON_L2, KeyEvent.KEYCODE_BUTTON_THUMBL -> {
+            KeyEvent.KEYCODE_BUTTON_MODE, KeyEvent.KEYCODE_MENU -> {
                 if (event.repeatCount == 0) editorPanelOpen = !editorPanelOpen
                 invalidate()
             }
             else -> Unit
         }
         return true
+    }
+
+    fun openMenuFromShortcut() {
+        if (!menuVisible) openMenu()
     }
 
     private fun openMenu() {
@@ -579,7 +580,8 @@ internal class GbaTouchControlsView(
                 1 -> enterPage(MenuPage.VIRTUAL_KEYS)
                 2 -> enterPage(MenuPage.CHEATS)
                 3 -> enterPage(MenuPage.RESET_CONFIRM)
-                4 -> activity.exitGame()
+                4 -> activity.softRestartGameNoExit()
+                5 -> activity.exitGame()
             }
             MenuPage.SAVE -> saveSelectedState()
             MenuPage.LOAD -> {
@@ -1394,25 +1396,26 @@ internal class GbaTouchControlsView(
     }
 
     private fun menuHint(): String = when (menuPage) {
-        MenuPage.MAIN -> "上下选择，A 进入，B 返回。SELECT+X 退出。"
-        MenuPage.SAVE -> "上下选中，A 存档，Y 读档，X 删除，B 返回。"
+        MenuPage.MAIN -> CommonEmulatorUiSpec.mainMenuHint(activity)
+        MenuPage.SAVE -> CommonEmulatorUiSpec.saveMenuHint()
         MenuPage.LOAD -> "上下选择槽位，A 读取并关闭菜单，B 返回。"
         MenuPage.DELETE_SAVE -> "上下选择，A 删除，B 返回；可删除快捷存档。"
-        MenuPage.VIRTUAL_KEYS -> "A 进入设置项，B 返回。"
+        MenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeysHint()
         MenuPage.VIRTUAL_ALPHA -> "连接手柄时虚拟按键默认透明。左右调整透明度，B 返回。"
         MenuPage.VIRTUAL_EDITOR -> "触摸拖动按键；点放大/缩小或手柄左右调大小，保存后生效。"
         MenuPage.CHEATS -> ""
         MenuPage.CUSTOM_CHEATS -> "A 添加/开关，B 返回；右下角删除可触屏删除。"
         MenuPage.CUSTOM_CHEAT_DELETE -> "上下选择，A 删除，B 返回。"
-        MenuPage.RESET_CONFIRM -> "重载 ROM，不读取快捷/普通存档和游戏内 SRAM。"
+        MenuPage.RESET_CONFIRM -> CommonEmulatorUiSpec.resetHint()
     }
 
     private fun subtitleForMain(index: Int): String = when (index) {
         0 -> "统一管理存档 / 读档 / 删除，含快捷存档"
         1 -> "透明度、位置、大小和自定义组合键"
         2 -> "自定义金手指代码管理"
-        3 -> "重新开始，不读取当前存档"
-        4 -> "退出到启动器"
+        3 -> CommonEmulatorUiSpec.resetHint()
+        4 -> CommonEmulatorUiSpec.restartHint()
+        5 -> "退出到启动器"
         else -> ""
     }
 

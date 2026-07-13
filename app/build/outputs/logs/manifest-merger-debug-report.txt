@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-126:12
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-126:12
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-126:12
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-126:12
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
+INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
+INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
+INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
 MERGED from [androidx.navigationevent:navigationevent-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\9ca47a4e013b09fcdc4564a56cfcb658\transformed\navigationevent\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigationevent:navigationevent-compose-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\39d94ac69e9cc423232b5a2a210aac63\transformed\navigationevent-compose\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.compose.animation:animation-core-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\7f5846a1d670f020fabbdd3181315881\transformed\animation-core\AndroidManifest.xml:2:1-7:12
@@ -89,7 +89,7 @@ ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:10:5-79
 	android:name
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:10:22-76
 queries
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:13:5-75:15
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:13:5-83:15
 intent#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:14:9-17:18
 action#android.intent.action.MAIN
@@ -204,19 +204,23 @@ intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gamebo
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:55:9-58:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gba-rom
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:59:9-62:18
-intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-nes-rom
+intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gameboy-rom
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:63:9-66:18
-intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-nintendo-nes-rom
+intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gameboy-color-rom
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:67:9-70:18
-intent#action:name:android.intent.action.SEND+data:mimeType:application/x-nes-rom
+intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-nes-rom
 ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:71:9-74:18
+intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-nintendo-nes-rom
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:75:9-78:18
+intent#action:name:android.intent.action.SEND+data:mimeType:application/x-nes-rom
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:79:9-82:18
 action#android.intent.action.SEND
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:72:13-65
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:13-65
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:72:21-62
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:21-62
 application
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:77:5-125:19
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:77:5-125:19
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:85:5-141:19
+INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:85:5-141:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:23:5-33:19
@@ -238,73 +242,87 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\Ad
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:83:9-35
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:91:9-35
 	android:label
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:79:9-41
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:87:9-41
 	android:roundIcon
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:81:9-54
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:89:9-54
 	android:icon
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:9-43
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:88:9-43
 	android:allowBackup
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:78:9-35
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:86:9-35
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:82:9-50
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-50
 provider#androidx.core.content.FileProvider
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:85:9-93:20
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:93:9-101:20
 	android:grantUriPermissions
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:89:13-47
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:97:13-47
 	android:authorities
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:87:13-69
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:95:13-69
 	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:88:13-37
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:96:13-37
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:86:13-62
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:94:13-62
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:13-92:54
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:98:13-100:54
 	android:resource
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:92:17-51
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:100:17-51
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:91:17-67
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:99:17-67
 activity#com.bond.md3elauncher.emulator.gba.InternalGbaActivity
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:96:9-102:136
-	android:screenOrientation
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:100:13-56
-	android:process
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:99:13-44
-	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:98:13-37
-	android:configChanges
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:102:13-133
-	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:101:13-54
-	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:97:13-61
-activity#com.bond.md3elauncher.MainActivity
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:104:9-124:20
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:104:9-110:136
 	android:screenOrientation
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:108:13-56
-	android:launchMode
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:107:13-43
-	android:windowSoftInputMode
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-68
+	android:process
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:107:13-44
 	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:106:13-36
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:106:13-37
 	android:configChanges
 		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:110:13-133
+	android:theme
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-54
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:105:13-41
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:105:13-61
+activity#com.bond.md3elauncher.emulator.fc.InternalFcActivity
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:112:9-118:136
+	android:screenOrientation
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:116:13-56
+	android:process
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:115:13-43
+	android:exported
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:114:13-37
+	android:configChanges
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:118:13-133
+	android:theme
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-54
+	android:name
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:113:13-59
+activity#com.bond.md3elauncher.MainActivity
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:120:9-140:20
+	android:screenOrientation
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:124:13-56
+	android:launchMode
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:123:13-43
+	android:windowSoftInputMode
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:125:13-68
+	android:exported
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:122:13-36
+	android:configChanges
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:126:13-133
+	android:name
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:121:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:113:13-116:29
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:129:13-132:29
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.DEFAULT+category:name:android.intent.category.HOME
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:119:13-123:29
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:135:13-139:29
 category#android.intent.category.HOME
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:121:17-73
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:137:17-73
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:121:27-70
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:137:27-70
 category#android.intent.category.DEFAULT
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:122:17-76
+ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:138:17-76
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:122:27-73
+		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:138:27-73
 uses-sdk
 INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml

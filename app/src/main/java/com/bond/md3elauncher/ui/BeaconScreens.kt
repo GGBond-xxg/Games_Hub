@@ -61,6 +61,32 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private fun <T> applySavedItemOrder(
+    items: List<T>,
+    savedOrder: List<String>,
+    keyOf: (T) -> String
+): List<T> {
+    if (items.size <= 1 || savedOrder.isEmpty()) return items
+    val baseIndex = items.mapIndexed { index, item -> keyOf(item) to index }.toMap()
+    val savedIndex = savedOrder.withIndex().associate { it.value to it.index }
+    return items.sortedWith(
+        compareBy<T> { item -> savedIndex[keyOf(item)] ?: (savedOrder.size + (baseIndex[keyOf(item)] ?: 0)) }
+            .thenBy { item -> baseIndex[keyOf(item)] ?: 0 }
+    )
+}
+
+private fun reorderedKeys(keys: List<String>, selectedKey: String?, delta: Int): List<String>? {
+    if (keys.size <= 1 || selectedKey == null) return null
+    val currentIndex = keys.indexOf(selectedKey)
+    if (currentIndex < 0) return null
+    val nextIndex = currentIndex + delta
+    if (nextIndex !in keys.indices) return null
+    return keys.toMutableList().apply {
+        removeAt(currentIndex)
+        add(nextIndex, selectedKey)
+    }
+}
+
 @Composable
 internal fun FavoritesBeaconScreen(
     games: List<GameItem>,
@@ -68,6 +94,8 @@ internal fun FavoritesBeaconScreen(
     installedApps: List<InstalledApp>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
+    itemOrder: List<String>,
+    onSaveItemOrder: (List<String>) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
     onToggleSelectedChange: ((() -> Unit)?) -> Unit,
     onEditSelectedChange: ((() -> Unit)?) -> Unit,
@@ -81,8 +109,8 @@ internal fun FavoritesBeaconScreen(
 ) {
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val entries = remember(games, installedApps, favorites, query, itemOverrides) {
-        buildList {
+    val entries = remember(games, installedApps, favorites, query, itemOverrides, itemOrder) {
+        val base = buildList {
             games.filter { it.id in favorites }.forEach { game ->
                 add(
                     FavoriteEntry(
@@ -114,6 +142,7 @@ internal fun FavoritesBeaconScreen(
                     entry.typeLabel.contains(query, true)
             }
             .sortedBy { it.title.lowercase() }
+        applySavedItemOrder(base, itemOrder) { it.key }
     }
     val selected = entries.firstOrNull { it.key == selectedKey } ?: entries.firstOrNull()
     PublishFavoriteLaunchAction(selected, onLaunchSelectedChange, onLaunchGame, onLaunchAndroidApp)
@@ -126,23 +155,24 @@ internal fun FavoritesBeaconScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     fun moveFavoriteSelection(delta: Int) {
-        if (entries.isEmpty()) return
-        val currentIndex = entries.indexOfFirst { it.key == (selectedKey ?: selected?.key) }.takeIf { it >= 0 } ?: 0
-        val nextIndex = (currentIndex + delta).coerceIn(0, entries.lastIndex)
-        selectedKey = entries[nextIndex].key
-        val visibleItems = listState.layoutInfo.visibleItemsInfo
-        val firstVisible = visibleItems.firstOrNull()?.index
-        val lastVisible = visibleItems.lastOrNull()?.index
-        if (firstVisible != null && lastVisible != null && (nextIndex < firstVisible || nextIndex > lastVisible)) {
-            scope.launch { listState.scrollToItem(nextIndex) }
+        val key = selected?.key ?: return
+        val keys = entries.map { it.key }
+        val next = reorderedKeys(keys, key, delta) ?: return
+        selectedKey = key
+        onSaveItemOrder(next)
+        val nextIndex = next.indexOf(key).coerceAtLeast(0)
+        scope.launch {
+            delay(80L)
+            listState.scrollToItem(nextIndex.coerceAtLeast(0))
         }
     }
-    LaunchedEffect(entries, selected?.key) {
-        if (entries.isEmpty()) {
-            onMoveSelectionActionsChange(null, null)
-        } else {
-            onMoveSelectionActionsChange({ moveFavoriteSelection(-1) }, { moveFavoriteSelection(1) })
-        }
+    LaunchedEffect(entries, selected?.key, query) {
+        val index = entries.indexOfFirst { it.key == selected?.key }
+        val canReorder = query.isBlank() && index >= 0
+        onMoveSelectionActionsChange(
+            if (canReorder && index > 0) { { moveFavoriteSelection(-1) } } else null,
+            if (canReorder && index < entries.lastIndex) { { moveFavoriteSelection(1) } } else null
+        )
     }
 
     if (entries.isEmpty()) {
@@ -279,6 +309,8 @@ internal fun PlatformBeaconScreen(
     favorites: Set<String>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
+    itemOrder: List<String>,
+    onSaveItemOrder: (List<String>) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
     onToggleSelectedChange: ((() -> Unit)?) -> Unit,
     onEditSelectedChange: ((() -> Unit)?) -> Unit,
@@ -290,14 +322,15 @@ internal fun PlatformBeaconScreen(
     onToggleFavorite: (GameItem) -> Unit
 ) {
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
-    val visible = remember(games, query, itemOverrides) {
-        games.filter {
+    val visible = remember(games, query, itemOverrides, itemOrder) {
+        val base = games.filter {
             val displayTitle = itemTitle(itemOverrides, it.id, it.title)
             query.isBlank() ||
                 displayTitle.contains(query, true) ||
                 it.fileName.contains(query, true) ||
                 it.serial.orEmpty().contains(query, true)
         }
+        applySavedItemOrder(base, itemOrder) { it.id }
     }
     val selected = visible.firstOrNull { it.id == selectedId } ?: visible.firstOrNull()
     PublishGameLaunchAction(selected, onLaunchSelectedChange, onLaunchGame)
@@ -311,23 +344,24 @@ internal fun PlatformBeaconScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     fun moveGameSelection(delta: Int) {
-        if (visible.isEmpty()) return
-        val currentIndex = visible.indexOfFirst { it.id == (selectedId ?: selected?.id) }.takeIf { it >= 0 } ?: 0
-        val nextIndex = (currentIndex + delta).coerceIn(0, visible.lastIndex)
-        selectedId = visible[nextIndex].id
-        val visibleItems = listState.layoutInfo.visibleItemsInfo
-        val firstVisible = visibleItems.firstOrNull()?.index
-        val lastVisible = visibleItems.lastOrNull()?.index
-        if (firstVisible != null && lastVisible != null && (nextIndex < firstVisible || nextIndex > lastVisible)) {
-            scope.launch { listState.scrollToItem(nextIndex) }
+        val key = selected?.id ?: return
+        val keys = visible.map { it.id }
+        val next = reorderedKeys(keys, key, delta) ?: return
+        selectedId = key
+        onSaveItemOrder(next)
+        val nextIndex = next.indexOf(key).coerceAtLeast(0)
+        scope.launch {
+            delay(80L)
+            listState.scrollToItem(nextIndex.coerceAtLeast(0))
         }
     }
-    LaunchedEffect(visible, selected?.id) {
-        if (visible.isEmpty()) {
-            onMoveSelectionActionsChange(null, null)
-        } else {
-            onMoveSelectionActionsChange({ moveGameSelection(-1) }, { moveGameSelection(1) })
-        }
+    LaunchedEffect(visible, selected?.id, query) {
+        val index = visible.indexOfFirst { it.id == selected?.id }
+        val canReorder = query.isBlank() && index >= 0
+        onMoveSelectionActionsChange(
+            if (canReorder && index > 0) { { moveGameSelection(-1) } } else null,
+            if (canReorder && index < visible.lastIndex) { { moveGameSelection(1) } } else null
+        )
     }
 
     if (platform == null) {
@@ -403,6 +437,8 @@ internal fun AndroidBeaconScreen(
     taggedApps: Set<String>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
+    itemOrder: List<String>,
+    onSaveItemOrder: (List<String>) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
     onToggleSelectedChange: ((() -> Unit)?) -> Unit,
     onEditSelectedChange: ((() -> Unit)?) -> Unit,
@@ -415,12 +451,13 @@ internal fun AndroidBeaconScreen(
     onlyTagged: Boolean
 ) {
     var selectedPackage by rememberSaveable { mutableStateOf<String?>(null) }
-    val visible = remember(apps, query, itemOverrides) {
-        apps.filter { app ->
+    val visible = remember(apps, query, itemOverrides, itemOrder) {
+        val base = apps.filter { app ->
             val key = "app:${app.packageName}"
             val displayTitle = itemTitle(itemOverrides, key, app.label)
             query.isBlank() || displayTitle.contains(query, true) || app.packageName.contains(query, true)
         }
+        applySavedItemOrder(base, itemOrder) { "app:${it.packageName}" }
     }
     val selected = visible.firstOrNull { it.packageName == selectedPackage } ?: visible.firstOrNull()
     PublishAndroidLaunchAction(selected, onLaunchSelectedChange, onLaunchAndroidApp)
@@ -443,23 +480,25 @@ internal fun AndroidBeaconScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     fun moveAndroidSelection(delta: Int) {
-        if (visible.isEmpty()) return
-        val currentIndex = visible.indexOfFirst { it.packageName == (selectedPackage ?: selected?.packageName) }.takeIf { it >= 0 } ?: 0
-        val nextIndex = (currentIndex + delta).coerceIn(0, visible.lastIndex)
-        selectedPackage = visible[nextIndex].packageName
-        val visibleItems = listState.layoutInfo.visibleItemsInfo
-        val firstVisible = visibleItems.firstOrNull()?.index
-        val lastVisible = visibleItems.lastOrNull()?.index
-        if (firstVisible != null && lastVisible != null && (nextIndex < firstVisible || nextIndex > lastVisible)) {
-            scope.launch { listState.scrollToItem(nextIndex) }
+        val selectedApp = selected ?: return
+        val key = "app:${selectedApp.packageName}"
+        val keys = visible.map { "app:${it.packageName}" }
+        val next = reorderedKeys(keys, key, delta) ?: return
+        selectedPackage = selectedApp.packageName
+        onSaveItemOrder(next)
+        val nextIndex = next.indexOf(key).coerceAtLeast(0)
+        scope.launch {
+            delay(80L)
+            listState.scrollToItem(nextIndex.coerceAtLeast(0))
         }
     }
-    LaunchedEffect(visible, selected?.packageName) {
-        if (visible.isEmpty()) {
-            onMoveSelectionActionsChange(null, null)
-        } else {
-            onMoveSelectionActionsChange({ moveAndroidSelection(-1) }, { moveAndroidSelection(1) })
-        }
+    LaunchedEffect(visible, selected?.packageName, query) {
+        val index = visible.indexOfFirst { it.packageName == selected?.packageName }
+        val canReorder = query.isBlank() && index >= 0
+        onMoveSelectionActionsChange(
+            if (canReorder && index > 0) { { moveAndroidSelection(-1) } } else null,
+            if (canReorder && index < visible.lastIndex) { { moveAndroidSelection(1) } } else null
+        )
     }
 
     if (visible.isEmpty()) {

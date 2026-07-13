@@ -1,6 +1,8 @@
 package com.bond.md3elauncher.emulator.gba
 
 import com.bond.md3elauncher.MainActivity
+import com.bond.md3elauncher.emulator.ControllerShortcutAction
+import com.bond.md3elauncher.emulator.ControllerShortcutSettings
 import androidx.activity.ComponentActivity
 import android.app.AlertDialog
 import android.content.Context
@@ -79,6 +81,7 @@ class InternalGbaActivity : ComponentActivity() {
 
     private val hardwarePressedKeys = mutableSetOf<Int>()
     private val handledLongKeys = mutableSetOf<Int>()
+    private val firedShortcutActions = mutableSetOf<ControllerShortcutAction>()
     private val turboHandler = Handler(Looper.getMainLooper())
     private val turboTasks = mutableMapOf<Int, Runnable>()
     private val turboTargets = mutableMapOf<Int, Int>()
@@ -111,15 +114,18 @@ class InternalGbaActivity : ComponentActivity() {
         skipAutoStateRestore = intent.getBooleanExtra(EXTRA_SKIP_AUTO_STATE_RESTORE, false)
         skipSaveRamRestore = intent.getBooleanExtra(EXTRA_SKIP_SAVE_RAM_RESTORE, false)
 
-        showLoading("正在启动内置 GBA 模拟器...")
+        showLoading("正在启动内置 GBA / GB/GBC 模拟器...")
         configureWindow()
 
         val romUri = intent.getStringExtra(EXTRA_ROM_URI)?.let(Uri::parse)
         val fileName = intent.getStringExtra(EXTRA_FILE_NAME).orEmpty().ifBlank { "game.gba" }
         val title = intent.getStringExtra(EXTRA_TITLE).orEmpty().ifBlank { fileName }
+        val platformLabel = intent.getStringExtra(EXTRA_PLATFORM_LABEL).orEmpty().ifBlank {
+            if (fileName.lowercase(Locale.ROOT).endsWith(".gb") || fileName.lowercase(Locale.ROOT).endsWith(".gbc") || fileName.lowercase(Locale.ROOT).endsWith(".sgb")) "GB/GBC" else "GBA"
+        }
 
         if (romUri == null) {
-            finishWithMessage("没有收到 GBA ROM")
+            finishWithMessage("没有收到 $platformLabel ROM")
             return
         }
 
@@ -131,7 +137,7 @@ class InternalGbaActivity : ComponentActivity() {
                 finishWithMessage("读取 ROM 失败：${it.message ?: "未知错误"}")
                 return@launch
             }
-            startRetroView(romFile, title)
+            startRetroView(romFile, title, platformLabel)
         }
     }
 
@@ -181,7 +187,7 @@ class InternalGbaActivity : ComponentActivity() {
             handledLongKeys -= keyCode
         }
 
-        if (handleGlobalHardwareShortcuts(event)) {
+        if (handleConfigurableHardwareShortcut(event)) {
             return true
         }
 
@@ -189,54 +195,8 @@ class InternalGbaActivity : ComponentActivity() {
             if (consumed) return true
         }
 
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_BUTTON_THUMBR -> {
-                    if (event.repeatCount == 0) cycleFastForwardSpeed()
-                    controlsView?.markHardwareControllerUsed()
-                    return true
-                }
-                KeyEvent.KEYCODE_BUTTON_X -> {
-                    controlsView?.markHardwareControllerUsed()
-                    startTurbo(keyCode, KeyEvent.KEYCODE_BUTTON_A)
-                    return true
-                }
-                KeyEvent.KEYCODE_BUTTON_Y -> {
-                    controlsView?.markHardwareControllerUsed()
-                    startTurbo(keyCode, KeyEvent.KEYCODE_BUTTON_B)
-                    return true
-                }
-                KeyEvent.KEYCODE_BUTTON_L1 -> {
-                    controlsView?.markHardwareControllerUsed()
-                    if (event.repeatCount > 0 && handledLongKeys.add(keyCode)) {
-                        saveQuickState()
-                        return true
-                    }
-                }
-                KeyEvent.KEYCODE_BUTTON_R1 -> {
-                    controlsView?.markHardwareControllerUsed()
-                    if (event.repeatCount > 0 && handledLongKeys.add(keyCode)) {
-                        loadQuickState(hideMenuAfterLoad = false)
-                        return true
-                    }
-                }
-                KeyEvent.KEYCODE_BUTTON_START -> {
-                    controlsView?.markHardwareControllerUsed()
-                }
-                else -> Unit
-            }
-        } else if (event.action == KeyEvent.ACTION_UP) {
-            when (keyCode) {
-                KeyEvent.KEYCODE_BUTTON_X -> {
-                    stopTurbo(keyCode)
-                    return true
-                }
-                KeyEvent.KEYCODE_BUTTON_Y -> {
-                    stopTurbo(keyCode)
-                    return true
-                }
-            }
-        }
+        // 固定硬件快捷键已改为“设置 > 系统 > 手柄操作”里的通用配置。
+        // 未绑定快捷键的手柄按键继续作为正常游戏输入下发给 core。
 
         val view = retroView
         if (view != null && isGameKey(keyCode)) {
@@ -250,21 +210,84 @@ class InternalGbaActivity : ComponentActivity() {
         return super.dispatchKeyEvent(event)
     }
 
-    private fun handleGlobalHardwareShortcuts(event: KeyEvent): Boolean {
-        val keyCode = event.keyCode
-        if (event.action != KeyEvent.ACTION_DOWN) return false
-        if (controlsView?.isMenuOpen() == true) return false
 
-        val selectHeld = hardwarePressedKeys.contains(KeyEvent.KEYCODE_BUTTON_SELECT)
-        val xHeld = hardwarePressedKeys.contains(KeyEvent.KEYCODE_BUTTON_X)
-        if (selectHeld && xHeld) {
-            exitGame()
-            return true
+    private fun handleConfigurableHardwareShortcut(event: KeyEvent): Boolean {
+        val settings = ControllerShortcutSettings.load(this)
+        if (controlsView?.isMenuOpen() == true) {
+            return handleConfiguredMenuToggleShortcut(event, settings)
         }
-        return false
+
+        if (event.action == KeyEvent.ACTION_UP) {
+            val released = ControllerShortcutSettings.releasedActions(settings, hardwarePressedKeys, firedShortcutActions)
+            if (released.isEmpty()) return false
+            var consumed = false
+            released.forEach { action ->
+                firedShortcutActions -= action
+                when (action) {
+                    ControllerShortcutAction.TURBO_A -> {
+                        stopTurbo(SHORTCUT_TURBO_A_SOURCE)
+                        consumed = true
+                    }
+                    ControllerShortcutAction.TURBO_B -> {
+                        stopTurbo(SHORTCUT_TURBO_B_SOURCE)
+                        consumed = true
+                    }
+                    else -> {
+                        if (event.keyCode in settings.keysFor(action)) consumed = true
+                    }
+                }
+            }
+            return consumed
+        }
+
+        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0) return false
+        val action = ControllerShortcutSettings.findTriggeredAction(
+            settings = settings,
+            pressedKeys = hardwarePressedKeys,
+            currentKey = event.keyCode,
+            alreadyFired = firedShortcutActions
+        ) ?: return false
+
+        firedShortcutActions += action
+        controlsView?.markHardwareControllerUsed()
+        when (action) {
+            ControllerShortcutAction.QUICK_SAVE -> saveQuickState()
+            ControllerShortcutAction.QUICK_LOAD -> loadQuickState(hideMenuAfterLoad = false)
+            ControllerShortcutAction.FAST_FORWARD -> cycleFastForwardSpeed()
+            ControllerShortcutAction.OPEN_MENU -> controlsView?.openMenuFromShortcut()
+            ControllerShortcutAction.EXIT_GAME -> {
+                releaseAllGameInputs()
+                exitGame()
+            }
+            ControllerShortcutAction.TURBO_A -> startTurbo(SHORTCUT_TURBO_A_SOURCE, KeyEvent.KEYCODE_BUTTON_A)
+            ControllerShortcutAction.TURBO_B -> startTurbo(SHORTCUT_TURBO_B_SOURCE, KeyEvent.KEYCODE_BUTTON_B)
+        }
+        return true
     }
 
-    private fun startRetroView(romFile: File, title: String) {
+
+    private fun handleConfiguredMenuToggleShortcut(event: KeyEvent, settings: ControllerShortcutSettings): Boolean {
+        val menuKeys = settings.keysFor(ControllerShortcutAction.OPEN_MENU)
+        if (menuKeys.isEmpty()) return false
+
+        if (event.action == KeyEvent.ACTION_UP) {
+            if (ControllerShortcutAction.OPEN_MENU in firedShortcutActions && event.keyCode in menuKeys) {
+                firedShortcutActions -= ControllerShortcutAction.OPEN_MENU
+                return true
+            }
+            return false
+        }
+
+        if (event.action != KeyEvent.ACTION_DOWN || event.repeatCount > 0) return false
+        val shouldToggle = event.keyCode in menuKeys && menuKeys.all { it in hardwarePressedKeys }
+        if (!shouldToggle || ControllerShortcutAction.OPEN_MENU in firedShortcutActions) return false
+
+        firedShortcutActions += ControllerShortcutAction.OPEN_MENU
+        controlsView?.hideMenu()
+        return true
+    }
+
+    private fun startRetroView(romFile: File, title: String, platformLabel: String) {
         val coreFile = File(applicationInfo.nativeLibraryDir, CORE_FILE_NAME)
         if (!coreFile.exists()) {
             finishWithMessage("内置 GBA 核心不存在：${coreFile.absolutePath}")
@@ -320,7 +343,7 @@ class InternalGbaActivity : ComponentActivity() {
         configureWindow()
         view.requestFocus()
         startAutoRestoreWatcher(view, storage)
-        Toast.makeText(this, "内置 GBA：$title", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "内置 $platformLabel：$title", Toast.LENGTH_SHORT).show()
     }
 
     private fun gbaVariables(): Array<Variable> = arrayOf(
@@ -337,7 +360,7 @@ class InternalGbaActivity : ComponentActivity() {
             extractGbaFromZip(uri, dir, safeName)?.let { return it }
         }
 
-        val outFile = File(dir, safeName.ensureGbaExtension())
+        val outFile = File(dir, safeName.ensureGbaFamilyExtension())
         contentResolver.openInputStream(uri).use { input ->
             requireNotNull(input) { "无法打开 ROM 输入流" }
             FileOutputStream(outFile).use { output -> input.copyTo(output) }
@@ -356,10 +379,10 @@ class InternalGbaActivity : ComponentActivity() {
                         archiveName.substringBeforeLast('.', archiveName) + ".gba"
                     }
                     val lower = entryName.lowercase(Locale.ROOT)
-                    if (!lower.endsWith(".gba") && !lower.endsWith(".agb") && !lower.endsWith(".bin")) {
+                    if (!isSupportedGbaFamilyRomName(lower)) {
                         continue
                     }
-                    val outFile = File(dir, entryName.ensureGbaExtension())
+                    val outFile = File(dir, entryName.ensureGbaFamilyExtension())
                     FileOutputStream(outFile).use { output -> zip.copyTo(output) }
                     return outFile
                 }
@@ -584,6 +607,25 @@ class InternalGbaActivity : ComponentActivity() {
         Log.d(TAG, "skip SRAM persist reason=$reason disabled to avoid native serializeSRAM crash")
     }
 
+
+    internal fun softRestartGameNoExit() {
+        val view = retroView ?: return showToast("模拟器还没准备好")
+        stopAllTurbo()
+        controlsView?.releaseAll()
+        controlsView?.hideMenu()
+        runCatching {
+            view.queueEvent {
+                runCatching { LibretroDroid.reset() }
+                    .onFailure { Log.e(TAG, "soft reset GBA core failed", it) }
+            }
+        }.onSuccess {
+            showToast("已重启当前 GBA 游戏")
+        }.onFailure {
+            Log.e(TAG, "queue soft reset GBA failed", it)
+            showToast("重启游戏失败")
+        }
+    }
+
     internal fun restartGameFresh() {
         coldRestartGbaProcess(
             message = "正在冷重启游戏...",
@@ -660,10 +702,18 @@ class InternalGbaActivity : ComponentActivity() {
         return SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(file.lastModified()))
     }
 
-    private fun String.ensureGbaExtension(): String {
+    private fun String.ensureGbaFamilyExtension(): String {
         val lower = lowercase(Locale.ROOT)
-        return if (lower.endsWith(".gba") || lower.endsWith(".agb") || lower.endsWith(".bin")) this else "${this}.gba"
+        return if (isSupportedGbaFamilyRomName(lower)) this else "${this}.gba"
     }
+
+    private fun isSupportedGbaFamilyRomName(lowerName: String): Boolean =
+        lowerName.endsWith(".gba") ||
+            lowerName.endsWith(".agb") ||
+            lowerName.endsWith(".gb") ||
+            lowerName.endsWith(".gbc") ||
+            lowerName.endsWith(".sgb") ||
+            lowerName.endsWith(".bin")
 
     private fun sanitizeFileName(value: String): String =
         value.map { ch -> if (ch.isLetterOrDigit() || ch in listOf('.', '_', '-', ' ', '(', ')', '[', ']')) ch else '_' }
@@ -1325,6 +1375,7 @@ class InternalGbaActivity : ComponentActivity() {
         const val EXTRA_ROM_URI = "rom_uri"
         const val EXTRA_FILE_NAME = "file_name"
         const val EXTRA_TITLE = "title"
+        const val EXTRA_PLATFORM_LABEL = "platform_label"
         private const val EXTRA_SKIP_AUTO_STATE_RESTORE = "skip_auto_state_restore"
         private const val EXTRA_SKIP_SAVE_RAM_RESTORE = "skip_save_ram_restore"
         private const val EXTRA_CHEAT_RELOAD_STATE = "cheat_reload_state"
@@ -1349,6 +1400,8 @@ class InternalGbaActivity : ComponentActivity() {
         private const val DEFAULT_HARDWARE_CONTROLS_ALPHA = 0.0f
         private const val MAX_STATE_SLOTS = 5
         private const val TURBO_INTERVAL_MS = 70L
+        private const val SHORTCUT_TURBO_A_SOURCE = -310001
+        private const val SHORTCUT_TURBO_B_SOURCE = -310002
         private const val CHEAT_WALK_THROUGH_WALLS = "cheat_walk_through_walls"
         private const val CHEAT_INF_MONEY = "cheat_inf_money"
         private const val CHEAT_MASTER_BALL_PC = "cheat_master_ball_pc"
@@ -1356,7 +1409,7 @@ class InternalGbaActivity : ComponentActivity() {
         private const val CHEAT_INF_PP = "cheat_inf_pp"
         private const val CHEAT_EXP_BOOST = "cheat_exp_boost"
         private const val LEAF_GREEN_V10_MASTER_CODE = "0000BE99+000A+1003DAE6+0007"
-        private val MAIN_MENU_ITEMS = listOf("存档", "虚拟按键设置", "作弊", "重置", "退出游戏")
+        private val MAIN_MENU_ITEMS = listOf("存档", "虚拟按键设置", "作弊", "重置", "重启游戏", "退出游戏")
         private val VIRTUAL_KEY_MENU_ITEMS = listOf("透明度设置", "虚拟键编辑")
         private val VIRTUAL_EDITOR_ITEMS = listOf("添加自定键", "放大当前键", "缩小当前键", "保存并返回游戏", "重置布局", "取消编辑 / 返回游戏")
         private val CHEAT_ITEMS = emptyList<CheatItem>()

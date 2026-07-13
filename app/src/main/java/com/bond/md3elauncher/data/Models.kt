@@ -20,9 +20,14 @@ enum class PlatformKind(
         subtitle = "内置 GBA / My Boy! / Pizza Boy / RetroArch",
         extensions = setOf("gba", "zip", "7z")
     ),
+    GB(
+        title = "GB/GBC",
+        subtitle = "内置 GB/GBC / My OldBoy! / RetroArch",
+        extensions = setOf("gb", "gbc", "sgb", "zip", "7z")
+    ),
     NES(
         title = "FC/NES",
-        subtitle = "Nes.emu / Nostalgia.NES / John NESS / RetroArch",
+        subtitle = "内置 FC/NES / Nes.emu / Nostalgia.NES / RetroArch",
         extensions = setOf("nes", "fds", "unf", "unif", "zip", "7z")
     );
 }

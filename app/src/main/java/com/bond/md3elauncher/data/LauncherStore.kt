@@ -236,11 +236,50 @@ class LauncherStore(context: Context) {
     }
 
     fun saveTabOrder(order: List<String>) {
-        val allowed = setOf("NS", "PSP", "GBA", "NES", "ANDROID")
+        val allowed = setOf("NS", "PSP", "GBA", "GB", "NES", "ANDROID")
         val clean = (order.filter { it in allowed } + defaultTabOrder()).distinct()
         val arr = JSONArray()
         clean.forEach { arr.put(it) }
         prefs.edit().putString(KEY_TAB_ORDER, arr.toString()).apply()
+    }
+
+    fun loadItemOrders(): Map<String, List<String>> {
+        val raw = prefs.getString(KEY_ITEM_ORDERS, null) ?: return emptyMap()
+        return runCatching {
+            val obj = JSONObject(raw)
+            buildMap {
+                val keys = obj.keys()
+                while (keys.hasNext()) {
+                    val scope = keys.next()
+                    val arr = obj.optJSONArray(scope) ?: continue
+                    val order = buildList {
+                        for (i in 0 until arr.length()) {
+                            val value = arr.optString(i).takeIf { it.isNotBlank() }
+                            if (value != null) add(value)
+                        }
+                    }.distinct()
+                    if (order.isNotEmpty()) put(scope, order)
+                }
+            }
+        }.getOrElse { emptyMap() }
+    }
+
+    fun saveItemOrder(scope: String, order: List<String>) {
+        val cleanScope = scope.trim().takeIf { it.isNotBlank() } ?: return
+        val cleanOrder = order.mapNotNull { value -> value.trim().takeIf { it.isNotBlank() } }.distinct()
+        val next = loadItemOrders().toMutableMap()
+        if (cleanOrder.isEmpty()) {
+            next.remove(cleanScope)
+        } else {
+            next[cleanScope] = cleanOrder
+        }
+        val obj = JSONObject()
+        next.forEach { (key, values) ->
+            val arr = JSONArray()
+            values.forEach { arr.put(it) }
+            obj.put(key, arr)
+        }
+        prefs.edit().putString(KEY_ITEM_ORDERS, obj.toString()).apply()
     }
 
     fun loadScraperSettings(): ScraperSettings = ScraperSettings(
@@ -265,6 +304,7 @@ class LauncherStore(context: Context) {
         PlatformConfig(id = PlatformKind.PSP.name, kind = PlatformKind.PSP),
         PlatformConfig(id = PlatformKind.SWITCH.name, kind = PlatformKind.SWITCH),
         PlatformConfig(id = PlatformKind.GBA.name, kind = PlatformKind.GBA),
+        PlatformConfig(id = PlatformKind.GB.name, kind = PlatformKind.GB),
         PlatformConfig(id = PlatformKind.NES.name, kind = PlatformKind.NES)
     )
 
@@ -273,7 +313,7 @@ class LauncherStore(context: Context) {
         return platforms + defaultPlatforms().filter { it.id !in existingIds }
     }
 
-    private fun defaultTabOrder(): List<String> = listOf("PSP", "NS", "GBA", "NES", "ANDROID")
+    private fun defaultTabOrder(): List<String> = listOf("PSP", "NS", "GBA", "GB", "NES", "ANDROID")
 
     private fun JSONObject.optStringOrNull(key: String): String? =
         if (has(key) && !isNull(key)) optString(key).takeIf { it.isNotBlank() } else null
@@ -297,6 +337,7 @@ class LauncherStore(context: Context) {
         private const val KEY_SAFE_MARGIN_LEFT = "safe_margin_left"
         private const val KEY_SAFE_MARGIN_RIGHT = "safe_margin_right"
         private const val KEY_TAB_ORDER = "tab_order"
+        private const val KEY_ITEM_ORDERS = "item_orders"
         private const val KEY_SCRAPER_LIBRETRO = "scraper_libretro"
         private const val KEY_SCRAPER_TGDB = "scraper_tgdb_key"
         private const val KEY_SCRAPER_STEAMGRID = "scraper_steamgrid_key"

@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.ui
 
+import android.view.KeyEvent as AndroidKeyEvent
 import android.view.ViewConfiguration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -31,6 +32,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.nativeKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
@@ -61,6 +63,7 @@ fun LauncherApp(
     safeMargins: SafeMarginSettings,
     scraperSettings: ScraperSettings,
     tabOrder: List<String>,
+    itemOrders: Map<String, List<String>>,
     isScanning: Boolean,
     showHomePrompt: Boolean,
     onPickFolder: (PlatformConfig) -> Unit,
@@ -82,6 +85,7 @@ fun LauncherApp(
     onSetSafeMargins: (SafeMarginSettings) -> Unit,
     onSaveScraperSettings: (ScraperSettings) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit,
+    onSaveItemOrder: (scope: String, order: List<String>) -> Unit,
     isDefaultHome: Boolean,
     onExitApp: () -> Unit,
     onDismissHomePrompt: () -> Unit
@@ -102,12 +106,14 @@ fun LauncherApp(
     var moveSelectionDown by remember { mutableStateOf<(() -> Unit)?>(null) }
     var editTarget by remember { mutableStateOf<EditTarget?>(null) }
     var editCenterText by remember { mutableStateOf("编辑显示信息") }
+    var controllerShortcutCaptureHandler by remember { mutableStateOf<((AndroidKeyEvent) -> Boolean)?>(null) }
     val visibleTabs = remember(games, tabOrder, tab) {
         val orderedMiddle = normalizedTabOrder(tabOrder).filter { candidate ->
             when (candidate) {
                 BeaconTab.NS -> games.any { it.platformId == PlatformKind.SWITCH.name } || tab == BeaconTab.NS
                 BeaconTab.PSP -> games.any { it.platformId == PlatformKind.PSP.name } || tab == BeaconTab.PSP
                 BeaconTab.GBA -> games.any { it.platformId == PlatformKind.GBA.name } || tab == BeaconTab.GBA
+                BeaconTab.GB -> games.any { it.platformId == PlatformKind.GB.name } || tab == BeaconTab.GB
                 BeaconTab.NES -> games.any { it.platformId == PlatformKind.NES.name } || tab == BeaconTab.NES
                 BeaconTab.ANDROID -> true
                 else -> false
@@ -142,6 +148,10 @@ fun LauncherApp(
         key == Key.X ||
         key == Key.ButtonB ||
         key == Key.B
+
+    fun isMoveOrderKey(nativeEvent: AndroidKeyEvent): Boolean =
+        nativeEvent.keyCode == AndroidKeyEvent.KEYCODE_BUTTON_THUMBL ||
+            nativeEvent.keyCode == AndroidKeyEvent.KEYCODE_BUTTON_THUMBR
 
     fun startPrimaryPress(): Boolean {
         if (aLongPressJob == null && !aLongPressFired) {
@@ -187,6 +197,10 @@ fun LauncherApp(
             }
             BeaconTab.GBA -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.GBA.name }
+                if (first != null && first.id in favorites) "取消收藏" else "收藏"
+            }
+            BeaconTab.GB -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.GB.name }
                 if (first != null && first.id in favorites) "取消收藏" else "收藏"
             }
             BeaconTab.NES -> {
@@ -315,23 +329,29 @@ fun LauncherApp(
             .fillMaxSize()
             .background(colors.surface)
             .onPreviewKeyEvent { event ->
+                controllerShortcutCaptureHandler?.let { handler ->
+                    return@onPreviewKeyEvent handler(event.nativeKeyEvent)
+                }
                 if (showSearchDialog) return@onPreviewKeyEvent false
                 val selectionPage = !isBackPage
                 when (event.type) {
                     KeyEventType.KeyDown -> when {
-                        selectionPage && event.key == Key.DirectionUp -> {
-                            moveSelectionUp?.invoke()
-                            moveSelectionUp != null
-                        }
-                        selectionPage && event.key == Key.DirectionDown -> {
-                            moveSelectionDown?.invoke()
-                            moveSelectionDown != null
-                        }
+                        selectionPage && isMoveOrderKey(event.nativeKeyEvent) -> true
                         selectionPage && isPrimaryKey(event.key) -> startPrimaryPress()
                         isShortcutKey(event.key) -> true
                         else -> false
                     }
                     KeyEventType.KeyUp -> when {
+                        selectionPage && event.nativeKeyEvent.keyCode == AndroidKeyEvent.KEYCODE_BUTTON_THUMBL -> {
+                            cancelPrimaryPress()
+                            moveSelectionUp?.invoke()
+                            moveSelectionUp != null
+                        }
+                        selectionPage && event.nativeKeyEvent.keyCode == AndroidKeyEvent.KEYCODE_BUTTON_THUMBR -> {
+                            cancelPrimaryPress()
+                            moveSelectionDown?.invoke()
+                            moveSelectionDown != null
+                        }
                         selectionPage && isPrimaryKey(event.key) -> finishPrimaryPress()
                         event.key == Key.ButtonB || event.key == Key.B -> {
                             cancelPrimaryPress()
@@ -408,6 +428,8 @@ fun LauncherApp(
                             taggedApps = androidGames,
                             itemOverrides = itemOverrides,
                             query = searchQuery,
+                            itemOrder = itemOrders["android_all"].orEmpty(),
+                            onSaveItemOrder = { order -> onSaveItemOrder("android_all", order) },
                             onLaunchSelectedChange = { launchSelected = it },
                             onToggleSelectedChange = { bottomBSelected = it },
                             onEditSelectedChange = { editSelected = it },
@@ -427,6 +449,8 @@ fun LauncherApp(
                                 installedApps = installedApps,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                itemOrder = itemOrders["favorites"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("favorites", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -445,6 +469,8 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                itemOrder = itemOrders["platform:${PlatformKind.SWITCH.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.SWITCH.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -462,6 +488,8 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                itemOrder = itemOrders["platform:${PlatformKind.PSP.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.PSP.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -479,6 +507,27 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                itemOrder = itemOrders["platform:${PlatformKind.GBA.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.GBA.name}", order) },
+                                onLaunchSelectedChange = { launchSelected = it },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
+                            BeaconTab.GB -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.GB },
+                                games = games.filter { it.platformId == PlatformKind.GB.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                itemOrder = itemOrders["platform:${PlatformKind.GB.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.GB.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -496,6 +545,8 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                itemOrder = itemOrders["platform:${PlatformKind.NES.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.NES.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -513,6 +564,8 @@ fun LauncherApp(
                                 taggedApps = androidGames,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                itemOrder = itemOrders["android_games"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("android_games", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -560,7 +613,8 @@ fun LauncherApp(
                                 onSetSafeMargins = onSetSafeMargins,
                                 onSaveScraperSettings = onSaveScraperSettings,
                                 onSaveTabOrder = onSaveTabOrder,
-                                onLaunchSelectedChange = { launchSelected = it }
+                                onLaunchSelectedChange = { launchSelected = it },
+                                onControllerShortcutCaptureHandlerChange = { controllerShortcutCaptureHandler = it }
                             )
                         }
                     }
@@ -583,6 +637,8 @@ fun LauncherApp(
                         }
                     },
                     onSearch = bottomSearchAction,
+                    onMoveUp = if (!isBackPage) moveSelectionUp else null,
+                    onMoveDown = if (!isBackPage) moveSelectionDown else null,
                     onLaunchSelected = if (editTarget == null && appPickerPlatform == null) launchSelected else null,
                     centerText = if (editTarget != null) {
                         editCenterText
@@ -595,6 +651,7 @@ fun LauncherApp(
                             BeaconTab.ANDROID -> "安卓游戏"
                             BeaconTab.PSP -> "PSP 游戏"
                             BeaconTab.GBA -> "GBA 游戏"
+                            BeaconTab.GB -> "GB/GBC 游戏"
                             BeaconTab.NES -> "FC 游戏"
                             BeaconTab.SETTINGS -> "设置"
                         }
@@ -614,6 +671,7 @@ fun LauncherApp(
                 tab == BeaconTab.ANDROID -> "搜索安卓游戏"
                 tab == BeaconTab.PSP -> "搜索 PSP 游戏"
                 tab == BeaconTab.GBA -> "搜索 GBA 游戏"
+                tab == BeaconTab.GB -> "搜索 GB/GBC 游戏"
                 tab == BeaconTab.NES -> "搜索 FC/NES 游戏"
                 tab == BeaconTab.SETTINGS -> "搜索设置"
                 else -> "搜索"

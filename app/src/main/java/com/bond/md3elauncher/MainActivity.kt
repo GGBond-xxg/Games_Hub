@@ -39,6 +39,7 @@ import com.bond.md3elauncher.system.AndroidAppRepository
 import com.bond.md3elauncher.system.ExternalLauncher
 import com.bond.md3elauncher.emulator.InternalEmulators
 import com.bond.md3elauncher.emulator.gba.InternalGbaActivity
+import com.bond.md3elauncher.emulator.fc.InternalFcActivity
 import com.bond.md3elauncher.ui.LauncherApp
 import com.bond.md3elauncher.ui.MD3ELauncherTheme
 import kotlinx.coroutines.Dispatchers
@@ -67,12 +68,14 @@ class MainActivity : ComponentActivity() {
     private var safeMargins by mutableStateOf(SafeMarginSettings())
     private var scraperSettings by mutableStateOf(ScraperSettings())
     private var tabOrder by mutableStateOf<List<String>>(emptyList())
+    private var itemOrders by mutableStateOf<Map<String, List<String>>>(emptyMap())
     private var isDefaultHome by mutableStateOf(false)
     private var isScanning by mutableStateOf(false)
     private var showHomePrompt by mutableStateOf(false)
     private var pendingFolderPlatformId: String? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lastGbaRelayRequestId: Long = -1L
+    private var lastFcRelayRequestId: Long = -1L
 
     private val folderPicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
         val platformId = pendingFolderPlatformId ?: return@registerForActivityResult
@@ -105,6 +108,7 @@ class MainActivity : ComponentActivity() {
         safeMargins = store.loadSafeMargins()
         scraperSettings = store.loadScraperSettings()
         tabOrder = store.loadTabOrder()
+        itemOrders = store.loadItemOrders()
         applyLandscapeMode(landscapeMode)
         platforms = store.loadPlatforms()
         games = store.loadGames()
@@ -132,6 +136,7 @@ class MainActivity : ComponentActivity() {
                     safeMargins = safeMargins,
                     scraperSettings = scraperSettings,
                     tabOrder = tabOrder,
+                    itemOrders = itemOrders,
                     isScanning = isScanning,
                     showHomePrompt = showHomePrompt,
                     onPickFolder = { platform ->
@@ -149,23 +154,36 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     onUseInternalEmulator = { platform ->
-                        if (platform.kind == PlatformKind.GBA) {
-                            updatePlatform(platform.id) {
+                        when (platform.kind) {
+                            PlatformKind.GBA -> updatePlatform(platform.id) {
                                 it.copy(
                                     emulatorPackage = InternalEmulators.GBA_PACKAGE,
                                     emulatorName = InternalEmulators.GBA_NAME
                                 )
                             }
+                            PlatformKind.GB -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.GB_PACKAGE,
+                                    emulatorName = InternalEmulators.GB_NAME
+                                )
+                            }
+                            PlatformKind.NES -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.FC_PACKAGE,
+                                    emulatorName = InternalEmulators.FC_NAME
+                                )
+                            }
+                            else -> Unit
                         }
                     },
                     onScanPlatform = { platform -> scanPlatform(platform) },
                     onRescanAll = { scanAllPlatforms() },
                     onLaunchGame = { game ->
                         platforms.firstOrNull { it.id == game.platformId }?.let { platform ->
-                            if (InternalEmulators.usesInternalGba(platform)) {
-                                launchInternalGba(game)
-                            } else {
-                                externalLauncher.launchGame(game, platform)
+                            when {
+                                InternalEmulators.usesInternalGbaCore(platform) -> launchInternalGba(game, platform.kind)
+                                InternalEmulators.usesInternalFc(platform) -> launchInternalFc(game)
+                                else -> externalLauncher.launchGame(game, platform)
                             }
                             store.pushRecent(game.id)
                             recent = store.loadRecent()
@@ -217,6 +235,10 @@ class MainActivity : ComponentActivity() {
                         tabOrder = order
                         store.saveTabOrder(order)
                     },
+                    onSaveItemOrder = { scope, order ->
+                        store.saveItemOrder(scope, order)
+                        itemOrders = store.loadItemOrders()
+                    },
                     isDefaultHome = isDefaultHome,
                     onExitApp = { finish() },
                     onDismissHomePrompt = {
@@ -228,6 +250,7 @@ class MainActivity : ComponentActivity() {
         }
 
         handleGbaColdRestartRelay(intent)
+        handleFcColdRestartRelay(intent)
     }
 
     private fun applyApplicationNightMode(mode: ThemeMode) {
@@ -247,6 +270,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleGbaColdRestartRelay(intent)
+        handleFcColdRestartRelay(intent)
     }
 
     private fun handleGbaColdRestartRelay(source: Intent?) {
@@ -270,11 +294,42 @@ class MainActivity : ComponentActivity() {
         }, 900L)
     }
 
-    private fun launchInternalGba(game: GameItem) {
+
+    private fun handleFcColdRestartRelay(source: Intent?) {
+        if (source?.action != ACTION_FC_COLD_RESTART_RELAY) return
+        val requestId = source.getLongExtra(EXTRA_FC_RELAY_REQUEST_ID, System.currentTimeMillis())
+        if (requestId == lastFcRelayRequestId) return
+        lastFcRelayRequestId = requestId
+
+        val launch = Intent(this, InternalFcActivity::class.java).apply {
+            putExtras(source)
+            action = null
+            addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        }
+        mainHandler.postDelayed({
+            if (!isFinishing && !isDestroyed) {
+                startActivity(launch)
+                overridePendingTransition(0, 0)
+            }
+        }, 900L)
+    }
+
+    private fun launchInternalGba(game: GameItem, platformKind: PlatformKind = PlatformKind.GBA) {
+        val platformLabel = if (platformKind == PlatformKind.GB) "GB/GBC" else "GBA"
         val intent = Intent(this, InternalGbaActivity::class.java).apply {
             putExtra(InternalGbaActivity.EXTRA_ROM_URI, game.uri)
             putExtra(InternalGbaActivity.EXTRA_FILE_NAME, game.fileName)
             putExtra(InternalGbaActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalGbaActivity.EXTRA_PLATFORM_LABEL, platformLabel)
+        }
+        startActivity(intent)
+    }
+
+    private fun launchInternalFc(game: GameItem) {
+        val intent = Intent(this, InternalFcActivity::class.java).apply {
+            putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
+            putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
+            putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
         }
         startActivity(intent)
     }
@@ -450,6 +505,8 @@ class MainActivity : ComponentActivity() {
     companion object {
         const val ACTION_GBA_COLD_RESTART_RELAY = "com.bond.md3elauncher.action.GBA_COLD_RESTART_RELAY"
         const val EXTRA_GBA_RELAY_REQUEST_ID = "gba_relay_request_id"
+        const val ACTION_FC_COLD_RESTART_RELAY = "com.bond.md3elauncher.action.FC_COLD_RESTART_RELAY"
+        const val EXTRA_FC_RELAY_REQUEST_ID = "fc_relay_request_id"
     }
 
 }

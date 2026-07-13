@@ -41,12 +41,12 @@ class ExternalLauncher(private val context: Context) {
             platform.kind == PlatformKind.GBA && emulatorPackage.isMyBoyPackage() -> launchGbaWithMyBoy(game, emulatorPackage)
             emulatorPackage.isRetroArchPackage() -> launchWithRetroArch(game, platform.kind, emulatorPackage)
             platform.kind == PlatformKind.PSP && emulatorPackage.isPspFamilyPackage() -> launchWithPspFamily(game, emulatorPackage)
-            platform.kind == PlatformKind.GBA && emulatorPackage.isGbaFamilyPackage() -> launchWithGbaFamily(game, emulatorPackage)
+            (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB) && emulatorPackage.isGbaFamilyPackage() -> launchWithGbaFamily(game, emulatorPackage, platform.kind)
             platform.kind == PlatformKind.NES && emulatorPackage.isNesFamilyPackage() -> launchWithNesFamily(game, emulatorPackage)
             else -> launchWithGenericView(
                 game = game,
                 emulatorPackage = emulatorPackage,
-                includeCacheUris = platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.NES,
+                includeCacheUris = platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES,
                 extraBuilder = { uri -> addCommonRomExtras(uri, game, platform.kind) }
             )
         }
@@ -114,13 +114,13 @@ class ExternalLauncher(private val context: Context) {
         )
     }
 
-    private fun launchWithGbaFamily(game: GameItem, emulatorPackage: String): Boolean {
-        // Most GBA emulators accept either a granted content:// uri or a temporary file uri.
+    private fun launchWithGbaFamily(game: GameItem, emulatorPackage: String, platformKind: PlatformKind = PlatformKind.GBA): Boolean {
+        // Most GB/GBA emulators accept either a granted content:// uri or a temporary file uri.
         return launchWithGenericView(
             game = game,
             emulatorPackage = emulatorPackage,
             includeCacheUris = true,
-            extraBuilder = { uri -> addCommonRomExtras(uri, game, PlatformKind.GBA) }
+            extraBuilder = { uri -> addCommonRomExtras(uri, game, platformKind) }
         )
     }
 
@@ -347,6 +347,7 @@ class ExternalLauncher(private val context: Context) {
         val coreNames = when (platformKind) {
             PlatformKind.PSP -> listOf("ppsspp_libretro_android.so")
             PlatformKind.GBA -> listOf("mgba_libretro_android.so", "gpsp_libretro_android.so", "vba_next_libretro_android.so", "vba_m_libretro_android.so")
+            PlatformKind.GB -> listOf("gambatte_libretro_android.so", "sameboy_libretro_android.so", "mgba_libretro_android.so")
             PlatformKind.NES -> FcExternalEmulatorProfiles.retroArchCoreNames
             PlatformKind.SWITCH -> emptyList()
         }
@@ -685,6 +686,9 @@ class ExternalLauncher(private val context: Context) {
 
     private fun mimeTypesForGame(game: GameItem): List<String> = when (game.extension.lowercase(Locale.ROOT)) {
         "gba" -> listOf("application/x-gameboy-advance-rom", "application/x-gba-rom", "application/octet-stream")
+        "gb" -> listOf("application/x-gameboy-rom", "application/x-gb-rom", "application/octet-stream")
+        "gbc" -> listOf("application/x-gameboy-color-rom", "application/x-gbc-rom", "application/octet-stream")
+        "sgb" -> listOf("application/x-super-gameboy-rom", "application/octet-stream")
         "zip" -> listOf("application/zip", "application/octet-stream")
         "7z" -> listOf("application/x-7z-compressed", "application/octet-stream")
         "iso" -> listOf("application/x-iso9660-image", "application/octet-stream")
@@ -705,7 +709,7 @@ class ExternalLauncher(private val context: Context) {
 
     private fun String.isMyBoyPackage(): Boolean {
         val value = lowercase(Locale.ROOT)
-        return value == "com.fastemulator.gba" || value.contains("fastemulator") || value.contains("myboy")
+        return value == "com.fastemulator.gba" || value.contains("fastemulator") || value.contains("myboy") || value.contains("myoldboy") || value.contains("oldboy")
     }
 
     private fun String.isPspFamilyPackage(): Boolean {
@@ -723,10 +727,16 @@ class ExternalLauncher(private val context: Context) {
         val value = lowercase(Locale.ROOT)
         return isMyBoyPackage() ||
             value.contains("pizzaboy") ||
+            value.contains("oldboy") ||
+            value.contains("gbc") ||
+            value.contains("gambatte") ||
+            value.contains("sameboy") ||
             value.contains("johnemulators") && value.contains("gba") ||
             value.contains("johngba") ||
             value == "com.explusalpha.gbaemu" ||
+            value == "com.explusalpha.gbcemu" ||
             value.contains("gbaemu") ||
+            value.contains("gbcemu") ||
             value.contains("nostalgiaemulators") && value.contains("gba") ||
             value.contains("nostalgia") && value.contains("gba") ||
             value.contains("mgba")

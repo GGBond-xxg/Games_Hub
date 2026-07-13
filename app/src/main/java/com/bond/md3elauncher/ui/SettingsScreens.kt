@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -33,6 +34,9 @@ import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
+import android.view.KeyEvent as AndroidKeyEvent
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -47,15 +51,22 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -68,8 +79,13 @@ import com.bond.md3elauncher.data.PlatformKind
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.data.SafeMarginSettings
 import com.bond.md3elauncher.data.ThemeMode
+import com.bond.md3elauncher.emulator.ControllerShortcutAction
+import com.bond.md3elauncher.emulator.ControllerShortcutSettings
 import com.bond.md3elauncher.emulator.InternalEmulators
 import com.bond.md3elauncher.emulator.fc.FcExternalEmulatorProfiles
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun SettingsBeaconScreen(
@@ -94,7 +110,8 @@ internal fun SettingsBeaconScreen(
     onSetSafeMargins: (SafeMarginSettings) -> Unit,
     onSaveScraperSettings: (ScraperSettings) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit,
-    onLaunchSelectedChange: ((() -> Unit)?) -> Unit
+    onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
+    onControllerShortcutCaptureHandlerChange: (((AndroidKeyEvent) -> Boolean)?) -> Unit
 ) {
     var showDeferredSections by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -103,6 +120,14 @@ internal fun SettingsBeaconScreen(
         showDeferredSections = true
     }
     var showEmulatorManager by rememberSaveable { mutableStateOf(false) }
+    var showControllerShortcuts by rememberSaveable { mutableStateOf(false) }
+    if (showControllerShortcuts) {
+        ControllerShortcutSettingsScreen(
+            onBack = { showControllerShortcuts = false },
+            onCaptureHandlerChange = onControllerShortcutCaptureHandlerChange
+        )
+        return
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -211,10 +236,251 @@ internal fun SettingsBeaconScreen(
                 SettingSection(title = "系统") {
                     ActionSettingRow(title = "默认桌面", subtitle = "把本 App 设为系统 Home 桌面。", buttonText = "选择", onClick = onOpenHomeSettings)
                     Spacer(Modifier.height(8.dp))
+                    ActionSettingRow(title = "手柄操作", subtitle = "设置内置 GBA / GB/GBC / FC/NES 通用快捷键，支持 1~3 键组合。", buttonText = "进入", onClick = { showControllerShortcuts = true })
+                    Spacer(Modifier.height(8.dp))
                     ActionSettingRow(title = "重新扫描", subtitle = if (isScanning) "正在扫描，请稍等。" else "重新读取已配置平台的 ROM 文件夹。", buttonText = "扫描全部", onClick = onRescanAll)
                 }
             }
         }
+    }
+}
+
+
+@Composable
+private fun ControllerShortcutSettingsScreen(
+    onBack: () -> Unit,
+    onCaptureHandlerChange: (((AndroidKeyEvent) -> Boolean)?) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var settings by remember { mutableStateOf(ControllerShortcutSettings.load(context)) }
+    var captureAction by remember { mutableStateOf<ControllerShortcutAction?>(null) }
+    var captureKeys by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    var finishCaptureJob by remember { mutableStateOf<Job?>(null) }
+    var conflictText by remember { mutableStateOf<String?>(null) }
+    var selectedIndex by rememberSaveable { mutableStateOf(0) }
+    val shortcutListState = rememberLazyListState()
+
+    fun beginCapture(action: ControllerShortcutAction) {
+        finishCaptureJob?.cancel()
+        conflictText = null
+        captureKeys = emptySet()
+        captureAction = action
+    }
+
+    fun cancelCapture() {
+        finishCaptureJob?.cancel()
+        finishCaptureJob = null
+        captureAction = null
+        captureKeys = emptySet()
+        onCaptureHandlerChange(null)
+    }
+
+    fun finishCapture() {
+        val action = captureAction ?: return
+        val keys = ControllerShortcutSettings.normalizeKeys(captureKeys)
+        finishCaptureJob?.cancel()
+        finishCaptureJob = null
+        if (keys.isEmpty()) {
+            captureAction = null
+            captureKeys = emptySet()
+            onCaptureHandlerChange(null)
+            return
+        }
+        val conflict = ControllerShortcutSettings.conflictAction(settings, action, keys)
+        if (conflict != null) {
+            conflictText = "${ControllerShortcutSettings.comboLabel(keys)} 已经被“${conflict.title}”使用，请换一个按键组合。"
+            captureAction = null
+            captureKeys = emptySet()
+            onCaptureHandlerChange(null)
+            return
+        }
+        settings = ControllerShortcutSettings.saveBinding(context, action, keys)
+        Toast.makeText(context, "${action.title} 已改为 ${ControllerShortcutSettings.comboLabel(keys)}", Toast.LENGTH_SHORT).show()
+        captureAction = null
+        captureKeys = emptySet()
+        onCaptureHandlerChange(null)
+    }
+
+    fun scheduleFinishCapture() {
+        finishCaptureJob?.cancel()
+        finishCaptureJob = scope.launch {
+            delay(360L)
+            finishCapture()
+        }
+    }
+
+    fun handleControllerScreenKey(nativeEvent: AndroidKeyEvent): Boolean {
+        val action = captureAction
+        if (action != null) {
+            if (nativeEvent.action == AndroidKeyEvent.ACTION_DOWN) {
+                val keyCode = nativeEvent.keyCode
+                if (nativeEvent.repeatCount == 0 && ControllerShortcutSettings.isCaptureCandidate(keyCode)) {
+                    val next = (captureKeys + keyCode).take(3).toSet()
+                    captureKeys = next
+                    scheduleFinishCapture()
+                }
+                return true
+            }
+            if (nativeEvent.action == AndroidKeyEvent.ACTION_UP) return true
+            return true
+        }
+
+        val keyCode = nativeEvent.keyCode
+        if (nativeEvent.action == AndroidKeyEvent.ACTION_UP) {
+            return keyCode == AndroidKeyEvent.KEYCODE_DPAD_UP ||
+                keyCode == AndroidKeyEvent.KEYCODE_DPAD_DOWN ||
+                keyCode == AndroidKeyEvent.KEYCODE_BUTTON_A ||
+                keyCode == AndroidKeyEvent.KEYCODE_DPAD_CENTER ||
+                keyCode == AndroidKeyEvent.KEYCODE_ENTER ||
+                keyCode == AndroidKeyEvent.KEYCODE_BUTTON_B ||
+                keyCode == AndroidKeyEvent.KEYCODE_BACK
+        }
+        if (nativeEvent.action != AndroidKeyEvent.ACTION_DOWN || nativeEvent.repeatCount > 0) return false
+        return when (keyCode) {
+            AndroidKeyEvent.KEYCODE_DPAD_UP -> {
+                selectedIndex = (selectedIndex - 1 + ControllerShortcutSettings.EDITABLE_ACTIONS.size) % ControllerShortcutSettings.EDITABLE_ACTIONS.size
+                true
+            }
+            AndroidKeyEvent.KEYCODE_DPAD_DOWN -> {
+                selectedIndex = (selectedIndex + 1) % ControllerShortcutSettings.EDITABLE_ACTIONS.size
+                true
+            }
+            AndroidKeyEvent.KEYCODE_BUTTON_A,
+            AndroidKeyEvent.KEYCODE_DPAD_CENTER,
+            AndroidKeyEvent.KEYCODE_ENTER -> {
+                beginCapture(ControllerShortcutSettings.EDITABLE_ACTIONS[selectedIndex])
+                true
+            }
+            AndroidKeyEvent.KEYCODE_BUTTON_B,
+            AndroidKeyEvent.KEYCODE_BACK -> {
+                onBack()
+                true
+            }
+            else -> false
+        }
+    }
+
+    LaunchedEffect(captureAction, captureKeys, settings, selectedIndex) {
+        onCaptureHandlerChange(::handleControllerScreenKey)
+    }
+
+    LaunchedEffect(selectedIndex) {
+        // Header 和标题各占一个 LazyColumn item，所以快捷键行从 index 2 开始。
+        shortcutListState.animateScrollToItem((selectedIndex + 2).coerceAtLeast(0))
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            finishCaptureJob?.cancel()
+            onCaptureHandlerChange(null)
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = shortcutListState,
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(key = "controllerHeader") {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("手柄操作", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
+                    TextButton(onClick = onBack) { Text("返回") }
+                }
+                Text(
+                    "这里是内置模拟器通用快捷键，GBA 和 FC/NES 会共用。可用方向键选择项目，按 A 进入修改；也可以点“修改”。按下任意 1~3 个手柄按键，停顿约 360ms 后自动保存。",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            item(key = "controllerRowsTitle") {
+                Text(
+                    "快捷键",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                )
+            }
+
+            ControllerShortcutSettings.EDITABLE_ACTIONS.forEachIndexed { index, action ->
+                item(key = "controllerAction_${action.name}") {
+                    ActionSettingRow(
+                        title = action.title,
+                        subtitle = "${action.subtitle} · 当前：${ControllerShortcutSettings.comboLabel(settings.keysFor(action))}",
+                        buttonText = "修改",
+                        selected = index == selectedIndex,
+                        onClick = {
+                            selectedIndex = index
+                            beginCapture(action)
+                        }
+                    )
+                }
+            }
+
+            item(key = "controllerRestore") {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(
+                        onClick = {
+                            settings = ControllerShortcutSettings.resetToDefault(context)
+                            Toast.makeText(context, "已恢复默认手柄快捷键", Toast.LENGTH_SHORT).show()
+                        }
+                    ) { Text("恢复默认") }
+                }
+            }
+
+            item(key = "controllerTips") {
+                OutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp)) {
+                        Text("说明", fontWeight = FontWeight.Black)
+                        Text(
+                            "默认：快速保存=L1，快速读取=R1，快进=R3，菜单=L2，退出=SELECT+X，连发A=X，连发B=Y。多键组合会优先于单键，例如 SELECT+X 会优先触发退出，不会触发 X 连发。",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        val action = captureAction
+        if (action != null) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .fillMaxWidth(0.62f),
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(28.dp),
+                tonalElevation = 8.dp
+            ) {
+                Column(Modifier.padding(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("正在修改：${action.title}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        if (captureKeys.isEmpty()) "请按下手柄按键" else "已读取：${ControllerShortcutSettings.comboLabel(captureKeys)}",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text("支持同时按 2 个或 3 个按键；停止输入约 360ms 后保存。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(10.dp))
+                    TextButton(onClick = { cancelCapture() }) { Text("取消") }
+                }
+            }
+        }
+    }
+
+    val conflict = conflictText
+    if (conflict != null) {
+        AlertDialog(
+            onDismissRequest = { conflictText = null },
+            title = { Text("按键冲突") },
+            text = { Text(conflict) },
+            confirmButton = {
+                FilledTonalButton(onClick = { conflictText = null }) { Text("知道了") }
+            }
+        )
     }
 }
 
@@ -362,16 +628,20 @@ private fun tabOrderKeysWithEmulators(emulators: List<BeaconTab>, tabOrder: List
 
 
 private fun platformEmulatorSubtitle(platform: PlatformConfig): String = when {
+    InternalEmulators.usesInternalGb(platform) -> "${InternalEmulators.GB_NAME} · ${platform.gameCount} 个游戏"
     InternalEmulators.usesInternalGba(platform) -> "${InternalEmulators.GBA_NAME} · ${platform.gameCount} 个游戏"
+    InternalEmulators.usesInternalFc(platform) -> "${InternalEmulators.FC_NAME} · ${platform.gameCount} 个游戏"
     platform.emulatorName.isNullOrBlank() -> "未绑定模拟器 · ${platform.gameCount} 个游戏"
     else -> "${platform.emulatorName} · ${platform.gameCount} 个游戏"
 }
 
 private fun platformHasReadyEmulator(platform: PlatformConfig): Boolean =
-    InternalEmulators.usesInternalGba(platform) || !platform.emulatorPackage.isNullOrBlank()
+    InternalEmulators.usesInternal(platform) || !platform.emulatorPackage.isNullOrBlank()
 
 private fun currentEmulatorLabel(platform: PlatformConfig): String = when {
+    InternalEmulators.usesInternalGb(platform) -> "当前：${InternalEmulators.GB_NAME}"
     InternalEmulators.usesInternalGba(platform) -> "当前：${InternalEmulators.GBA_NAME}"
+    InternalEmulators.usesInternalFc(platform) -> "当前：${InternalEmulators.FC_NAME}"
     platform.emulatorName.isNullOrBlank() -> "当前未绑定模拟器"
     else -> "当前：${platform.emulatorName}"
 }
@@ -397,6 +667,7 @@ private fun EmulatorManagerRows(
             BeaconTab.PSP -> platforms.firstOrNull { it.kind == PlatformKind.PSP }
             BeaconTab.NS -> platforms.firstOrNull { it.kind == PlatformKind.SWITCH }
             BeaconTab.GBA -> platforms.firstOrNull { it.kind == PlatformKind.GBA }
+            BeaconTab.GB -> platforms.firstOrNull { it.kind == PlatformKind.GB }
             BeaconTab.NES -> platforms.firstOrNull { it.kind == PlatformKind.NES }
             else -> null
         }
@@ -459,7 +730,7 @@ private fun EmulatorManagerRows(
 
     PlatformPlaceholderRow(
         title = "添加其他",
-        subtitle = "占位：后续可添加 FC / GBC 等模拟器",
+        subtitle = "占位：后续可添加 SFC / MD / PS1 等模拟器",
         actionText = "待添加",
         icon = Icons.Rounded.AddCircle
     )
@@ -535,7 +806,8 @@ private fun TabOrderEditor(
                         BeaconTab.NS -> "NS / Switch 平台入口"
                         BeaconTab.PSP -> "PSP 平台入口"
                         BeaconTab.GBA -> "GBA / 内置模拟器平台入口"
-                        BeaconTab.NES -> "FC/NES 外部模拟器入口"
+                        BeaconTab.GB -> "GB/GBC / 内置 mGBA 平台入口"
+                        BeaconTab.NES -> "FC/NES 内置 / 外部模拟器入口"
                         BeaconTab.ANDROID -> "安卓应用入口"
                         else -> ""
                     },
@@ -612,6 +884,12 @@ private fun OrderedPlatformRows(
             }
             BeaconTab.GBA -> {
                 platforms.firstOrNull { it.kind == PlatformKind.GBA }?.let { platform ->
+                    PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            BeaconTab.GB -> {
+                platforms.firstOrNull { it.kind == PlatformKind.GB }?.let { platform ->
                     PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
                     Spacer(Modifier.height(8.dp))
                 }
@@ -772,12 +1050,23 @@ private fun ToggleSettingRow(title: String, subtitle: String, checked: Boolean, 
 }
 
 @Composable
-private fun ActionSettingRow(title: String, subtitle: String, buttonText: String, onClick: () -> Unit) {
+private fun ActionSettingRow(
+    title: String,
+    subtitle: String,
+    buttonText: String,
+    selected: Boolean = false,
+    onClick: () -> Unit
+) {
+    val bgColor = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f)
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+            .background(bgColor)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -870,15 +1159,50 @@ private fun ScraperTextField(
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+    var editing by rememberSaveable(label) { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(editing) {
+        if (editing) {
+            runCatching { focusRequester.requestFocus() }
+        } else {
+            focusManager.clearFocus(force = true)
+        }
+    }
+
+    Row(
         modifier = modifier.fillMaxWidth(),
-        singleLine = true,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
-        shape = RoundedCornerShape(18.dp)
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = { if (editing) onValueChange(it) },
+            modifier = Modifier
+                .weight(1f)
+                .focusRequester(focusRequester)
+                .focusProperties { canFocus = editing },
+            singleLine = true,
+            readOnly = !editing,
+            label = { Text(label) },
+            placeholder = { Text(if (editing) placeholder else "点右侧“编辑”后输入") },
+            shape = RoundedCornerShape(18.dp)
+        )
+        FilledTonalButton(
+            onClick = {
+                if (editing) {
+                    editing = false
+                    focusManager.clearFocus(force = true)
+                } else {
+                    editing = true
+                }
+            },
+            modifier = Modifier.height(40.dp)
+        ) {
+            Text(if (editing) "保存" else "编辑")
+        }
+    }
 }
 
 @Composable
@@ -895,7 +1219,10 @@ internal fun PlatformSetupScreen(
 ) {
     val hasFolder = !platform.folderUri.isNullOrBlank()
     val usesInternalGba = InternalEmulators.usesInternalGba(platform)
-    val hasExternalEmulator = !platform.emulatorPackage.isNullOrBlank() && !usesInternalGba
+    val usesInternalGb = InternalEmulators.usesInternalGb(platform)
+    val usesInternalFc = InternalEmulators.usesInternalFc(platform)
+    val usesInternal = usesInternalGba || usesInternalGb || usesInternalFc
+    val hasExternalEmulator = !platform.emulatorPackage.isNullOrBlank() && !usesInternal
     val displayApp = emulatorApp ?: InstalledApp(
         label = platform.emulatorName ?: "已选择的模拟器",
         packageName = platform.emulatorPackage.orEmpty()
@@ -921,12 +1248,22 @@ internal fun PlatformSetupScreen(
                     actionText = if (hasFolder) "更换" else "选择",
                     onClick = onPickFolder
                 )
-                if (platform.kind == PlatformKind.GBA) {
+                if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) {
+                    val internalTitle = when (platform.kind) {
+                        PlatformKind.GB -> "内置 GB/GBC 模拟器"
+                        PlatformKind.NES -> "内置 FC/NES 模拟器"
+                        else -> "内置 GBA 模拟器"
+                    }
+                    val internalSubtitle = when (platform.kind) {
+                        PlatformKind.GB -> "复用 mGBA libretro core，支持 .gb / .gbc 和普通 .zip 内 ROM。"
+                        PlatformKind.NES -> "基于 Nestopia libretro core，支持 .nes 和普通 .zip 内 ROM。"
+                        else -> "默认启动方式，不需要安装外部模拟器。"
+                    }
                     PlatformConfigRow(
-                        title = "内置 GBA 模拟器",
-                        subtitle = "默认启动方式，不需要安装外部模拟器。",
-                        actionText = if (usesInternalGba) "使用中" else "使用",
-                        enabled = !usesInternalGba,
+                        title = internalTitle,
+                        subtitle = internalSubtitle,
+                        actionText = if (usesInternal) "使用中" else "使用",
+                        enabled = !usesInternal,
                         onClick = onUseInternalEmulator
                     )
                 }
@@ -940,7 +1277,7 @@ internal fun PlatformSetupScreen(
                 if (hasExternalEmulator) {
                     PlatformConfigRow(
                         title = "清除外部模拟器",
-                        subtitle = if (platform.kind == PlatformKind.GBA) "清除后会回到内置 GBA 模拟器。" else "只清除绑定关系，不会删除模拟器 App。",
+                        subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) "清除后会回到内置模拟器。" else "只清除绑定关系，不会删除模拟器 App。",
                         actionText = "清除",
                         onClick = onClearEmulator
                     )
@@ -959,7 +1296,7 @@ internal fun PlatformSetupScreen(
             Column(Modifier.padding(14.dp)) {
                 Text("提示", fontWeight = FontWeight.Black)
                 Text(
-                    "GBA 默认使用内置模拟器；PSP/FC/NES/GBA 也可以改用外部模拟器。长按游戏可以自定义显示名称和图标。",
+                    "GBA、GB/GBC 和 FC/NES 默认使用内置模拟器；PSP/FC/NES/GBA/GB/GBC 也可以改用外部模拟器。长按游戏可以自定义显示名称和图标。",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1148,13 +1485,15 @@ private fun emulatorSearchHint(platform: PlatformConfig): String = when (platfor
     PlatformKind.PSP -> "搜索 PPSSPP / Rocket PSP / MYPSP / RetroArch / 包名"
     PlatformKind.SWITCH -> "搜索 Yuzu / Suyu / Citron / 包名"
     PlatformKind.GBA -> "搜索 My Boy / Pizza Boy / John GBA / GBA.emu / RetroArch / 包名"
+    PlatformKind.GB -> "搜索 My OldBoy / Pizza Boy C / GBC.emu / RetroArch / 包名"
     PlatformKind.NES -> "搜索 Nes.emu / Nostalgia.NES / RetroArch / 包名"
 }
 
 private fun externalEmulatorHelpText(kind: PlatformKind): String = when (kind) {
     PlatformKind.GBA -> "可选：改用 My Boy / Pizza Boy / John GBA / RetroArch"
+    PlatformKind.GB -> "可选：改用 My OldBoy / Pizza Boy C / GBC.emu / RetroArch"
     PlatformKind.PSP -> "请选择 PPSSPP / PPSSPP Gold / RetroArch 等 PSP 模拟器"
-    PlatformKind.NES -> "请选择 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 模拟器"
+    PlatformKind.NES -> "可选：改用 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 外部模拟器"
     PlatformKind.SWITCH -> "请选择 Switch 外部模拟器；本项目不包含 keys / firmware"
 }
 
@@ -1197,6 +1536,24 @@ private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: Inst
             "com.explusalpha.gbaemu",
             "nostalgia.gba",
             "nostalgiaemulators",
+            "mgba",
+            "retroarch",
+            "com.retroarch"
+        )
+        PlatformKind.GB -> listOf(
+            "my oldboy",
+            "myoldboy",
+            "oldboy",
+            "gbc",
+            "game boy",
+            "gameboy",
+            "pizza boy c",
+            "pizzaboyc",
+            "gbc.emu",
+            "gbcemu",
+            "com.explusalpha.gbcemu",
+            "gambatte",
+            "sameboy",
             "mgba",
             "retroarch",
             "com.retroarch"
