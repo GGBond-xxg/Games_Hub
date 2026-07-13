@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
@@ -210,7 +212,13 @@ private fun EditInfoPage(
                 }
             }
 
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 FilledTonalButton(onClick = onSearchCover, modifier = Modifier.fillMaxWidth()) { Text("联网搜索封面") }
                 FilledTonalButton(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text("设备选择封面") }
                 FilledTonalButton(
@@ -221,7 +229,20 @@ private fun EditInfoPage(
                     modifier = Modifier.fillMaxWidth()
                 ) { Text("编辑显示名称") }
 
-                Spacer(Modifier.weight(1f))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.36f),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        "封面建议使用竖版 3:4 图片，推荐 600×800 px；PNG/JPG 都可以，过大图片会自动适配显示。",
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(Modifier.height(6.dp))
             }
         }
     }

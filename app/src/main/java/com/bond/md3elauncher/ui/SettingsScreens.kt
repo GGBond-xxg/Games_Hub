@@ -236,7 +236,7 @@ internal fun SettingsBeaconScreen(
                 SettingSection(title = "系统") {
                     ActionSettingRow(title = "默认桌面", subtitle = "把本 App 设为系统 Home 桌面。", buttonText = "选择", onClick = onOpenHomeSettings)
                     Spacer(Modifier.height(8.dp))
-                    ActionSettingRow(title = "手柄操作", subtitle = "设置内置 GBA / GB/GBC / FC/NES 通用快捷键，支持 1~3 键组合。", buttonText = "进入", onClick = { showControllerShortcuts = true })
+                    ActionSettingRow(title = "手柄操作", subtitle = "设置内置模拟器通用快捷键，支持1~3键组合。", buttonText = "进入", onClick = { showControllerShortcuts = true })
                     Spacer(Modifier.height(8.dp))
                     ActionSettingRow(title = "重新扫描", subtitle = if (isScanning) "正在扫描，请稍等。" else "重新读取已配置平台的 ROM 文件夹。", buttonText = "扫描全部", onClick = onRescanAll)
                 }
@@ -390,7 +390,7 @@ private fun ControllerShortcutSettingsScreen(
                     TextButton(onClick = onBack) { Text("返回") }
                 }
                 Text(
-                    "这里是内置模拟器通用快捷键，GBA 和 FC/NES 会共用。可用方向键选择项目，按 A 进入修改；也可以点“修改”。按下任意 1~3 个手柄按键，停顿约 360ms 后自动保存。",
+                    "设置内置模拟器通用快捷键，支持1~3键组合。",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

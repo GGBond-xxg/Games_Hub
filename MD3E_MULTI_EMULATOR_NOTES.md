@@ -127,3 +127,10 @@ emulator/common/CommonEmulatorHost.kt`：统一 GBA 标准虚拟按键排布。
 - 底部提示顺序调整为 `Y 设置 / X 搜索 / L3 上移 / R3 下移 / B 操作`。
 - 列表上移 / 下移后延迟滚动到当前选中项，避免移动到顶部后当前游戏被滚出可视区域。
 - 后续新增模拟器仍必须复用 `emulator/common/` 的公共按键和菜单规范。
+
+## v0.1.77 UI wording and cover hint rule
+
+- Settings > System > 手柄操作 subtitle and detail description must stay short: `设置内置模拟器通用快捷键，支持1~3键组合。`
+- Long-press edit page must show a cover recommendation below the three actions: online cover search, local cover selection, and display name edit.
+- Recommended cover size is portrait 3:4, `600×800 px`; PNG/JPG are both acceptable.
+- The edit action column must remain vertically scrollable to prevent overflow when future hints or buttons are added.
