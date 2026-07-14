@@ -178,6 +178,12 @@ class MainActivity : ComponentActivity() {
                                     emulatorName = InternalEmulators.FC_NAME
                                 )
                             }
+                            PlatformKind.SFC -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.SFC_PACKAGE,
+                                    emulatorName = InternalEmulators.SFC_NAME
+                                )
+                            }
                             else -> Unit
                         }
                     },
@@ -188,6 +194,7 @@ class MainActivity : ComponentActivity() {
                             when {
                                 InternalEmulators.usesInternalGbaCore(platform) -> launchInternalGba(game, platform.kind)
                                 InternalEmulators.usesInternalFc(platform) -> launchInternalFc(game)
+                                InternalEmulators.usesInternalSfc(platform) -> launchInternalSfc(game)
                                 else -> externalLauncher.launchGame(game, platform)
                             }
                             store.pushRecent(game.id)
@@ -340,6 +347,18 @@ class MainActivity : ComponentActivity() {
             putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
             putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
             putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "FC/NES")
+        }
+        startActivity(intent)
+    }
+
+    private fun launchInternalSfc(game: GameItem) {
+        val intent = Intent(this, InternalFcActivity::class.java).apply {
+            putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
+            putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
+            putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "SFC/SNES")
+            putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.SNES9X_CORE_FILE_NAME)
         }
         startActivity(intent)
     }

@@ -33,6 +33,7 @@
         <package android:name="com.retroarch.ra32" />
         <package android:name="com.retroarch.ra64" />
         <package android:name="com.retroarch.plus" />
+        <package android:name="com.explusalpha.Snes9xPlus" />
         <package android:name="com.explusalpha.NesEmu" />
         <package android:name="com.johnemulators.johnness" />
         <package android:name="com.johnemulators.johnnesslite" />
@@ -67,6 +68,14 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:mimeType="application/x-gameboy-color-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/x-snes-rom" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/x-super-nintendo-rom" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />

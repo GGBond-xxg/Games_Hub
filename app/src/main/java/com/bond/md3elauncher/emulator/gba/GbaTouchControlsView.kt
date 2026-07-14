@@ -122,7 +122,7 @@ internal class GbaTouchControlsView(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val shouldDrawControls = editorMode || !menuVisible || menuPage == MenuPage.VIRTUAL_KEYS || menuPage == MenuPage.VIRTUAL_ALPHA
+        val shouldDrawControls = editorMode || !menuVisible || menuPage == MenuPage.VIRTUAL_KEYS || menuPage == MenuPage.VIRTUAL_ALPHA || menuPage == MenuPage.VIRTUAL_TOUCH_ALPHA
         if (shouldDrawControls) {
             val alpha = controlsAlphaForCurrentMode()
             if (alpha > 0f) {
@@ -513,9 +513,10 @@ internal class GbaTouchControlsView(
     }
 
     private fun controlsAlphaForCurrentMode(): Float = when {
-        editorMode -> max(activity.hardwareControlsAlpha, 0.72f)
-        menuVisible && menuPage == MenuPage.VIRTUAL_EDITOR -> max(activity.hardwareControlsAlpha, 0.55f)
-        menuVisible && (menuPage == MenuPage.VIRTUAL_KEYS || menuPage == MenuPage.VIRTUAL_ALPHA) -> activity.hardwareControlsAlpha
+        editorMode -> max(activity.touchControlsAlpha, 0.72f)
+        menuVisible && menuPage == MenuPage.VIRTUAL_EDITOR -> max(activity.touchControlsAlpha, 0.55f)
+        menuVisible && menuPage == MenuPage.VIRTUAL_ALPHA -> activity.hardwareControlsAlpha
+        menuVisible && (menuPage == MenuPage.VIRTUAL_KEYS || menuPage == MenuPage.VIRTUAL_TOUCH_ALPHA) -> activity.touchControlsAlpha
         hardwareMode -> activity.hardwareControlsAlpha
         else -> activity.touchControlsAlpha
     }.coerceIn(0f, 1f)
@@ -525,8 +526,9 @@ internal class GbaTouchControlsView(
         MenuPage.SAVE -> MAX_STATE_SLOTS + 1
         MenuPage.LOAD -> MAX_STATE_SLOTS
         MenuPage.DELETE_SAVE -> MAX_STATE_SLOTS + 1
-        MenuPage.VIRTUAL_KEYS -> VIRTUAL_KEY_MENU_ITEMS.size
+        MenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeyMenuItems(context).size
         MenuPage.VIRTUAL_ALPHA -> 1
+        MenuPage.VIRTUAL_TOUCH_ALPHA -> 1
         MenuPage.VIRTUAL_EDITOR -> VIRTUAL_EDITOR_ITEMS.size
         MenuPage.CHEATS -> activity.loadCustomCheats().size
         MenuPage.CUSTOM_CHEATS -> activity.loadCustomCheats().size + 1
@@ -541,6 +543,7 @@ internal class GbaTouchControlsView(
         MenuPage.DELETE_SAVE -> deleteSlotIndex
         MenuPage.VIRTUAL_KEYS -> virtualSettingsIndex
         MenuPage.VIRTUAL_ALPHA -> 0
+        MenuPage.VIRTUAL_TOUCH_ALPHA -> 0
         MenuPage.VIRTUAL_EDITOR -> editorIndex
         MenuPage.CHEATS -> cheatIndex
         MenuPage.CUSTOM_CHEATS -> customCheatIndex
@@ -557,6 +560,7 @@ internal class GbaTouchControlsView(
             MenuPage.DELETE_SAVE -> deleteSlotIndex = fixed
             MenuPage.VIRTUAL_KEYS -> virtualSettingsIndex = fixed
             MenuPage.VIRTUAL_ALPHA -> Unit
+            MenuPage.VIRTUAL_TOUCH_ALPHA -> Unit
             MenuPage.VIRTUAL_EDITOR -> editorIndex = fixed
             MenuPage.CHEATS -> cheatIndex = fixed
             MenuPage.CUSTOM_CHEATS -> customCheatIndex = fixed
@@ -575,7 +579,11 @@ internal class GbaTouchControlsView(
         when (menuPage) {
             MenuPage.VIRTUAL_ALPHA -> {
                 activity.hardwareControlsAlpha = (activity.hardwareControlsAlpha + delta * 0.05f).coerceIn(0f, 1f)
-                activity.showToast(tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()))
+                activity.showToast(tr("emulator.virtual.alpha_title", "Real Controller Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()))
+            }
+            MenuPage.VIRTUAL_TOUCH_ALPHA -> {
+                activity.touchControlsAlpha = (activity.touchControlsAlpha + delta * 0.05f).coerceIn(0f, 1f)
+                activity.showToast(tr("emulator.virtual.touch_alpha_title", "Virtual Controller Opacity: {percent}%", "percent" to (activity.touchControlsAlpha * 100).roundToInt()))
             }
             MenuPage.VIRTUAL_EDITOR -> resizeSelectedEditable(delta)
             MenuPage.VIRTUAL_KEYS,
@@ -612,9 +620,11 @@ internal class GbaTouchControlsView(
             MenuPage.DELETE_SAVE -> deleteLegacyDeleteState()
             MenuPage.VIRTUAL_KEYS -> when (virtualSettingsIndex) {
                 0 -> enterPage(MenuPage.VIRTUAL_ALPHA)
-                1 -> startVirtualEditor()
+                1 -> enterPage(MenuPage.VIRTUAL_TOUCH_ALPHA)
+                2 -> startVirtualEditor()
             }
             MenuPage.VIRTUAL_ALPHA -> Unit
+            MenuPage.VIRTUAL_TOUCH_ALPHA -> Unit
             MenuPage.VIRTUAL_EDITOR -> when (editorIndex) {
                 0 -> showAddCustomButtonDialog()
                 1 -> resizeSelectedEditable(1)
@@ -671,9 +681,14 @@ internal class GbaTouchControlsView(
     private fun backFromMenu() {
         when (menuPage) {
             MenuPage.MAIN -> hideMenu()
-            MenuPage.VIRTUAL_ALPHA, MenuPage.VIRTUAL_EDITOR -> {
+            MenuPage.VIRTUAL_ALPHA, MenuPage.VIRTUAL_TOUCH_ALPHA, MenuPage.VIRTUAL_EDITOR -> {
+                val previous = menuPage
                 menuPage = MenuPage.VIRTUAL_KEYS
-                virtualSettingsIndex = 0
+                virtualSettingsIndex = when (previous) {
+                    MenuPage.VIRTUAL_ALPHA -> 0
+                    MenuPage.VIRTUAL_TOUCH_ALPHA -> 1
+                    else -> 2
+                }
                 invalidate()
             }
             MenuPage.CUSTOM_CHEAT_DELETE -> {
@@ -1386,7 +1401,8 @@ internal class GbaTouchControlsView(
             MenuPage.LOAD -> drawSlotList(canvas, loadSlotIndex, mode = SlotListMode.LOAD)
             MenuPage.DELETE_SAVE -> drawSlotList(canvas, deleteSlotIndex, mode = SlotListMode.DELETE)
             MenuPage.VIRTUAL_KEYS -> drawVirtualSettings(canvas)
-            MenuPage.VIRTUAL_ALPHA -> drawVirtualAlphaSettings(canvas)
+            MenuPage.VIRTUAL_ALPHA -> drawVirtualAlphaSettings(canvas, isTouch = false)
+            MenuPage.VIRTUAL_TOUCH_ALPHA -> drawVirtualAlphaSettings(canvas, isTouch = true)
             MenuPage.VIRTUAL_EDITOR -> drawVirtualEditor(canvas)
             MenuPage.CHEATS -> drawCheatList(canvas)
             MenuPage.CUSTOM_CHEATS -> drawCustomCheatList(canvas)
@@ -1404,7 +1420,8 @@ internal class GbaTouchControlsView(
         MenuPage.LOAD -> tr("emulator.menu.load", "Load State")
         MenuPage.DELETE_SAVE -> tr("emulator.menu.delete_save", "Delete Save")
         MenuPage.VIRTUAL_KEYS -> tr("emulator.menu.virtual_keys", "Virtual Buttons")
-        MenuPage.VIRTUAL_ALPHA -> tr("emulator.menu.transparency", "Transparency")
+        MenuPage.VIRTUAL_ALPHA -> tr("emulator.menu.hardware_opacity", "Real Controller Opacity")
+        MenuPage.VIRTUAL_TOUCH_ALPHA -> tr("emulator.menu.touch_opacity", "Virtual Controller Opacity")
         MenuPage.VIRTUAL_EDITOR -> tr("emulator.menu.virtual_editor", "Virtual Button Editor")
         MenuPage.CHEATS -> tr("emulator.menu.cheat", "Cheats")
         MenuPage.CUSTOM_CHEATS -> tr("emulator.menu.cheats_custom", "Custom Cheats")
@@ -1418,7 +1435,8 @@ internal class GbaTouchControlsView(
         MenuPage.LOAD -> tr("emulator.hint.load", "Up/Down select a slot, A load and close menu, B back.")
         MenuPage.DELETE_SAVE -> tr("emulator.hint.delete", "Up/Down select, A delete, B back. Quick save can also be deleted.")
         MenuPage.VIRTUAL_KEYS -> CommonEmulatorUiSpec.virtualKeysHint(context)
-        MenuPage.VIRTUAL_ALPHA -> tr("emulator.hint.virtual_alpha", "Controller-mode opacity. Left/right adjust, B back.")
+        MenuPage.VIRTUAL_ALPHA -> tr("emulator.hint.virtual_alpha", "Adjust opacity when a real controller is connected. Left/right adjust, B back.")
+        MenuPage.VIRTUAL_TOUCH_ALPHA -> tr("emulator.hint.virtual_touch_alpha", "Adjust opacity when using virtual touch controls. Left/right adjust, B back.")
         MenuPage.VIRTUAL_EDITOR -> tr("emulator.hint.virtual_editor", "Drag buttons; tap increase/decrease or use left/right to resize, then save.")
         MenuPage.CHEATS -> ""
         MenuPage.CUSTOM_CHEATS -> tr("emulator.hint.custom_cheats", "A add/toggle, B back; use the delete button to remove cheats.")
@@ -1428,7 +1446,7 @@ internal class GbaTouchControlsView(
 
     private fun subtitleForMain(index: Int): String = when (index) {
         0 -> tr("emulator.subtitle.save", "Manage saves, loads, deletes, and quick save")
-        1 -> tr("emulator.subtitle.virtual", "Opacity, position, size, and custom combo buttons")
+        1 -> tr("emulator.subtitle.virtual", "Real-controller opacity, virtual-controller opacity, size, position, and custom combo buttons")
         2 -> tr("emulator.subtitle.cheat", "Manage custom cheat codes")
         3 -> CommonEmulatorUiSpec.resetHint(context)
         4 -> CommonEmulatorUiSpec.restartHint(context)
@@ -1643,11 +1661,15 @@ internal class GbaTouchControlsView(
     private fun drawVirtualSettings(canvas: Canvas) {
         val dp = resources.displayMetrics.density
         drawList(canvas, CommonEmulatorUiSpec.virtualKeyMenuItems(context), virtualSettingsIndex, menuPanelRect.top + 72f * dp) { index, _ ->
-            if (index == 0) tr("emulator.virtual.subtitle.transparency", "Adjust controller-mode virtual button opacity") else tr("emulator.virtual.subtitle.editor", "Drag button positions, resize with left/right, add combo buttons")
+            when (index) {
+                0 -> tr("emulator.virtual.subtitle.hardware_opacity", "Adjust opacity when a real controller is connected")
+                1 -> tr("emulator.virtual.subtitle.touch_opacity", "Adjust opacity when using virtual touch controls")
+                else -> tr("emulator.virtual.subtitle.editor", "Drag button positions, resize with left/right, add combo buttons")
+            }
         }
     }
 
-    private fun drawVirtualAlphaSettings(canvas: Canvas) {
+    private fun drawVirtualAlphaSettings(canvas: Canvas, isTouch: Boolean) {
         val dp = resources.displayMetrics.density
         val left = menuPanelRect.left + 26f * dp
         val right = menuPanelRect.right - 26f * dp
@@ -1656,13 +1678,19 @@ internal class GbaTouchControlsView(
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = 15f * dp
         textPaint.color = Color.WHITE
-        canvas.drawText(tr("emulator.virtual.alpha_title", "Controller Virtual Button Opacity: {percent}%", "percent" to (activity.hardwareControlsAlpha * 100).roundToInt()), left, top, textPaint)
+        val value = if (isTouch) activity.touchControlsAlpha else activity.hardwareControlsAlpha
+        val title = if (isTouch) {
+            tr("emulator.virtual.touch_alpha_title", "Virtual Controller Opacity: {percent}%", "percent" to (value * 100).roundToInt())
+        } else {
+            tr("emulator.virtual.alpha_title", "Real Controller Opacity: {percent}%", "percent" to (value * 100).roundToInt())
+        }
+        canvas.drawText(title, left, top, textPaint)
 
         val cy = top + 42f * dp
         strokePaint.strokeWidth = 5f * dp
         strokePaint.color = Color.argb(95, 255, 255, 255)
         canvas.drawLine(left, cy, right, cy, strokePaint)
-        val thumbX = left + (right - left) * activity.hardwareControlsAlpha
+        val thumbX = left + (right - left) * value
         strokePaint.color = Color.argb(225, 255, 255, 255)
         canvas.drawLine(left, cy, thumbX, cy, strokePaint)
         fillPaint.color = Color.WHITE
@@ -1673,7 +1701,12 @@ internal class GbaTouchControlsView(
         textPaint.textSize = 12f * dp
         textPaint.color = Color.argb(205, 255, 255, 255)
         canvas.drawText(tr("emulator.virtual.alpha_left_right", "← More Transparent    → More Visible"), left, cy + 36f * dp, textPaint)
-        canvas.drawText(tr("emulator.virtual.alpha_note", "Default is 0%. Raise it only if you need touch assistance while using a controller."), left, cy + 58f * dp, textPaint)
+        val note = if (isTouch) {
+            tr("emulator.virtual.touch_alpha_note", "Controls shown while using the touch screen. This does not affect real-controller mode.")
+        } else {
+            tr("emulator.virtual.alpha_note", "Default is 0%. This only applies when a real controller is connected.")
+        }
+        canvas.drawText(note, left, cy + 58f * dp, textPaint)
     }
 
     private fun drawVirtualEditor(canvas: Canvas) {

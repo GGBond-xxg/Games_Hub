@@ -25,6 +25,11 @@ enum class PlatformKind(
         subtitle = "内置 GB/GBC / My OldBoy! / RetroArch",
         extensions = setOf("gb", "gbc", "sgb", "zip", "7z")
     ),
+    SFC(
+        title = "SFC/SNES",
+        subtitle = "内置 SFC/SNES / Snes9x EX+ / RetroArch",
+        extensions = setOf("sfc", "smc", "swc", "fig", "bs", "st", "zip", "7z")
+    ),
     NES(
         title = "FC/NES",
         subtitle = "内置 FC/NES / Nes.emu / Nostalgia.NES / RetroArch",

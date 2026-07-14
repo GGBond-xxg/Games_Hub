@@ -1428,7 +1428,7 @@ class InternalGbaActivity : ComponentActivity() {
         private const val CHEAT_EXP_BOOST = "cheat_exp_boost"
         private const val LEAF_GREEN_V10_MASTER_CODE = "0000BE99+000A+1003DAE6+0007"
         private val MAIN_MENU_ITEMS = listOf("Save States", "Virtual Buttons", "Cheats", "Reset", "Restart Game", "Exit Game")
-        private val VIRTUAL_KEY_MENU_ITEMS = listOf("Transparency", "Virtual Button Editor")
+        private val VIRTUAL_KEY_MENU_ITEMS = listOf("Real Controller Opacity", "Virtual Controller Opacity", "Virtual Button Editor")
         private val VIRTUAL_EDITOR_ITEMS = listOf("Add Custom Button", "Increase Button Size", "Decrease Button Size", "Save and Return", "Reset Layout", "Cancel / Return to Game")
         private val CHEAT_ITEMS = emptyList<CheatItem>()
     }

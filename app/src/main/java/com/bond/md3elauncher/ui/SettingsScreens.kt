@@ -659,6 +659,7 @@ private fun tabOrderKeysWithEmulators(emulators: List<BeaconTab>, tabOrder: List
 private fun internalEmulatorDisplayName(context: android.content.Context, platform: PlatformConfig): String = when {
     InternalEmulators.usesInternalGb(platform) -> I18n.t(context, "platform.gb.name", "内置 GB/GBC 模拟器")
     InternalEmulators.usesInternalGba(platform) -> I18n.t(context, "platform.gba.name", "内置 GBA 模拟器")
+    InternalEmulators.usesInternalSfc(platform) -> I18n.t(context, "platform.sfc.name", "内置 SFC/SNES 模拟器")
     InternalEmulators.usesInternalFc(platform) -> I18n.t(context, "platform.fc.name", "内置 FC/NES 模拟器")
     else -> platform.emulatorName.orEmpty()
 }
@@ -703,6 +704,7 @@ private fun EmulatorManagerRows(
             BeaconTab.NS -> platforms.firstOrNull { it.kind == PlatformKind.SWITCH }
             BeaconTab.GBA -> platforms.firstOrNull { it.kind == PlatformKind.GBA }
             BeaconTab.GB -> platforms.firstOrNull { it.kind == PlatformKind.GB }
+            BeaconTab.SFC -> platforms.firstOrNull { it.kind == PlatformKind.SFC }
             BeaconTab.NES -> platforms.firstOrNull { it.kind == PlatformKind.NES }
             else -> null
         }
@@ -884,6 +886,7 @@ private fun localizedTabOrderSubtitle(context: android.content.Context, tab: Bea
     BeaconTab.PSP -> I18n.t(context, "settings.tab_order.psp", "PSP 平台入口")
     BeaconTab.GBA -> I18n.t(context, "settings.tab_order.gba", "GBA / 内置模拟器平台入口")
     BeaconTab.GB -> I18n.t(context, "settings.tab_order.gb", "GB/GBC / 内置 mGBA 平台入口")
+    BeaconTab.SFC -> I18n.t(context, "settings.tab_order.sfc", "SFC/SNES 内置 / 外部模拟器入口")
     BeaconTab.NES -> I18n.t(context, "settings.tab_order.nes", "FC/NES 内置 / 外部模拟器入口")
     BeaconTab.ANDROID -> I18n.t(context, "settings.tab_order.android", "安卓应用入口")
     else -> ""
@@ -931,6 +934,12 @@ private fun OrderedPlatformRows(
             }
             BeaconTab.GB -> {
                 platforms.firstOrNull { it.kind == PlatformKind.GB }?.let { platform ->
+                    PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            BeaconTab.SFC -> {
+                platforms.firstOrNull { it.kind == PlatformKind.SFC }?.let { platform ->
                     PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
                     Spacer(Modifier.height(8.dp))
                 }
@@ -1316,7 +1325,8 @@ internal fun PlatformSetupScreen(
     val usesInternalGba = InternalEmulators.usesInternalGba(platform)
     val usesInternalGb = InternalEmulators.usesInternalGb(platform)
     val usesInternalFc = InternalEmulators.usesInternalFc(platform)
-    val usesInternal = usesInternalGba || usesInternalGb || usesInternalFc
+    val usesInternalSfc = InternalEmulators.usesInternalSfc(platform)
+    val usesInternal = usesInternalGba || usesInternalGb || usesInternalFc || usesInternalSfc
     val hasExternalEmulator = !platform.emulatorPackage.isNullOrBlank() && !usesInternal
     val displayApp = emulatorApp ?: InstalledApp(
         label = platform.emulatorName ?: I18n.t(context, "settings.platform.selected_emulator", "已选择的模拟器"),
@@ -1343,14 +1353,16 @@ internal fun PlatformSetupScreen(
                     actionText = if (hasFolder) I18n.t(context, "common.change", "更换") else I18n.t(context, "common.select", "选择"),
                     onClick = onPickFolder
                 )
-                if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) {
+                if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC) {
                     val internalTitle = when (platform.kind) {
                         PlatformKind.GB -> I18n.t(context, "platform.gb.name", "内置 GB/GBC 模拟器")
+                        PlatformKind.SFC -> I18n.t(context, "platform.sfc.name", "内置 SFC/SNES 模拟器")
                         PlatformKind.NES -> I18n.t(context, "platform.fc.name", "内置 FC/NES 模拟器")
                         else -> I18n.t(context, "platform.gba.name", "内置 GBA 模拟器")
                     }
                     val internalSubtitle = when (platform.kind) {
                         PlatformKind.GB -> I18n.t(context, "settings.platform.internal_gb.subtitle", "复用 mGBA libretro core，支持 .gb / .gbc 和普通 .zip 内 ROM。")
+                        PlatformKind.SFC -> I18n.t(context, "settings.platform.internal_sfc.subtitle", "基于 Snes9x libretro core，支持 .sfc / .smc 和普通 .zip 内 ROM。")
                         PlatformKind.NES -> I18n.t(context, "settings.platform.internal_fc.subtitle", "基于 Nestopia libretro core，支持 .nes 和普通 .zip 内 ROM。")
                         else -> I18n.t(context, "settings.platform.internal_gba.subtitle", "默认启动方式，不需要安装外部模拟器。")
                     }
@@ -1372,7 +1384,7 @@ internal fun PlatformSetupScreen(
                 if (hasExternalEmulator) {
                     PlatformConfigRow(
                         title = I18n.t(context, "settings.platform.clear_external.title", "清除外部模拟器"),
-                        subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES) I18n.t(context, "settings.platform.clear_external.internal_subtitle", "清除后会回到内置模拟器。") else I18n.t(context, "settings.platform.clear_external.subtitle", "只清除绑定关系，不会删除模拟器 App。"),
+                        subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC) I18n.t(context, "settings.platform.clear_external.internal_subtitle", "清除后会回到内置模拟器。") else I18n.t(context, "settings.platform.clear_external.subtitle", "只清除绑定关系，不会删除模拟器 App。"),
                         actionText = I18n.t(context, "common.clear", "清除"),
                         onClick = onClearEmulator
                     )
@@ -1583,12 +1595,14 @@ private fun emulatorSearchHint(context: android.content.Context, platform: Platf
     PlatformKind.SWITCH -> I18n.t(context, "settings.picker.search.switch", "搜索 Yuzu / Suyu / Citron / 包名")
     PlatformKind.GBA -> I18n.t(context, "settings.picker.search.gba", "搜索 My Boy / Pizza Boy / John GBA / GBA.emu / RetroArch / 包名")
     PlatformKind.GB -> I18n.t(context, "settings.picker.search.gb", "搜索 My OldBoy / Pizza Boy C / GBC.emu / RetroArch / 包名")
+    PlatformKind.SFC -> I18n.t(context, "settings.picker.search.sfc", "搜索 Snes9x EX+ / SuperRetro16 / RetroArch / 包名")
     PlatformKind.NES -> I18n.t(context, "settings.picker.search.nes", "搜索 Nes.emu / Nostalgia.NES / RetroArch / 包名")
 }
 
 private fun externalEmulatorHelpText(context: android.content.Context, kind: PlatformKind): String = when (kind) {
     PlatformKind.GBA -> I18n.t(context, "settings.platform.external.help.gba", "可选：改用 My Boy / Pizza Boy / John GBA / RetroArch")
     PlatformKind.GB -> I18n.t(context, "settings.platform.external.help.gb", "可选：改用 My OldBoy / Pizza Boy C / GBC.emu / RetroArch")
+    PlatformKind.SFC -> I18n.t(context, "settings.platform.external.help.sfc", "可选：改用 Snes9x EX+ / SuperRetro16 / RetroArch 等 SFC/SNES 外部模拟器")
     PlatformKind.PSP -> I18n.t(context, "settings.platform.external.help.psp", "请选择 PPSSPP / PPSSPP Gold / RetroArch 等 PSP 模拟器")
     PlatformKind.NES -> I18n.t(context, "settings.platform.external.help.nes", "可选：改用 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 外部模拟器")
     PlatformKind.SWITCH -> I18n.t(context, "settings.platform.external.help.switch", "请选择 Switch 外部模拟器；本项目不包含 keys / firmware")
@@ -1652,6 +1666,18 @@ private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: Inst
             "gambatte",
             "sameboy",
             "mgba",
+            "retroarch",
+            "com.retroarch"
+        )
+        PlatformKind.SFC -> listOf(
+            "snes9x",
+            "snes9x ex",
+            "snes9x ex+",
+            "com.explusalpha.snes9xplus",
+            "superretro16",
+            "super retro",
+            "snes",
+            "sfc",
             "retroarch",
             "com.retroarch"
         )

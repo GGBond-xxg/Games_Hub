@@ -40,14 +40,16 @@ class ExternalLauncher(private val context: Context) {
 
         val launched = when {
             platform.kind == PlatformKind.GBA && emulatorPackage.isMyBoyPackage() -> launchGbaWithMyBoy(game, emulatorPackage)
+            platform.kind == PlatformKind.GB && emulatorPackage.isMyOldBoyPackage() -> launchGbWithMyOldBoy(game, emulatorPackage)
             emulatorPackage.isRetroArchPackage() -> launchWithRetroArch(game, platform.kind, emulatorPackage)
             platform.kind == PlatformKind.PSP && emulatorPackage.isPspFamilyPackage() -> launchWithPspFamily(game, emulatorPackage)
             (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB) && emulatorPackage.isGbaFamilyPackage() -> launchWithGbaFamily(game, emulatorPackage, platform.kind)
             platform.kind == PlatformKind.NES && emulatorPackage.isNesFamilyPackage() -> launchWithNesFamily(game, emulatorPackage)
+            platform.kind == PlatformKind.SFC && emulatorPackage.isSfcFamilyPackage() -> launchWithSfcFamily(game, emulatorPackage)
             else -> launchWithGenericView(
                 game = game,
                 emulatorPackage = emulatorPackage,
-                includeCacheUris = platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES,
+                includeCacheUris = platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC,
                 extraBuilder = { uri -> addCommonRomExtras(uri, game, platform.kind) }
             )
         }
@@ -125,6 +127,157 @@ class ExternalLauncher(private val context: Context) {
         )
     }
 
+
+    private fun launchGbWithMyOldBoy(game: GameItem, emulatorPackage: String): Boolean {
+        // My OldBoy! does not behave like My Boy!: package-level ACTION_VIEW often opens
+        // the ROM browser instead of the game. Prefer known / queried emulator activities,
+        // and only show a clear fallback message if the installed build does not expose one.
+        val originalUri = Uri.parse(game.uri)
+        val cachedFile = copyRomToLaunchCache(game)
+        val cachedContentUri = cachedFile?.let { file ->
+            runCatching { FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file) }.getOrNull()
+        }
+        val cachedFileUri = cachedFile?.let { file ->
+            runCatching {
+                StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().build())
+                Uri.fromFile(file)
+            }.getOrNull()
+        }
+        val uriCandidates = listOfNotNull(originalUri, cachedContentUri, cachedFileUri).distinctBy { it.toString() }
+        val launcherComponent = context.packageManager.getLaunchIntentForPackage(emulatorPackage)?.component
+
+        val explicitCandidates = buildList {
+            uriCandidates.forEach { uri ->
+                myOldBoyKnownComponents(emulatorPackage).forEach { component ->
+                    myOldBoyMimeTypes(game).forEach { mime ->
+                        add(
+                            Intent(Intent.ACTION_VIEW).apply {
+                                this.component = component
+                                setDataAndType(uri, mime)
+                                addMyOldBoyExtras(uri, game)
+                                addRomFlags(uri)
+                            }
+                        )
+                    }
+                    add(
+                        Intent(Intent.ACTION_VIEW).apply {
+                            this.component = component
+                            data = uri
+                            addMyOldBoyExtras(uri, game)
+                            addRomFlags(uri)
+                        }
+                    )
+                }
+            }
+        }.distinctBy { listOf(it.component?.className.orEmpty(), it.dataString.orEmpty(), it.type.orEmpty()).joinToString("|") }
+
+        explicitCandidates.forEach { intent -> if (tryStartIntent(intent)) return true }
+
+        val queryBases = buildList {
+            uriCandidates.forEach { uri ->
+                myOldBoyMimeTypes(game).forEach { mime ->
+                    add(
+                        Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, mime)
+                            setPackage(emulatorPackage)
+                            addMyOldBoyExtras(uri, game)
+                            addRomFlags(uri)
+                        }
+                    )
+                }
+                add(
+                    Intent(Intent.ACTION_VIEW).apply {
+                        data = uri
+                        setPackage(emulatorPackage)
+                        addMyOldBoyExtras(uri, game)
+                        addRomFlags(uri)
+                    }
+                )
+            }
+        }
+
+        val exportedViewIntents = queryBases
+            .flatMap { queryExplicitRomIntents(it, emulatorPackage) }
+            .filter { intent ->
+                val component = intent.component ?: return@filter false
+                val className = component.className.lowercase(Locale.ROOT)
+                val isLauncher = launcherComponent?.className == component.className
+                !isLauncher && (className.contains("emulator") || className.contains("game") || className.contains("play"))
+            }
+            .distinctBy { intent ->
+                listOf(intent.component?.className.orEmpty(), intent.dataString.orEmpty(), intent.type.orEmpty()).joinToString("|")
+            }
+
+        exportedViewIntents.forEach { intent -> if (tryStartIntent(intent)) return true }
+
+        openEmulatorOnly(
+            emulatorPackage,
+            I18n.t(
+                context,
+                "toast.my_oldboy_direct_open_failed",
+                "My OldBoy opened, but this installed build did not expose a stable direct ROM launch entry. Use the built-in GB/GBC emulator for one-click launch."
+            )
+        )
+        return true
+    }
+
+    private fun myOldBoyKnownComponents(emulatorPackage: String): List<ComponentName> {
+        val packageBased = listOf(
+            "$emulatorPackage.EmulatorActivity",
+            "$emulatorPackage.GameActivity",
+            "$emulatorPackage.PlayActivity"
+        )
+        val fastEmulatorBased = listOf(
+            "com.fastemulator.gbc.EmulatorActivity",
+            "com.fastemulator.gbc.GameActivity",
+            "com.fastemulator.gbcfree.EmulatorActivity",
+            "com.fastemulator.gbcfree.GameActivity"
+        )
+        return (packageBased + fastEmulatorBased)
+            .map { ComponentName(emulatorPackage, it) }
+            .distinctBy { it.className }
+    }
+
+    private fun myOldBoyMimeTypes(game: GameItem): List<String> = linkedSetOf(
+        mimeTypeForGame(game),
+        "application/x-gameboy-rom",
+        "application/x-gb-rom",
+        "application/x-gameboy-color-rom",
+        "application/x-gbc-rom",
+        "application/octet-stream"
+    ).toList()
+
+    private fun Intent.addMyOldBoyExtras(uri: Uri, game: GameItem) {
+        val value = uri.toString()
+        val rawPath = readableFilePath(uri).orEmpty().ifBlank { uri.path.orEmpty() }
+        val launchValue = rawPath.ifBlank { value }
+        putExtra(Intent.EXTRA_STREAM, uri)
+        putExtra(Intent.EXTRA_TEXT, value)
+        putExtra("uri", value)
+        putExtra("Uri", value)
+        putExtra("URI", value)
+        putExtra("rom", launchValue)
+        putExtra("ROM", launchValue)
+        putExtra("Rom", launchValue)
+        putExtra("romUri", value)
+        putExtra("rom_uri", value)
+        putExtra("ROM_URI", value)
+        putExtra("path", launchValue)
+        putExtra("file", launchValue)
+        putExtra("filepath", launchValue)
+        putExtra("file_path", launchValue)
+        putExtra("filename", game.fileName)
+        putExtra("fileName", game.fileName)
+        putExtra("game", game.title)
+        putExtra("title", game.title)
+        if (rawPath.isNotBlank()) {
+            putExtra("rawPath", rawPath)
+            putExtra("romPath", rawPath)
+            putExtra("rom_path", rawPath)
+            putExtra("absolutePath", rawPath)
+        }
+    }
+
     private fun launchWithNesFamily(game: GameItem, emulatorPackage: String): Boolean {
         // FC/NES ROMs are usually small; provide cached content:// and file:// fallbacks for older emulators.
         return when {
@@ -137,6 +290,16 @@ class ExternalLauncher(private val context: Context) {
                 extraBuilder = { uri -> addCommonRomExtras(uri, game, PlatformKind.NES) }
             )
         }
+    }
+
+    private fun launchWithSfcFamily(game: GameItem, emulatorPackage: String): Boolean {
+        // SFC/SNES ROMs are small; cached file/content fallbacks improve compatibility with older emulators.
+        return launchWithGenericView(
+            game = game,
+            emulatorPackage = emulatorPackage,
+            includeCacheUris = true,
+            extraBuilder = { uri -> addCommonRomExtras(uri, game, PlatformKind.SFC) }
+        )
     }
 
     private fun launchWithNesEmu(game: GameItem, emulatorPackage: String): Boolean {
@@ -349,6 +512,7 @@ class ExternalLauncher(private val context: Context) {
             PlatformKind.PSP -> listOf("ppsspp_libretro_android.so")
             PlatformKind.GBA -> listOf("mgba_libretro_android.so", "gpsp_libretro_android.so", "vba_next_libretro_android.so", "vba_m_libretro_android.so")
             PlatformKind.GB -> listOf("gambatte_libretro_android.so", "sameboy_libretro_android.so", "mgba_libretro_android.so")
+            PlatformKind.SFC -> listOf("snes9x_libretro_android.so", "bsnes_libretro_android.so", "mesen-s_libretro_android.so")
             PlatformKind.NES -> FcExternalEmulatorProfiles.retroArchCoreNames
             PlatformKind.SWITCH -> emptyList()
         }
@@ -690,6 +854,8 @@ class ExternalLauncher(private val context: Context) {
         "gb" -> listOf("application/x-gameboy-rom", "application/x-gb-rom", "application/octet-stream")
         "gbc" -> listOf("application/x-gameboy-color-rom", "application/x-gbc-rom", "application/octet-stream")
         "sgb" -> listOf("application/x-super-gameboy-rom", "application/octet-stream")
+        "sfc", "smc" -> listOf("application/x-snes-rom", "application/x-super-nintendo-rom", "application/x-sfc-rom", "application/octet-stream")
+        "swc", "fig", "bs", "st" -> listOf("application/x-snes-rom", "application/octet-stream")
         "zip" -> listOf("application/zip", "application/octet-stream")
         "7z" -> listOf("application/x-7z-compressed", "application/octet-stream")
         "iso" -> listOf("application/x-iso9660-image", "application/octet-stream")
@@ -707,6 +873,16 @@ class ExternalLauncher(private val context: Context) {
         "unf", "unif" -> listOf("application/x-unif-rom", "application/octet-stream")
         else -> listOf("application/octet-stream")
     }.distinct()
+
+
+    private fun String.isMyOldBoyPackage(): Boolean {
+        val value = lowercase(Locale.ROOT)
+        return value == "com.fastemulator.gbc" ||
+            value == "com.fastemulator.gbcfree" ||
+            value.contains("myoldboy") ||
+            value.contains("oldboy") ||
+            value.contains("fastemulator") && value.contains("gbc")
+    }
 
     private fun String.isMyBoyPackage(): Boolean {
         val value = lowercase(Locale.ROOT)
@@ -745,6 +921,15 @@ class ExternalLauncher(private val context: Context) {
 
     private fun String.isNesFamilyPackage(): Boolean =
         FcExternalEmulatorProfiles.matchesPackage(this)
+
+    private fun String.isSfcFamilyPackage(): Boolean {
+        val value = lowercase(Locale.ROOT)
+        return value.contains("snes9x") ||
+            value.contains("snes") ||
+            value.contains("sfc") ||
+            value.contains("superretro") ||
+            value == "com.explusalpha.snes9xplus"
+    }
 
     private fun String.isNesEmuPackage(): Boolean {
         val value = lowercase(Locale.ROOT)

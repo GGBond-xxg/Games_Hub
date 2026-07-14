@@ -23,3 +23,7 @@ third_party/lemuroid/COPYING
 ```
 
 该记录仅用于历史版本说明；当前 v0.1.73 源码包中不再内置 FC/NES 的 FCEUmm core。
+
+## Snes9x libretro core
+
+This project bundles the Snes9x libretro Android core for the built-in SFC/SNES emulator. The binary is sourced from the existing Lemuroid/libretro core package already used by this project workflow. Keep the upstream license notices when redistributing.

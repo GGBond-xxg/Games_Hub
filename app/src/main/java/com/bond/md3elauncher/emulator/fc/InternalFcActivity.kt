@@ -81,6 +81,10 @@ class InternalFcActivity : ComponentActivity() {
     private var preparedRomHeaderInfo: FcRomHeaderInfo? = null
     private var preparedRomStorageSeed: String = ""
     private var firstFrameRendered = false
+    private val platformLabel: String get() = intent.getStringExtra(EXTRA_PLATFORM_LABEL).orEmpty().ifBlank { "FC/NES" }
+    internal val isSfcMode: Boolean get() = intent.getStringExtra(EXTRA_CORE_FILE_NAME) == SNES9X_CORE_FILE_NAME || platformLabel.contains("SFC", ignoreCase = true) || platformLabel.contains("SNES", ignoreCase = true)
+    private val internalDirName: String get() = if (isSfcMode) "internal_sfc" else "internal_fc"
+    private val processLogName: String get() = if (isSfcMode) "SFC/SNES" else "FC/NES"
 
     private val hardwarePressedKeys = mutableSetOf<Int>()
     private val handledLongKeys = mutableSetOf<Int>()
@@ -91,7 +95,7 @@ class InternalFcActivity : ComponentActivity() {
     private val turboDownTargets = mutableSetOf<Int>()
 
     internal val settingsPrefs: SharedPreferences by lazy {
-        getSharedPreferences("internal_fc_settings", Context.MODE_PRIVATE)
+        getSharedPreferences("internal_gba_settings", Context.MODE_PRIVATE)
     }
 
     internal var touchControlsAlpha: Float = DEFAULT_TOUCH_CONTROLS_ALPHA
@@ -115,15 +119,15 @@ class InternalFcActivity : ComponentActivity() {
         touchControlsAlpha = settingsPrefs.getFloat(PREF_TOUCH_CONTROLS_ALPHA, DEFAULT_TOUCH_CONTROLS_ALPHA).coerceIn(0f, 1f)
         hardwareControlsAlpha = settingsPrefs.getFloat(PREF_HARDWARE_CONTROLS_ALPHA, DEFAULT_HARDWARE_CONTROLS_ALPHA).coerceIn(0f, 1f)
 
-        showLoading(tr("emulator.loading.fc", "Starting built-in FC/NES emulator..."))
+        showLoading(tr("emulator.loading.platform", "Starting built-in {platform} emulator...", "platform" to platformLabel))
         configureWindow()
 
         val romUri = intent.getStringExtra(EXTRA_ROM_URI)?.let(Uri::parse)
-        val fileName = intent.getStringExtra(EXTRA_FILE_NAME).orEmpty().ifBlank { "game.nes" }
+        val fileName = intent.getStringExtra(EXTRA_FILE_NAME).orEmpty().ifBlank { if (isSfcMode) "game.sfc" else "game.nes" }
         val title = intent.getStringExtra(EXTRA_TITLE).orEmpty().ifBlank { fileName }
 
         if (romUri == null) {
-            finishWithMessage(tr("emulator.no_rom", "No {platform} ROM received", "platform" to "FC/NES"))
+            finishWithMessage(tr("emulator.no_rom", "No {platform} ROM received", "platform" to platformLabel))
             return
         }
 
@@ -286,12 +290,12 @@ class InternalFcActivity : ComponentActivity() {
     private fun startRetroView(romFile: File, title: String) {
         val coreChoice = chooseFcCore()
         if (!coreChoice.file.exists()) {
-            finishWithMessage(tr("emulator.core_missing", "Built-in {platform} core is missing: {path}", "platform" to "FC/NES", "path" to coreChoice.file.absolutePath))
+            finishWithMessage(tr("emulator.core_missing", "Built-in {platform} core is missing: {path}", "platform" to platformLabel, "path" to coreChoice.file.absolutePath))
             return
         }
 
-        val systemDir = File(filesDir, "internal_fc/system").apply { mkdirs() }
-        val savesDir = File(filesDir, "internal_fc/saves").apply { mkdirs() }
+        val systemDir = File(filesDir, "$internalDirName/system").apply { mkdirs() }
+        val savesDir = File(filesDir, "$internalDirName/saves").apply { mkdirs() }
         val storage = buildGameStorage(romFile, title).also {
             it.root.mkdirs()
             gameStorage = it
@@ -343,34 +347,40 @@ class InternalFcActivity : ComponentActivity() {
         startLaunchStallWatcher(title, coreChoice.displayName)
         // v0.1.71：启动时不再弹出 Mapper / core 风险提示，避免汉化 ROM 打开后连续 Toast 干扰。
         // 兼容性信息只写日志；真正的操作结果（存档/读档/重启）仍然用 Toast 提示。
-        Log.d(TAG, "Internal FC/NES launch title=$title core=${coreChoice.displayName} header=$preparedRomHeaderInfo notice=${coreChoice.notice}")
+        Log.d(TAG, "Internal $processLogName launch title=$title core=${coreChoice.displayName} header=$preparedRomHeaderInfo notice=${coreChoice.notice}")
         if (!shouldAutoRestoreInitialState()) {
-            Log.d(TAG, "FC/NES clean boot: skip initial auto state restore title=$title header=$preparedRomHeaderInfo")
+            Log.d(TAG, "$processLogName clean boot: skip initial auto state restore title=$title header=$preparedRomHeaderInfo")
         }
     }
 
     private fun chooseFcCore(): FcCoreChoice {
-        // v0.1.73：实测 Nestopia 可以同时启动普通 ROM 和 Mapper 115 汉化/改版 ROM。
-        // 为了避免 Mesen native 闪退和 FCEUmm 黑屏问题，内置 FC/NES 固定只使用 Nestopia。
         val nativeDir = File(applicationInfo.nativeLibraryDir)
-        val chosenFile = File(nativeDir, NESTOPIA_CORE_FILE_NAME)
-        Log.d(TAG, "FC/NES core selected=Nestopia only file=${chosenFile.absolutePath} header=$preparedRomHeaderInfo")
-        return FcCoreChoice(chosenFile, "Nestopia")
+        return if (isSfcMode) {
+            val chosenFile = File(nativeDir, SNES9X_CORE_FILE_NAME)
+            Log.d(TAG, "SFC/SNES core selected=Snes9x file=${chosenFile.absolutePath}")
+            FcCoreChoice(chosenFile, "Snes9x")
+        } else {
+            // v0.1.73：实测 Nestopia 可以同时启动普通 ROM 和 Mapper 115 汉化/改版 ROM。
+            // 为了避免 Mesen native 闪退和 FCEUmm 黑屏问题，内置 FC/NES 固定只使用 Nestopia。
+            val chosenFile = File(nativeDir, NESTOPIA_CORE_FILE_NAME)
+            Log.d(TAG, "FC/NES core selected=Nestopia only file=${chosenFile.absolutePath} header=$preparedRomHeaderInfo")
+            FcCoreChoice(chosenFile, "Nestopia")
+        }
     }
 
     private fun fcVariables(): Array<Variable> = emptyArray()
 
     private fun prepareRomFile(uri: Uri, fileName: String): File {
-        val safeName = sanitizeFileName(fileName).ifBlank { "game.nes" }
-        val dir = File(cacheDir, "internal_fc/roms").apply { mkdirs() }
+        val safeName = sanitizeFileName(fileName).ifBlank { if (isSfcMode) "game.sfc" else "game.nes" }
+        val dir = File(cacheDir, "$internalDirName/roms").apply { mkdirs() }
         val lower = safeName.lowercase(Locale.ROOT)
 
         if (lower.endsWith(".7z")) {
-            error(tr("emulator.unsupported_7z", "Built-in {platform} does not support direct 7z loading yet. Extract it first, or use an external emulator.", "platform" to "FC/NES"))
+            error(tr("emulator.unsupported_7z", "Built-in {platform} does not support direct 7z loading yet. Extract it first, or use an external emulator.", "platform" to platformLabel))
         }
         if (lower.endsWith(".zip")) {
             extractFcFromZip(uri, dir, safeName)?.let { extracted ->
-                preparedRomHeaderInfo = analyzeFcRomHeader(extracted)
+                preparedRomHeaderInfo = if (isSfcMode) null else analyzeFcRomHeader(extracted)
                 return extracted
             }
             error(tr("emulator.zip_no_rom", "No supported ROM found in ZIP"))
@@ -379,14 +389,14 @@ class InternalFcActivity : ComponentActivity() {
         // v0.1.65：不要把中文/特殊字符文件名直接传给 libretro core。
         // 部分 FC/NES core 在 Android native 层读取非 ASCII 路径时会失败，表现为原版能开、汉化/改版无法启动。
         // 这里统一复制到 ASCII 缓存名，再把该路径交给内置 Nestopia core。
-        val extension = fcRomExtension(lower) ?: ".nes"
+        val extension = platformRomExtension(lower) ?: if (isSfcMode) ".sfc" else ".nes"
         preparedRomStorageSeed = originalRomStorageName(safeName, extension)
         val outFile = File(dir, asciiRomCacheName("rom", "${uri}|${safeName}", extension))
         contentResolver.openInputStream(uri).use { input ->
             requireNotNull(input) { tr("emulator.rom_input_failed", "Unable to open ROM input stream") }
             FileOutputStream(outFile).use { output -> input.copyTo(output) }
         }
-        preparedRomHeaderInfo = analyzeFcRomHeader(outFile)
+        preparedRomHeaderInfo = if (isSfcMode) null else analyzeFcRomHeader(outFile)
         return outFile
     }
 
@@ -398,11 +408,11 @@ class InternalFcActivity : ComponentActivity() {
                     val entry = zip.nextEntry ?: break
                     if (entry.isDirectory) continue
                     val entryName = sanitizeFileName(entry.name.substringAfterLast('/')).ifBlank {
-                        archiveName.substringBeforeLast('.', archiveName) + ".nes"
+                        archiveName.substringBeforeLast('.', archiveName) + (if (isSfcMode) ".sfc" else ".nes")
                     }
                     val lower = entryName.lowercase(Locale.ROOT)
-                    if (!isFcRomName(lower)) continue
-                    val extension = fcRomExtension(lower) ?: ".nes"
+                    if (!isPlatformRomName(lower)) continue
+                    val extension = platformRomExtension(lower) ?: if (isSfcMode) ".sfc" else ".nes"
                     preparedRomStorageSeed = originalRomStorageName(entryName, extension)
                     val outFile = File(dir, asciiRomCacheName("zip", "${archiveName}|${entryName}", extension))
                     FileOutputStream(outFile).use { output -> zip.copyTo(output) }
@@ -473,7 +483,7 @@ class InternalFcActivity : ComponentActivity() {
                         if (shouldAutoRestore) {
                             restoreInitialState(view, storage)
                         } else {
-                            Log.d(TAG, "skip initial auto restore for FC/NES clean boot storage=${storage.root.name} header=$preparedRomHeaderInfo")
+                            Log.d(TAG, "skip initial auto restore for $processLogName clean boot storage=${storage.root.name} header=$preparedRomHeaderInfo")
                         }
                     }
                 }
@@ -499,7 +509,7 @@ class InternalFcActivity : ComponentActivity() {
             val header = preparedRomHeaderInfo
             val mapperText = header?.takeIf { it.mapper >= 0 }?.let { "Mapper ${it.mapper}" } ?: tr("emulator.unknown_mapper", "Unknown Mapper")
             // v0.1.71：只记录黑屏/无首帧信息，不再反复弹窗。
-            Log.w(TAG, "no frame rendered for FC/NES title=$title core=$coreName mapper=$mapperText header=$header")
+            Log.w(TAG, "no frame rendered for $processLogName title=$title core=$coreName mapper=$mapperText header=$header")
         }
     }
 
@@ -636,12 +646,12 @@ class InternalFcActivity : ComponentActivity() {
         runCatching {
             view.queueEvent {
                 runCatching { LibretroDroid.reset() }
-                    .onFailure { Log.e(TAG, "soft reset FC/NES core failed", it) }
+                    .onFailure { Log.e(TAG, "soft reset $processLogName core failed", it) }
             }
         }.onSuccess {
-            showToast(tr("emulator.restart_done", "Restarted current {platform} game", "platform" to "FC/NES"))
+            showToast(tr("emulator.restart_done", "Restarted current {platform} game", "platform" to platformLabel))
         }.onFailure {
-            Log.e(TAG, "queue soft reset FC/NES failed", it)
+            Log.e(TAG, "queue soft reset $processLogName failed", it)
             showToast(tr("emulator.restart_failed", "Failed to restart game"))
         }
     }
@@ -669,23 +679,23 @@ class InternalFcActivity : ComponentActivity() {
             startActivity(relay)
             overridePendingTransition(0, 0)
         }.onFailure {
-            Log.e(TAG, "relay internal fc restart failed", it)
+            Log.e(TAG, "relay internal $processLogName restart failed", it)
         }
 
         finish()
         overridePendingTransition(0, 0)
         turboHandler.postDelayed({
-            Log.w(TAG, "kill old internal_fc process after relay")
+            Log.w(TAG, "kill old $internalDirName process after relay")
             Process.killProcess(Process.myPid())
             exitProcess(0)
         }, 320L)
     }
 
     private fun buildGameStorage(romFile: File, title: String): FcGameStorage {
-        val displayName = sanitizeFileName(title.substringBeforeLast('.', title)).ifBlank { "FC_NES" }
+        val displayName = sanitizeFileName(title.substringBeforeLast('.', title)).ifBlank { if (isSfcMode) "SFC_SNES" else "FC_NES" }
         val digestSource = "${preparedRomStorageSeed.ifBlank { romFile.name }}:${romFile.length()}"
         val key = sha1(digestSource).take(16) + "_" + displayName.take(36)
-        val root = File(filesDir, "internal_fc/game_data/$key")
+        val root = File(filesDir, "$internalDirName/game_data/$key")
         return FcGameStorage(key, displayName, root)
     }
 
@@ -702,13 +712,19 @@ class InternalFcActivity : ComponentActivity() {
     private fun fcRomExtension(lowerName: String): String? =
         listOf(".nes", ".fds", ".unf", ".unif").firstOrNull { lowerName.endsWith(it) }
 
-    private fun isFcRomName(lowerName: String): Boolean = fcRomExtension(lowerName) != null
+    private fun sfcRomExtension(lowerName: String): String? =
+        listOf(".sfc", ".smc", ".swc", ".fig", ".bs", ".st").firstOrNull { lowerName.endsWith(it) }
+
+    private fun platformRomExtension(lowerName: String): String? =
+        if (isSfcMode) sfcRomExtension(lowerName) else fcRomExtension(lowerName)
+
+    private fun isPlatformRomName(lowerName: String): Boolean = platformRomExtension(lowerName) != null
 
     private fun asciiRomCacheName(prefix: String, seed: String, extension: String): String =
         "${prefix}_${sha1(seed).take(16)}${extension.lowercase(Locale.ROOT)}"
 
     private fun originalRomStorageName(name: String, extension: String): String =
-        if (fcRomExtension(name.lowercase(Locale.ROOT)) != null) name else "${name}${extension}"
+        if (platformRomExtension(name.lowercase(Locale.ROOT)) != null) name else "${name}${extension}"
 
     private fun sanitizeFileName(value: String): String =
         value.map { ch -> if (ch.isLetterOrDigit() || ch in listOf('.', '_', '-', ' ', '(', ')', '[', ']')) ch else '_' }
@@ -730,7 +746,7 @@ class InternalFcActivity : ComponentActivity() {
     }
 
     private fun exitInternalProcess(reason: String) {
-        Log.w(TAG, "exit internal fc process reason=$reason")
+        Log.w(TAG, "exit internal $processLogName process reason=$reason")
         suppressLifecycleSaveRam = true
         stopAllTurbo()
         controlsView?.releaseAll()
@@ -738,7 +754,7 @@ class InternalFcActivity : ComponentActivity() {
         finish()
         overridePendingTransition(0, 0)
         turboHandler.postDelayed({
-            Log.w(TAG, "kill internal_fc process after exit")
+            Log.w(TAG, "kill $internalDirName process after exit")
             Process.killProcess(Process.myPid())
             exitProcess(0)
         }, 260L)
@@ -810,6 +826,10 @@ class InternalFcActivity : ComponentActivity() {
         KeyEvent.KEYCODE_DPAD_RIGHT,
         KeyEvent.KEYCODE_BUTTON_A,
         KeyEvent.KEYCODE_BUTTON_B,
+        KeyEvent.KEYCODE_BUTTON_X,
+        KeyEvent.KEYCODE_BUTTON_Y,
+        KeyEvent.KEYCODE_BUTTON_L1,
+        KeyEvent.KEYCODE_BUTTON_R1,
         KeyEvent.KEYCODE_BUTTON_START,
         KeyEvent.KEYCODE_BUTTON_SELECT,
         KeyEvent.KEYCODE_ENTER,
@@ -876,6 +896,9 @@ class InternalFcActivity : ComponentActivity() {
         const val EXTRA_FILE_NAME = "file_name"
         const val EXTRA_TITLE = "title"
         const val EXTRA_AUTO_RESTORE_STATE = "auto_restore_state"
+        const val EXTRA_PLATFORM_LABEL = "platform_label"
+        const val EXTRA_CORE_FILE_NAME = "core_file_name"
+        const val SNES9X_CORE_FILE_NAME = "libsnes9x_libretro_android.so"
         private const val NESTOPIA_CORE_FILE_NAME = "libnestopia_libretro_android.so"
         private const val TAG = "GameHub_FC"
         private const val PREF_TOUCH_CONTROLS_ALPHA = "touch_controls_alpha"

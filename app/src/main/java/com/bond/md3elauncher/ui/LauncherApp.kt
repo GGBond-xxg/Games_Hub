@@ -126,6 +126,7 @@ fun LauncherApp(
                 BeaconTab.PSP -> games.any { it.platformId == PlatformKind.PSP.name } || tab == BeaconTab.PSP
                 BeaconTab.GBA -> games.any { it.platformId == PlatformKind.GBA.name } || tab == BeaconTab.GBA
                 BeaconTab.GB -> games.any { it.platformId == PlatformKind.GB.name } || tab == BeaconTab.GB
+                BeaconTab.SFC -> games.any { it.platformId == PlatformKind.SFC.name } || tab == BeaconTab.SFC
                 BeaconTab.NES -> games.any { it.platformId == PlatformKind.NES.name } || tab == BeaconTab.NES
                 BeaconTab.ANDROID -> true
                 else -> false
@@ -213,6 +214,10 @@ fun LauncherApp(
             }
             BeaconTab.GB -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.GB.name }
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
+            }
+            BeaconTab.SFC -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.SFC.name }
                 if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.NES -> {
@@ -563,6 +568,27 @@ fun LauncherApp(
                                 onToggleFavorite = onToggleFavorite
                             )
 
+
+
+                            BeaconTab.SFC -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.SFC },
+                                games = games.filter { it.platformId == PlatformKind.SFC.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                itemOrder = itemOrders["platform:${PlatformKind.SFC.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.SFC.name}", order) },
+                                onLaunchSelectedChange = { launchSelected = it },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
                             BeaconTab.NES -> PlatformBeaconScreen(
                                 platform = platforms.firstOrNull { it.kind == PlatformKind.NES },
                                 games = games.filter { it.platformId == PlatformKind.NES.name },
@@ -678,6 +704,7 @@ fun LauncherApp(
                             BeaconTab.PSP -> I18n.t(context, "launcher.center.psp", "PSP 游戏")
                             BeaconTab.GBA -> I18n.t(context, "launcher.center.gba", "GBA 游戏")
                             BeaconTab.GB -> I18n.t(context, "launcher.center.gb", "GB/GBC 游戏")
+                            BeaconTab.SFC -> I18n.t(context, "launcher.center.sfc", "SFC/SNES 游戏")
                             BeaconTab.NES -> I18n.t(context, "launcher.center.nes", "FC 游戏")
                             BeaconTab.SETTINGS -> I18n.t(context, "launcher.center.settings", "设置")
                         }
@@ -698,6 +725,7 @@ fun LauncherApp(
                 tab == BeaconTab.PSP -> I18n.t(context, "launcher.search.psp", "搜索 PSP 游戏")
                 tab == BeaconTab.GBA -> I18n.t(context, "launcher.search.gba", "搜索 GBA 游戏")
                 tab == BeaconTab.GB -> I18n.t(context, "launcher.search.gb", "搜索 GB/GBC 游戏")
+                tab == BeaconTab.SFC -> I18n.t(context, "launcher.search.sfc", "搜索 SFC/SNES 游戏")
                 tab == BeaconTab.NES -> I18n.t(context, "launcher.search.nes", "搜索 FC/NES 游戏")
                 tab == BeaconTab.SETTINGS -> I18n.t(context, "launcher.search.settings", "搜索设置")
                 else -> I18n.t(context, "common.search", "搜索")

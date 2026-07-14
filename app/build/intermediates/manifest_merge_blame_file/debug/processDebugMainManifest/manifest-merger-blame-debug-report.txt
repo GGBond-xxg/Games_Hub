@@ -1,8 +1,8 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.bond.md3elauncher"
-4    android:versionCode="87"
-5    android:versionName="0.1.87" >
+4    android:versionCode="90"
+5    android:versionName="0.1.90" >
 6
 7    <uses-sdk
 7-->INJECTED
@@ -17,415 +17,438 @@
 14        If you plan to publish to Google Play, this permission needs policy review or removal.
 15    -->
 16    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-16-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:8:5-77
-16-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:8:22-74
+16-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:8:5-77
+16-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:8:22-74
 17    <uses-permission android:name="android.permission.INTERNET" />
-17-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:9:5-67
-17-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:9:22-64
+17-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:9:5-67
+17-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:9:22-64
 18    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-18-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:10:5-79
-18-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:10:22-76
+18-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:10:5-79
+18-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:10:22-76
 19
 20    <!-- Android 11+ package visibility: allow querying launchable apps for emulator/app selection. -->
 21    <queries>
-21-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:13:5-83:15
+21-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:13:5-92:15
 22        <intent>
-22-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:14:9-17:18
+22-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:14:9-17:18
 23            <action android:name="android.intent.action.MAIN" />
-23-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:13-65
-23-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:21-62
+23-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:13-65
+23-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:21-62
 24
 25            <category android:name="android.intent.category.LAUNCHER" />
-25-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:16:13-73
-25-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:16:23-70
+25-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:16:13-73
+25-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:16:23-70
 26        </intent>
 27        <intent>
-27-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:18:9-21:18
+27-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:18:9-21:18
 28            <action android:name="android.intent.action.VIEW" />
-28-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-28-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
+28-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+28-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
 29
 30            <data android:mimeType="application/octet-stream" />
-30-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-30-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
+30-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+30-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
 31        </intent>
 32
 33        <package android:name="org.ppsspp.ppsspp" />
-33-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:22:9-53
-33-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:22:18-50
+33-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:22:9-53
+33-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:22:18-50
 34        <package android:name="org.ppsspp.ppssppgold" />
-34-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:23:9-57
-34-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:23:18-54
+34-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:23:9-57
+34-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:23:18-54
 35        <package android:name="org.yuzu.yuzu_emu" />
-35-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:24:9-53
-35-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:24:18-50
+35-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:24:9-53
+35-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:24:18-50
 36        <package android:name="org.sudachi.sudachi_emu.ea" />
-36-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:25:9-62
-36-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:25:18-59
+36-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:25:9-62
+36-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:25:18-59
 37        <package android:name="org.sudachi.sudachi_emu" />
-37-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:26:9-59
-37-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:26:18-56
+37-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:26:9-59
+37-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:26:18-56
 38        <package android:name="org.suyu.suyu_emu" />
-38-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:27:9-53
-38-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:27:18-50
+38-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:27:9-53
+38-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:27:18-50
 39        <package android:name="org.eden.emulator" />
-39-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:28:9-53
-39-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:28:18-50
+39-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:28:9-53
+39-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:28:18-50
 40        <package android:name="com.fastemulator.gba" />
-40-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:29:9-56
-40-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:29:18-53
+40-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:29:9-56
+40-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:29:18-53
 41        <package android:name="com.swordfish.lemuroid" />
-41-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:30:9-58
-41-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:30:18-55
+41-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:30:9-58
+41-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:30:18-55
 42        <package android:name="com.retroarch" />
-42-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:31:9-49
-42-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:31:18-46
+42-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:31:9-49
+42-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:31:18-46
 43        <package android:name="com.retroarch.aarch64" />
-43-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:32:9-57
-43-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:32:18-54
+43-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:32:9-57
+43-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:32:18-54
 44        <package android:name="com.retroarch.ra32" />
-44-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:33:9-54
-44-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:33:18-51
+44-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:33:9-54
+44-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:33:18-51
 45        <package android:name="com.retroarch.ra64" />
-45-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:34:9-54
-45-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:34:18-51
+45-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:34:9-54
+45-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:34:18-51
 46        <package android:name="com.retroarch.plus" />
-46-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:35:9-54
-46-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:35:18-51
-47        <package android:name="com.explusalpha.NesEmu" />
-47-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:36:9-58
-47-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:36:18-55
-48        <package android:name="com.johnemulators.johnness" />
-48-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:37:9-62
-48-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:37:18-59
-49        <package android:name="com.johnemulators.johnnesslite" />
-49-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:38:9-66
-49-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:38:18-63
-50        <package android:name="com.johnemulators.johnnes" />
-50-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:39:9-61
-50-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:39:18-58
-51        <package android:name="com.johnemulators.johnneslite" />
-51-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:40:9-65
-51-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:40:18-62
-52        <package android:name="com.nostalgiaemulators.neslite" />
-52-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:41:9-66
-52-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:41:18-63
-53        <package android:name="com.nostalgiaemulators.nesfull" />
-53-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:42:9-66
-53-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:42:18-63
-54
-55        <intent>
-55-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:43:9-46:18
-56            <action android:name="android.intent.action.VIEW" />
-56-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-56-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-57
-58            <data android:mimeType="application/x-iso9660-image" />
-58-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-58-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-59        </intent>
-60        <intent>
-60-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:47:9-50:18
-61            <action android:name="android.intent.action.VIEW" />
-61-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-61-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-62
-63            <data android:mimeType="application/x-cso" />
-63-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-63-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-64        </intent>
-65        <intent>
-65-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:51:9-54:18
-66            <action android:name="android.intent.action.VIEW" />
-66-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-66-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-67
-68            <data android:mimeType="application/x-chd" />
-68-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-68-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-69        </intent>
-70        <intent>
-70-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:55:9-58:18
-71            <action android:name="android.intent.action.VIEW" />
-71-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-71-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-72
-73            <data android:mimeType="application/x-gameboy-advance-rom" />
-73-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-73-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-74        </intent>
-75        <intent>
-75-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:59:9-62:18
-76            <action android:name="android.intent.action.VIEW" />
-76-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-76-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-77
-78            <data android:mimeType="application/x-gba-rom" />
-78-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-78-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-79        </intent>
-80        <intent>
-80-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:63:9-66:18
-81            <action android:name="android.intent.action.VIEW" />
-81-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-81-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-82
-83            <data android:mimeType="application/x-gameboy-rom" />
-83-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-83-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-84        </intent>
-85        <intent>
-85-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:67:9-70:18
-86            <action android:name="android.intent.action.VIEW" />
-86-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-86-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-87
-88            <data android:mimeType="application/x-gameboy-color-rom" />
-88-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-88-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-89        </intent>
-90        <intent>
-90-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:71:9-74:18
-91            <action android:name="android.intent.action.VIEW" />
-91-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-91-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-92
-93            <data android:mimeType="application/x-nes-rom" />
-93-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-93-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-94        </intent>
-95        <intent>
-95-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:75:9-78:18
-96            <action android:name="android.intent.action.VIEW" />
-96-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
-96-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
-97
-98            <data android:mimeType="application/x-nintendo-nes-rom" />
-98-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-98-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-99        </intent>
-100        <intent>
-100-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:79:9-82:18
-101            <action android:name="android.intent.action.SEND" />
-101-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:13-65
-101-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:21-62
-102
-103            <data android:mimeType="application/x-nes-rom" />
-103-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
-103-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
-104        </intent>
-105    </queries>
-106
-107    <uses-feature
-107-->[com.github.Swordfish90:LibretroDroid:0.13.2] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\cafa1dbffe9699485e3a719c6bc0c768\transformed\LibretroDroid-0.13.2\AndroidManifest.xml:9:5-11:35
-108        android:glEsVersion="0x00020000"
-108-->[com.github.Swordfish90:LibretroDroid:0.13.2] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\cafa1dbffe9699485e3a719c6bc0c768\transformed\LibretroDroid-0.13.2\AndroidManifest.xml:10:9-41
-109        android:required="true" />
-109-->[com.github.Swordfish90:LibretroDroid:0.13.2] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\cafa1dbffe9699485e3a719c6bc0c768\transformed\LibretroDroid-0.13.2\AndroidManifest.xml:11:9-32
-110
-111    <permission
-111-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:22:5-24:47
-112        android:name="com.bond.md3elauncher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-112-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:23:9-81
-113        android:protectionLevel="signature" />
-113-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:24:9-44
-114
-115    <uses-permission android:name="com.bond.md3elauncher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-115-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:26:5-97
-115-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:26:22-94
-116
-117    <application
-117-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:85:5-141:19
-118        android:allowBackup="true"
-118-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:86:9-35
-119        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-119-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:28:18-86
-120        android:debuggable="true"
-121        android:extractNativeLibs="true"
-121-->INJECTED
-122        android:icon="@mipmap/ic_launcher"
-122-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:88:9-43
-123        android:label="@string/app_name"
-123-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:87:9-41
-124        android:roundIcon="@mipmap/ic_launcher_round"
-124-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:89:9-54
-125        android:supportsRtl="true"
-125-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:91:9-35
-126        android:theme="@style/Theme.GameHub" >
-126-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-45
-127        <provider
-127-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:93:9-101:20
-128            android:name="androidx.core.content.FileProvider"
-128-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:94:13-62
-129            android:authorities="com.bond.md3elauncher.fileprovider"
-129-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:95:13-69
-130            android:exported="false"
-130-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:96:13-37
-131            android:grantUriPermissions="true" >
-131-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:97:13-47
-132            <meta-data
-132-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:98:13-100:54
-133                android:name="android.support.FILE_PROVIDER_PATHS"
-133-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:99:17-67
-134                android:resource="@xml/file_paths" />
-134-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:100:17-51
-135        </provider>
-136
-137        <activity
-137-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:104:9-110:136
-138            android:name="com.bond.md3elauncher.emulator.gba.InternalGbaActivity"
-138-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:105:13-61
-139            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
-139-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:110:13-133
-140            android:exported="false"
-140-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:106:13-37
-141            android:process=":internal_gba"
-141-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:107:13-44
-142            android:screenOrientation="sensorLandscape"
-142-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:108:13-56
-143            android:theme="@style/Theme.GameHub" />
-143-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-49
-144        <activity
-144-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:112:9-118:136
-145            android:name="com.bond.md3elauncher.emulator.fc.InternalFcActivity"
-145-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:113:13-59
-146            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
-146-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:118:13-133
-147            android:exported="false"
-147-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:114:13-37
-148            android:process=":internal_fc"
-148-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:115:13-43
-149            android:screenOrientation="sensorLandscape"
-149-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:116:13-56
-150            android:theme="@style/Theme.GameHub" />
-150-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-49
-151        <activity
-151-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:120:9-140:20
-152            android:name="com.bond.md3elauncher.MainActivity"
-152-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:121:13-41
-153            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
-153-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:126:13-133
-154            android:exported="true"
-154-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:122:13-36
-155            android:launchMode="singleTop"
-155-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:123:13-43
-156            android:screenOrientation="sensorLandscape"
-156-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:124:13-56
-157            android:windowSoftInputMode="adjustNothing|stateHidden" >
-157-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:125:13-68
-158
-159            <!-- Normal app icon entry. -->
-160            <intent-filter>
-160-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:129:13-132:29
-161                <action android:name="android.intent.action.MAIN" />
-161-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:13-65
-161-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:21-62
-162
-163                <category android:name="android.intent.category.LAUNCHER" />
-163-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:16:13-73
-163-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:16:23-70
-164            </intent-filter>
-165
-166            <!-- Home launcher candidate. Users still choose it in system default Home app settings. -->
-167            <intent-filter>
-167-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:135:13-139:29
-168                <action android:name="android.intent.action.MAIN" />
-168-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:13-65
-168-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:21-62
+46-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:35:9-54
+46-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:35:18-51
+47        <package android:name="com.explusalpha.Snes9xPlus" />
+47-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:36:9-62
+47-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:36:18-59
+48        <package android:name="com.explusalpha.NesEmu" />
+48-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:37:9-58
+48-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:37:18-55
+49        <package android:name="com.johnemulators.johnness" />
+49-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:38:9-62
+49-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:38:18-59
+50        <package android:name="com.johnemulators.johnnesslite" />
+50-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:39:9-66
+50-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:39:18-63
+51        <package android:name="com.johnemulators.johnnes" />
+51-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:40:9-61
+51-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:40:18-58
+52        <package android:name="com.johnemulators.johnneslite" />
+52-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:41:9-65
+52-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:41:18-62
+53        <package android:name="com.nostalgiaemulators.neslite" />
+53-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:42:9-66
+53-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:42:18-63
+54        <package android:name="com.nostalgiaemulators.nesfull" />
+54-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:43:9-66
+54-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:43:18-63
+55
+56        <intent>
+56-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:44:9-47:18
+57            <action android:name="android.intent.action.VIEW" />
+57-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+57-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+58
+59            <data android:mimeType="application/x-iso9660-image" />
+59-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+59-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+60        </intent>
+61        <intent>
+61-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:48:9-51:18
+62            <action android:name="android.intent.action.VIEW" />
+62-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+62-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+63
+64            <data android:mimeType="application/x-cso" />
+64-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+64-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+65        </intent>
+66        <intent>
+66-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:52:9-55:18
+67            <action android:name="android.intent.action.VIEW" />
+67-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+67-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+68
+69            <data android:mimeType="application/x-chd" />
+69-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+69-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+70        </intent>
+71        <intent>
+71-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:56:9-59:18
+72            <action android:name="android.intent.action.VIEW" />
+72-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+72-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+73
+74            <data android:mimeType="application/x-gameboy-advance-rom" />
+74-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+74-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+75        </intent>
+76        <intent>
+76-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:60:9-63:18
+77            <action android:name="android.intent.action.VIEW" />
+77-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+77-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+78
+79            <data android:mimeType="application/x-gba-rom" />
+79-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+79-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+80        </intent>
+81        <intent>
+81-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:64:9-67:18
+82            <action android:name="android.intent.action.VIEW" />
+82-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+82-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+83
+84            <data android:mimeType="application/x-gameboy-rom" />
+84-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+84-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+85        </intent>
+86        <intent>
+86-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:68:9-71:18
+87            <action android:name="android.intent.action.VIEW" />
+87-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+87-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+88
+89            <data android:mimeType="application/x-gameboy-color-rom" />
+89-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+89-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+90        </intent>
+91        <intent>
+91-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:72:9-75:18
+92            <action android:name="android.intent.action.VIEW" />
+92-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+92-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+93
+94            <data android:mimeType="application/x-snes-rom" />
+94-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+94-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+95        </intent>
+96        <intent>
+96-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:76:9-79:18
+97            <action android:name="android.intent.action.VIEW" />
+97-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+97-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+98
+99            <data android:mimeType="application/x-super-nintendo-rom" />
+99-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+99-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+100        </intent>
+101        <intent>
+101-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:80:9-83:18
+102            <action android:name="android.intent.action.VIEW" />
+102-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+102-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+103
+104            <data android:mimeType="application/x-nes-rom" />
+104-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+104-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+105        </intent>
+106        <intent>
+106-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:84:9-87:18
+107            <action android:name="android.intent.action.VIEW" />
+107-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
+107-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
+108
+109            <data android:mimeType="application/x-nintendo-nes-rom" />
+109-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+109-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+110        </intent>
+111        <intent>
+111-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:88:9-91:18
+112            <action android:name="android.intent.action.SEND" />
+112-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:89:13-65
+112-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:89:21-62
+113
+114            <data android:mimeType="application/x-nes-rom" />
+114-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
+114-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
+115        </intent>
+116    </queries>
+117
+118    <uses-feature
+118-->[com.github.Swordfish90:LibretroDroid:0.13.2] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\cafa1dbffe9699485e3a719c6bc0c768\transformed\LibretroDroid-0.13.2\AndroidManifest.xml:9:5-11:35
+119        android:glEsVersion="0x00020000"
+119-->[com.github.Swordfish90:LibretroDroid:0.13.2] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\cafa1dbffe9699485e3a719c6bc0c768\transformed\LibretroDroid-0.13.2\AndroidManifest.xml:10:9-41
+120        android:required="true" />
+120-->[com.github.Swordfish90:LibretroDroid:0.13.2] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\cafa1dbffe9699485e3a719c6bc0c768\transformed\LibretroDroid-0.13.2\AndroidManifest.xml:11:9-32
+121
+122    <permission
+122-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:22:5-24:47
+123        android:name="com.bond.md3elauncher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+123-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:23:9-81
+124        android:protectionLevel="signature" />
+124-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:24:9-44
+125
+126    <uses-permission android:name="com.bond.md3elauncher.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+126-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:26:5-97
+126-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:26:22-94
+127
+128    <application
+128-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:94:5-150:19
+129        android:allowBackup="true"
+129-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:95:9-35
+130        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+130-->[androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:28:18-86
+131        android:debuggable="true"
+132        android:extractNativeLibs="true"
+132-->INJECTED
+133        android:icon="@mipmap/ic_launcher"
+133-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:97:9-43
+134        android:label="@string/app_name"
+134-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:96:9-41
+135        android:roundIcon="@mipmap/ic_launcher_round"
+135-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:98:9-54
+136        android:supportsRtl="true"
+136-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:100:9-35
+137        android:theme="@style/Theme.GameHub" >
+137-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:99:9-45
+138        <provider
+138-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:102:9-110:20
+139            android:name="androidx.core.content.FileProvider"
+139-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:103:13-62
+140            android:authorities="com.bond.md3elauncher.fileprovider"
+140-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:104:13-69
+141            android:exported="false"
+141-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:105:13-37
+142            android:grantUriPermissions="true" >
+142-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:106:13-47
+143            <meta-data
+143-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:107:13-109:54
+144                android:name="android.support.FILE_PROVIDER_PATHS"
+144-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:108:17-67
+145                android:resource="@xml/file_paths" />
+145-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:109:17-51
+146        </provider>
+147
+148        <activity
+148-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:113:9-119:136
+149            android:name="com.bond.md3elauncher.emulator.gba.InternalGbaActivity"
+149-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:114:13-61
+150            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+150-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:119:13-133
+151            android:exported="false"
+151-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:115:13-37
+152            android:process=":internal_gba"
+152-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:116:13-44
+153            android:screenOrientation="sensorLandscape"
+153-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:117:13-56
+154            android:theme="@style/Theme.GameHub" />
+154-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:118:13-49
+155        <activity
+155-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:121:9-127:136
+156            android:name="com.bond.md3elauncher.emulator.fc.InternalFcActivity"
+156-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:122:13-59
+157            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+157-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:127:13-133
+158            android:exported="false"
+158-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:123:13-37
+159            android:process=":internal_fc"
+159-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:124:13-43
+160            android:screenOrientation="sensorLandscape"
+160-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:125:13-56
+161            android:theme="@style/Theme.GameHub" />
+161-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:126:13-49
+162        <activity
+162-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:129:9-149:20
+163            android:name="com.bond.md3elauncher.MainActivity"
+163-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:130:13-41
+164            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+164-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:135:13-133
+165            android:exported="true"
+165-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:131:13-36
+166            android:launchMode="singleTop"
+166-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:132:13-43
+167            android:screenOrientation="sensorLandscape"
+167-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:133:13-56
+168            android:windowSoftInputMode="adjustNothing|stateHidden" >
+168-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:134:13-68
 169
-170                <category android:name="android.intent.category.HOME" />
-170-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:137:17-73
-170-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:137:27-70
-171                <category android:name="android.intent.category.DEFAULT" />
-171-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:138:17-76
-171-->D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:138:27-73
-172            </intent-filter>
-173        </activity>
-174        <activity
-174-->[androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:23:9-25:39
-175            android:name="androidx.compose.ui.tooling.PreviewActivity"
-175-->[androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:24:13-71
-176            android:exported="true" />
-176-->[androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:25:13-36
-177
-178        <provider
-178-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
-179            android:name="androidx.startup.InitializationProvider"
-179-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
-180            android:authorities="com.bond.md3elauncher.androidx-startup"
-180-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
-181            android:exported="false" >
-181-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
-182            <meta-data
-182-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
-183                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-183-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
-184                android:value="androidx.startup" />
-184-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
-185            <meta-data
-185-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b1625f0bc39a389b6b5e666c7b3848fc\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:29:13-31:52
-186                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-186-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b1625f0bc39a389b6b5e666c7b3848fc\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:30:17-78
-187                android:value="androidx.startup" />
-187-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b1625f0bc39a389b6b5e666c7b3848fc\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:31:17-49
-188            <meta-data
-188-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
-189                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-189-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
-190                android:value="androidx.startup" />
-190-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
-191        </provider>
-192
-193        <uses-library
-193-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
-194            android:name="androidx.window.extensions"
-194-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
-195            android:required="false" />
-195-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
-196        <uses-library
-196-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
-197            android:name="androidx.window.sidecar"
-197-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
-198            android:required="false" />
-198-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
-199
-200        <receiver
-200-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
-201            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-201-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
-202            android:directBootAware="false"
-202-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
-203            android:enabled="true"
-203-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
-204            android:exported="true"
-204-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
-205            android:permission="android.permission.DUMP" >
-205-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
-206            <intent-filter>
-206-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
-207                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-207-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
-207-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
-208            </intent-filter>
-209            <intent-filter>
-209-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
-210                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-210-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
-210-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
-211            </intent-filter>
-212            <intent-filter>
-212-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
-213                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-213-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
-213-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
-214            </intent-filter>
-215            <intent-filter>
-215-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
-216                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-216-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
-216-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
-217            </intent-filter>
-218        </receiver>
-219    </application>
-220
-221</manifest>
+170            <!-- Normal app icon entry. -->
+171            <intent-filter>
+171-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:138:13-141:29
+172                <action android:name="android.intent.action.MAIN" />
+172-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:13-65
+172-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:21-62
+173
+174                <category android:name="android.intent.category.LAUNCHER" />
+174-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:16:13-73
+174-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:16:23-70
+175            </intent-filter>
+176
+177            <!-- Home launcher candidate. Users still choose it in system default Home app settings. -->
+178            <intent-filter>
+178-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:144:13-148:29
+179                <action android:name="android.intent.action.MAIN" />
+179-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:13-65
+179-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:21-62
+180
+181                <category android:name="android.intent.category.HOME" />
+181-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:146:17-73
+181-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:146:27-70
+182                <category android:name="android.intent.category.DEFAULT" />
+182-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:147:17-76
+182-->D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:147:27-73
+183            </intent-filter>
+184        </activity>
+185        <activity
+185-->[androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:23:9-25:39
+186            android:name="androidx.compose.ui.tooling.PreviewActivity"
+186-->[androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:24:13-71
+187            android:exported="true" />
+187-->[androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:25:13-36
+188
+189        <provider
+189-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+190            android:name="androidx.startup.InitializationProvider"
+190-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+191            android:authorities="com.bond.md3elauncher.androidx-startup"
+191-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+192            android:exported="false" >
+192-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+193            <meta-data
+193-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+194                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+194-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+195                android:value="androidx.startup" />
+195-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+196            <meta-data
+196-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b1625f0bc39a389b6b5e666c7b3848fc\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:29:13-31:52
+197                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+197-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b1625f0bc39a389b6b5e666c7b3848fc\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:30:17-78
+198                android:value="androidx.startup" />
+198-->[androidx.lifecycle:lifecycle-process:2.10.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b1625f0bc39a389b6b5e666c7b3848fc\transformed\lifecycle-process-2.10.0\AndroidManifest.xml:31:17-49
+199            <meta-data
+199-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+200                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+200-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+201                android:value="androidx.startup" />
+201-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+202        </provider>
+203
+204        <uses-library
+204-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
+205            android:name="androidx.window.extensions"
+205-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
+206            android:required="false" />
+206-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
+207        <uses-library
+207-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
+208            android:name="androidx.window.sidecar"
+208-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
+209            android:required="false" />
+209-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b3fb8d1663ac68041e3449041c6d4253\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
+210
+211        <receiver
+211-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+212            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+212-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+213            android:directBootAware="false"
+213-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+214            android:enabled="true"
+214-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+215            android:exported="true"
+215-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+216            android:permission="android.permission.DUMP" >
+216-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+217            <intent-filter>
+217-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+218                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+218-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+218-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+219            </intent-filter>
+220            <intent-filter>
+220-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+221                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+221-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+221-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+222            </intent-filter>
+223            <intent-filter>
+223-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+224                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+224-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+224-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+225            </intent-filter>
+226            <intent-filter>
+226-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+227                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+227-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+227-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\102f5139ec034b6b5ffd044da296775b\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+228            </intent-filter>
+229        </receiver>
+230    </application>
+231
+232</manifest>

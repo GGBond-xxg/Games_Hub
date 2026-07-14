@@ -16,7 +16,7 @@ internal object CommonEmulatorUiSpec {
     // mainMenuItems(context) / virtualKeyMenuItems(context) so the text comes from JSON.
     val MAIN_MENU_ITEMS: List<String> = listOf("Save States", "Virtual Buttons", "Cheats", "Reset", "Restart Game", "Exit Game")
 
-    val VIRTUAL_KEY_MENU_ITEMS: List<String> = listOf("Transparency", "Virtual Button Editor")
+    val VIRTUAL_KEY_MENU_ITEMS: List<String> = listOf("Real Controller Opacity", "Virtual Controller Opacity", "Virtual Button Editor")
 
     fun mainMenuItems(context: Context): List<String> = listOf(
         I18n.t(context, "emulator.menu.save", "Save States"),
@@ -28,7 +28,8 @@ internal object CommonEmulatorUiSpec {
     )
 
     fun virtualKeyMenuItems(context: Context): List<String> = listOf(
-        I18n.t(context, "emulator.menu.transparency", "Transparency"),
+        I18n.t(context, "emulator.menu.hardware_opacity", "Real Controller Opacity"),
+        I18n.t(context, "emulator.menu.touch_opacity", "Virtual Controller Opacity"),
         I18n.t(context, "emulator.menu.virtual_editor", "Virtual Button Editor")
     )
 

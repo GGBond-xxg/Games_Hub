@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:1-142:12
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:1:1-151:12
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:1:1-151:12
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:1:1-151:12
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:1:1-151:12
 MERGED from [androidx.navigationevent:navigationevent-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\9ca47a4e013b09fcdc4564a56cfcb658\transformed\navigationevent\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.navigationevent:navigationevent-compose-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\39d94ac69e9cc423232b5a2a210aac63\transformed\navigationevent-compose\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.compose.animation:animation-core-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\7f5846a1d670f020fabbdd3181315881\transformed\animation-core\AndroidManifest.xml:2:1-7:12
@@ -69,158 +69,166 @@ MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\Administrator\.grad
 MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\70cfa2f32bdf1f4f56cb45f44f0debc0\transformed\localbroadcastmanager-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.print:print:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b2dfc8dd8210ec1f8acdf525661935f2\transformed\print-1.0.0\AndroidManifest.xml:17:1-22:12
 	package
-		INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+		INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 	android:versionName
-		INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+		INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 	android:versionCode
-		INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+		INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 	xmlns:android
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:1:11-69
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:1:11-69
 uses-permission#android.permission.QUERY_ALL_PACKAGES
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:8:5-77
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:8:5-77
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:8:22-74
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:8:22-74
 uses-permission#android.permission.INTERNET
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:9:5-67
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:9:5-67
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:9:22-64
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:9:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:10:5-79
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:10:5-79
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:10:22-76
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:10:22-76
 queries
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:13:5-83:15
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:13:5-92:15
 intent#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:14:9-17:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:14:9-17:18
 action#android.intent.action.MAIN
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:13-65
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:13-65
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:15:21-62
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:15:21-62
 category#android.intent.category.LAUNCHER
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:16:13-73
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:16:13-73
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:16:23-70
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:16:23-70
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/octet-stream
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:18:9-21:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:18:9-21:18
 action#android.intent.action.VIEW
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:13-65
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:13-65
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:19:21-62
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:19:21-62
 data
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:13-65
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:13-65
 	android:mimeType
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:20:19-62
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:20:19-62
 package#org.ppsspp.ppsspp
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:22:9-53
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:22:9-53
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:22:18-50
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:22:18-50
 package#org.ppsspp.ppssppgold
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:23:9-57
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:23:9-57
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:23:18-54
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:23:18-54
 package#org.yuzu.yuzu_emu
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:24:9-53
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:24:9-53
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:24:18-50
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:24:18-50
 package#org.sudachi.sudachi_emu.ea
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:25:9-62
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:25:9-62
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:25:18-59
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:25:18-59
 package#org.sudachi.sudachi_emu
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:26:9-59
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:26:9-59
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:26:18-56
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:26:18-56
 package#org.suyu.suyu_emu
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:27:9-53
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:27:9-53
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:27:18-50
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:27:18-50
 package#org.eden.emulator
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:28:9-53
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:28:9-53
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:28:18-50
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:28:18-50
 package#com.fastemulator.gba
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:29:9-56
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:29:9-56
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:29:18-53
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:29:18-53
 package#com.swordfish.lemuroid
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:30:9-58
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:30:9-58
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:30:18-55
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:30:18-55
 package#com.retroarch
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:31:9-49
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:31:9-49
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:31:18-46
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:31:18-46
 package#com.retroarch.aarch64
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:32:9-57
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:32:9-57
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:32:18-54
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:32:18-54
 package#com.retroarch.ra32
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:33:9-54
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:33:9-54
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:33:18-51
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:33:18-51
 package#com.retroarch.ra64
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:34:9-54
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:34:9-54
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:34:18-51
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:34:18-51
 package#com.retroarch.plus
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:35:9-54
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:35:9-54
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:35:18-51
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:35:18-51
+package#com.explusalpha.Snes9xPlus
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:36:9-62
+	android:name
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:36:18-59
 package#com.explusalpha.NesEmu
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:36:9-58
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:37:9-58
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:36:18-55
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:37:18-55
 package#com.johnemulators.johnness
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:37:9-62
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:38:9-62
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:37:18-59
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:38:18-59
 package#com.johnemulators.johnnesslite
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:38:9-66
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:39:9-66
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:38:18-63
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:39:18-63
 package#com.johnemulators.johnnes
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:39:9-61
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:40:9-61
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:39:18-58
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:40:18-58
 package#com.johnemulators.johnneslite
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:40:9-65
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:41:9-65
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:40:18-62
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:41:18-62
 package#com.nostalgiaemulators.neslite
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:41:9-66
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:42:9-66
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:41:18-63
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:42:18-63
 package#com.nostalgiaemulators.nesfull
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:42:9-66
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:43:9-66
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:42:18-63
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:43:18-63
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-iso9660-image
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:43:9-46:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:44:9-47:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-cso
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:47:9-50:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:48:9-51:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-chd
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:51:9-54:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:52:9-55:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gameboy-advance-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:55:9-58:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:56:9-59:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gba-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:59:9-62:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:60:9-63:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gameboy-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:63:9-66:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:64:9-67:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-gameboy-color-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:67:9-70:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:68:9-71:18
+intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-snes-rom
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:72:9-75:18
+intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-super-nintendo-rom
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:76:9-79:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-nes-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:71:9-74:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:80:9-83:18
 intent#action:name:android.intent.action.VIEW+data:mimeType:application/x-nintendo-nes-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:75:9-78:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:84:9-87:18
 intent#action:name:android.intent.action.SEND+data:mimeType:application/x-nes-rom
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:79:9-82:18
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:88:9-91:18
 action#android.intent.action.SEND
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:13-65
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:89:13-65
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:80:21-62
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:89:21-62
 application
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:85:5-141:19
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:85:5-141:19
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:94:5-150:19
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:94:5-150:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:22:5-26:19
 MERGED from [androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\780d5cbaf8c4697b46bdcbb3afa369a3\transformed\emoji2-1.4.0\AndroidManifest.xml:23:5-33:19
@@ -238,95 +246,95 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Administrator\.gra
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\7255c4f6ba6f255526e8c218b4e24ebb\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\7255c4f6ba6f255526e8c218b4e24ebb\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
 	android:extractNativeLibs
-		INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+		INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.18.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\0649e144841a69d9f785a0e4c3b0c13d\transformed\core-1.18.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:91:9-35
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:100:9-35
 	android:label
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:87:9-41
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:96:9-41
 	android:roundIcon
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:89:9-54
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:98:9-54
 	android:icon
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:88:9-43
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:97:9-43
 	android:allowBackup
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:86:9-35
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:95:9-35
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:90:9-45
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:99:9-45
 provider#androidx.core.content.FileProvider
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:93:9-101:20
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:102:9-110:20
 	android:grantUriPermissions
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:97:13-47
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:106:13-47
 	android:authorities
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:95:13-69
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:104:13-69
 	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:96:13-37
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:105:13-37
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:94:13-62
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:103:13-62
 meta-data#android.support.FILE_PROVIDER_PATHS
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:98:13-100:54
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:107:13-109:54
 	android:resource
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:100:17-51
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:109:17-51
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:99:17-67
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:108:17-67
 activity#com.bond.md3elauncher.emulator.gba.InternalGbaActivity
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:104:9-110:136
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:113:9-119:136
 	android:screenOrientation
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:108:13-56
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:117:13-56
 	android:process
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:107:13-44
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:116:13-44
 	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:106:13-37
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:115:13-37
 	android:configChanges
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:110:13-133
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:119:13-133
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:109:13-49
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:118:13-49
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:105:13-61
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:114:13-61
 activity#com.bond.md3elauncher.emulator.fc.InternalFcActivity
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:112:9-118:136
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:121:9-127:136
 	android:screenOrientation
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:116:13-56
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:125:13-56
 	android:process
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:115:13-43
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:124:13-43
 	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:114:13-37
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:123:13-37
 	android:configChanges
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:118:13-133
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:127:13-133
 	android:theme
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:117:13-49
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:126:13-49
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:113:13-59
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:122:13-59
 activity#com.bond.md3elauncher.MainActivity
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:120:9-140:20
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:129:9-149:20
 	android:screenOrientation
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:124:13-56
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:133:13-56
 	android:launchMode
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:123:13-43
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:132:13-43
 	android:windowSoftInputMode
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:125:13-68
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:134:13-68
 	android:exported
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:122:13-36
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:131:13-36
 	android:configChanges
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:126:13-133
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:135:13-133
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:121:13-41
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:130:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:129:13-132:29
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:138:13-141:29
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.DEFAULT+category:name:android.intent.category.HOME
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:135:13-139:29
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:144:13-148:29
 category#android.intent.category.HOME
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:137:17-73
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:146:17-73
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:137:27-70
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:146:27-70
 category#android.intent.category.DEFAULT
-ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:138:17-76
+ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:147:17-76
 	android:name
-		ADDED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml:138:27-73
+		ADDED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml:147:27-73
 uses-sdk
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
-INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
+INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 MERGED from [androidx.navigationevent:navigationevent-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\9ca47a4e013b09fcdc4564a56cfcb658\transformed\navigationevent\AndroidManifest.xml:5:5-44
 MERGED from [androidx.navigationevent:navigationevent-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\9ca47a4e013b09fcdc4564a56cfcb658\transformed\navigationevent\AndroidManifest.xml:5:5-44
 MERGED from [androidx.navigationevent:navigationevent-compose-android:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\39d94ac69e9cc423232b5a2a210aac63\transformed\navigationevent-compose\AndroidManifest.xml:5:5-44
@@ -456,9 +464,9 @@ MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] C:\User
 MERGED from [androidx.print:print:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b2dfc8dd8210ec1f8acdf525661935f2\transformed\print-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.print:print:1.0.0] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\b2dfc8dd8210ec1f8acdf525661935f2\transformed\print-1.0.0\AndroidManifest.xml:20:5-44
 	android:targetSdkVersion
-		INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+		INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from D:\Code\ProJect\MD3ELauncher\app\src\main\AndroidManifest.xml
+		INJECTED from D:\Code\ProJect\GameHub\app\src\main\AndroidManifest.xml
 activity#androidx.compose.ui.tooling.PreviewActivity
 ADDED from [androidx.compose.ui:ui-tooling-android:1.11.4] C:\Users\Administrator\.gradle\caches\9.4.1\transforms\1d227a44546535193074b4b9c44ca4cc\transformed\ui-tooling\AndroidManifest.xml:23:9-25:39
 	android:exported

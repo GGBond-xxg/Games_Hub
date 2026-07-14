@@ -1029,3 +1029,25 @@ Recommended next platform after PSP / NS / GBA / GB/GBC / FC/NES is **SFC/SNES**
 - App label is now `GameHub` for all locales.
 - I18n app name, controller shortcut subtitle, Appearance descriptions, cover scraper User-Agent, project display name, theme display identifiers, and README branding now use `GameHub`.
 - Internal Android package id remains `com.bond.md3elauncher` to avoid changing install identity or breaking app data updates.
+
+## v0.1.88 - SFC/SNES internal emulator
+
+- Added SFC/SNES platform tab and platform manager entry.
+- Added built-in SFC/SNES launch path using the Snes9x libretro core.
+- Supported SFC/SNES ROM extensions: `.sfc`, `.smc`, `.swc`, `.fig`, `.bs`, `.st`, plus regular `.zip` containing those ROMs.
+- SFC/SNES reuses the existing internal emulator common UI: GBA-style virtual buttons, save-state menu, virtual button settings, reset, restart game, and exit.
+- SFC/SNES supports external emulator selection as an optional fallback: Snes9x EX+, SuperRetro16, RetroArch, or compatible apps.
+- PSP and NS remain external-emulator based.
+
+## v0.1.89
+- GB/GBC：增加 My OldBoy! 专用外部启动尝试，优先调用可能的 EmulatorActivity，而不是直接落到普通启动器页。
+- 如果当前 My OldBoy! 版本未开放稳定的外部 ROM 直启入口，会提示使用内置 GB/GBC 模拟器；内置 GB/GBC 仍是最稳定的一键启动方案。
+
+## v0.1.90
+- Built-in emulator virtual button settings were normalized across GBA, GB/GBC, FC/NES, and SFC/SNES.
+- Virtual button settings now use three separate entries:
+  - Real Controller Opacity: opacity used only after a physical controller is connected.
+  - Virtual Controller Opacity: opacity used when touching on-screen virtual controls.
+  - Virtual Button Editor: position/size/custom combo editor entry.
+- Real controller opacity and virtual controller opacity are independent and no longer mixed.
+- FC/NES and SFC/SNES now read the common internal virtual-control preference store used by GBA/GB, so shared opacity and saved layout values stay aligned across internal emulators.

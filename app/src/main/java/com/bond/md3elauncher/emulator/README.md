@@ -160,3 +160,10 @@ emulator.short.exit
 新增内置模拟器时，不要直接写死中文菜单。必须复用 `CommonEmulatorUiSpec` 和 `I18n.t()`。
 
 Canvas 绘制文本必须做宽度保护，长文本要省略，避免国际化后菜单重叠。
+
+## SFC/SNES - v0.1.88
+
+- Internal SFC/SNES uses `libsnes9x_libretro_android.so`.
+- `PlatformKind.SFC` and `internal:sfc` identify the platform.
+- SFC/SNES must reuse the same common internal emulator UI conventions as GBA, GB/GBC and FC/NES.
+- Keep visible strings in `assets/i18n/*.json`.

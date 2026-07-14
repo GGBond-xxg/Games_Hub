@@ -172,3 +172,36 @@ Built-in emulator visible text must not be hardcoded in Kotlin. GBA/GB/GBC and F
 ## v0.1.85 internal emulator process lifecycle
 
 GBA / GB/GBC uses `:internal_gba`; FC/NES uses `:internal_fc`. These processes can keep old in-memory caches, including language settings. Normal emulator Exit now kills the internal process after finishing the Activity. Language mode is also written to `filesDir/i18n_language_mode.txt` for cross-process reads.
+
+## v0.1.88 SFC/SNES notes
+
+SFC/SNES is now part of the common emulator roadmap and should follow the same built-in emulator UI rules as GBA, GB/GBC and FC/NES.
+
+Implementation rules:
+- Built-in core: `libsnes9x_libretro_android.so`.
+- Platform kind: `PlatformKind.SFC`.
+- Top tab: `SFC`.
+- Display name: `SFC/SNES`.
+- ROM extensions: `.sfc`, `.smc`, `.swc`, `.fig`, `.bs`, `.st`, `.zip`, `.7z`.
+- Direct 7z loading is listed for scanning but not loaded by the internal core yet; users should extract 7z or use an external emulator.
+- Use the shared internal emulator menu and GBA-style virtual button layout.
+
+## v0.1.89 - My OldBoy! external launch note
+
+Some My OldBoy! builds only expose their normal launcher / ROM browser to other apps. GameHub now tries known My OldBoy! emulator activities and exported ROM VIEW activities first. If the installed build still opens only My OldBoy! itself, use GameHub's built-in GB/GBC emulator for true one-click launch.
+
+## v0.1.90 Virtual Controls Rule
+All built-in emulators must treat physical-controller opacity and touch-controller opacity as two separate settings:
+
+1. Real Controller Opacity
+   - Used after a hardware controller is detected.
+   - Default can be 0% so virtual controls do not block the screen.
+
+2. Virtual Controller Opacity
+   - Used when the player is using on-screen touch controls.
+   - Should remain visible enough for touch play.
+
+3. Virtual Button Editor
+   - Used for button position, size, and custom combo button editing.
+
+GBA and GB/GBC already share these settings. FC/NES and SFC/SNES must also use the common internal virtual-control preference store so opacity and layout behavior remain consistent.

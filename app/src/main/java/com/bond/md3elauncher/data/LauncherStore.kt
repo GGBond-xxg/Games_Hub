@@ -236,7 +236,7 @@ class LauncherStore(context: Context) {
     }
 
     fun saveTabOrder(order: List<String>) {
-        val allowed = setOf("NS", "PSP", "GBA", "GB", "NES", "ANDROID")
+        val allowed = setOf("NS", "PSP", "GBA", "GB", "SFC", "NES", "ANDROID")
         val clean = (order.filter { it in allowed } + defaultTabOrder()).distinct()
         val arr = JSONArray()
         clean.forEach { arr.put(it) }
@@ -316,6 +316,7 @@ class LauncherStore(context: Context) {
         PlatformConfig(id = PlatformKind.SWITCH.name, kind = PlatformKind.SWITCH),
         PlatformConfig(id = PlatformKind.GBA.name, kind = PlatformKind.GBA),
         PlatformConfig(id = PlatformKind.GB.name, kind = PlatformKind.GB),
+        PlatformConfig(id = PlatformKind.SFC.name, kind = PlatformKind.SFC),
         PlatformConfig(id = PlatformKind.NES.name, kind = PlatformKind.NES)
     )
 
@@ -324,7 +325,7 @@ class LauncherStore(context: Context) {
         return platforms + defaultPlatforms().filter { it.id !in existingIds }
     }
 
-    private fun defaultTabOrder(): List<String> = listOf("PSP", "NS", "GBA", "GB", "NES", "ANDROID")
+    private fun defaultTabOrder(): List<String> = listOf("PSP", "NS", "GBA", "GB", "SFC", "NES", "ANDROID")
 
     private fun JSONObject.optStringOrNull(key: String): String? =
         if (has(key) && !isNull(key)) optString(key).takeIf { it.isNotBlank() } else null

@@ -4,7 +4,7 @@ import android.graphics.RectF
 import com.bond.md3elauncher.emulator.common.CommonEmulatorUiSpec
 import java.io.File
 
-internal enum class MenuPage { MAIN, SAVE, LOAD, DELETE_SAVE, VIRTUAL_KEYS, VIRTUAL_ALPHA, VIRTUAL_EDITOR, CHEATS, CUSTOM_CHEATS, CUSTOM_CHEAT_DELETE, RESET_CONFIRM }
+internal enum class MenuPage { MAIN, SAVE, LOAD, DELETE_SAVE, VIRTUAL_KEYS, VIRTUAL_ALPHA, VIRTUAL_TOUCH_ALPHA, VIRTUAL_EDITOR, CHEATS, CUSTOM_CHEATS, CUSTOM_CHEAT_DELETE, RESET_CONFIRM }
 
 internal enum class SlotListMode { SAVE, LOAD, DELETE }
 
