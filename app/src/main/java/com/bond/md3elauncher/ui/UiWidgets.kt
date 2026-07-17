@@ -54,7 +54,12 @@ internal fun AppIcon(app: InstalledApp, size: Int) {
 }
 
 @Composable
-internal fun AppPreviewImage(app: InstalledApp, overridePath: String?, modifier: Modifier = Modifier) {
+internal fun AppPreviewImage(
+    app: InstalledApp,
+    overridePath: String?,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit
+) {
     val context = LocalContext.current
     val overrideVersion = imagePathVersion(overridePath)
     val bitmap = remember(app.packageName, overridePath, overrideVersion) {
@@ -64,12 +69,18 @@ internal fun AppPreviewImage(app: InstalledApp, overridePath: String?, modifier:
     PreviewBitmapOrIcon(
         bitmap = bitmap,
         modifier = modifier,
+        contentScale = contentScale,
         fallback = { Icon(Icons.Rounded.Apps, contentDescription = null, modifier = Modifier.fillMaxSize().padding(12.dp)) }
     )
 }
 
 @Composable
-internal fun GameCover(game: GameItem, overridePath: String? = null, modifier: Modifier = Modifier) {
+internal fun GameCover(
+    game: GameItem,
+    overridePath: String? = null,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit
+) {
     val overrideVersion = imagePathVersion(overridePath)
     val coverVersion = if (overridePath.isNullOrBlank()) imagePathVersion(game.coverPath) else 0L
     val coverBitmap = remember(game.coverPath, overridePath, overrideVersion, coverVersion) {
@@ -78,6 +89,7 @@ internal fun GameCover(game: GameItem, overridePath: String? = null, modifier: M
     PreviewBitmapOrIcon(
         bitmap = coverBitmap,
         modifier = modifier,
+        contentScale = contentScale,
         fallback = {
             Icon(
                 Icons.Rounded.SportsEsports,
@@ -93,6 +105,7 @@ internal fun GameCover(game: GameItem, overridePath: String? = null, modifier: M
 private fun PreviewBitmapOrIcon(
     bitmap: ImageBitmap?,
     modifier: Modifier,
+    contentScale: ContentScale,
     fallback: @Composable () -> Unit
 ) {
     Box(
@@ -104,7 +117,7 @@ private fun PreviewBitmapOrIcon(
                 bitmap = bitmap,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
+                contentScale = contentScale
             )
         } else {
             fallback()
@@ -115,8 +128,11 @@ private fun PreviewBitmapOrIcon(
 internal fun itemTitle(overrides: Map<String, ItemOverride>, key: String, fallback: String): String =
     overrides[key]?.title?.takeIf { it.isNotBlank() } ?: fallback
 
-internal fun itemImagePath(overrides: Map<String, ItemOverride>, key: String, fallback: String? = null): String? =
-    overrides[key]?.imagePath?.takeIf { it.isNotBlank() } ?: fallback
+internal fun itemPreviewImagePath(overrides: Map<String, ItemOverride>, key: String, fallback: String? = null): String? =
+    overrides[key]?.previewImagePath?.takeIf { it.isNotBlank() } ?: fallback
+
+internal fun itemGridImagePath(overrides: Map<String, ItemOverride>, key: String, fallback: String? = null): String? =
+    overrides[key]?.gridImagePath?.takeIf { it.isNotBlank() } ?: fallback
 
 internal fun platformDisplayName(title: String): String = when (title.lowercase()) {
     "switch" -> "NS"

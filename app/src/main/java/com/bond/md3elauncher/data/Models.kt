@@ -74,6 +74,11 @@ enum class LandscapeMode(val title: String, val subtitle: String) {
     RIGHT("横屏 2", "锁定反向横屏方向")
 }
 
+enum class LauncherLayoutMode {
+    LIST,
+    GRID
+}
+
 enum class Destination(val title: String) {
     FAVORITES("收藏"),
     LIBRARY("游戏库"),
@@ -109,7 +114,8 @@ data class SafeMarginSettings(
 data class ItemOverride(
     val key: String,
     val title: String? = null,
-    val imagePath: String? = null
+    val previewImagePath: String? = null,
+    val gridImagePath: String? = null
 )
 
 data class ScraperSettings(

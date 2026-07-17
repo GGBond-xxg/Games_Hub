@@ -43,6 +43,7 @@ import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.InstalledApp
 import com.bond.md3elauncher.data.ItemOverride
 import com.bond.md3elauncher.data.LandscapeMode
+import com.bond.md3elauncher.data.LauncherLayoutMode
 import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
 import com.bond.md3elauncher.data.ScraperSettings
@@ -60,6 +61,7 @@ fun LauncherApp(
     itemOverrides: Map<String, ItemOverride>,
     androidGames: Set<String>,
     landscapeMode: LandscapeMode,
+    launcherLayoutMode: LauncherLayoutMode,
     themeMode: ThemeMode,
     useDynamicColor: Boolean,
     safeMargins: SafeMarginSettings,
@@ -79,10 +81,16 @@ fun LauncherApp(
     onToggleFavorite: (GameItem) -> Unit,
     onToggleAndroidFavorite: (InstalledApp) -> Unit,
     onToggleAndroidGame: (InstalledApp) -> Unit,
-    onSaveItemOverride: (key: String, title: String, imageUriString: String?) -> Unit,
+    onSaveItemOverride: (
+        key: String,
+        title: String,
+        previewImageUriString: String?,
+        gridImageUriString: String?
+    ) -> Unit,
     onLaunchAndroidApp: (InstalledApp) -> Unit,
     onOpenHomeSettings: () -> Unit,
     onSetLandscapeMode: (LandscapeMode) -> Unit,
+    onSetLauncherLayoutMode: (LauncherLayoutMode) -> Unit,
     onSetThemeMode: (ThemeMode) -> Unit,
     onSetDynamicColor: (Boolean) -> Unit,
     onSetSafeMargins: (SafeMarginSettings) -> Unit,
@@ -117,7 +125,7 @@ fun LauncherApp(
     var moveSelectionUp by remember { mutableStateOf<(() -> Unit)?>(null) }
     var moveSelectionDown by remember { mutableStateOf<(() -> Unit)?>(null) }
     var editTarget by remember { mutableStateOf<EditTarget?>(null) }
-    var editCenterText by remember { mutableStateOf(I18n.t(context, "edit.title", "编辑显示信息")) }
+    var editCenterText by remember { mutableStateOf("") }
     var controllerShortcutCaptureHandler by remember { mutableStateOf<((AndroidKeyEvent) -> Boolean)?>(null) }
     val visibleTabs = remember(games, tabOrder, tab) {
         val orderedMiddle = normalizedTabOrder(tabOrder).filter { candidate ->
@@ -428,13 +436,18 @@ fun LauncherApp(
                             target = editTarget!!,
                             scraperSettings = scraperSettings,
                             onBack = {
-                                editCenterText = I18n.t(context, "edit.title", "编辑显示信息")
+                                editCenterText = ""
                                 editTarget = null
                             },
                             onFooterTextChange = { editCenterText = it },
-                            onSave = { title, imageUriString ->
-                                onSaveItemOverride(editTarget!!.key, title, imageUriString)
-                                editCenterText = I18n.t(context, "edit.title", "编辑显示信息")
+                            onSave = { title, previewImageUriString, gridImageUriString ->
+                                onSaveItemOverride(
+                                    editTarget!!.key,
+                                    title,
+                                    previewImageUriString,
+                                    gridImageUriString
+                                )
+                                editCenterText = ""
                                 editTarget = null
                             }
                         )
@@ -457,6 +470,7 @@ fun LauncherApp(
                             taggedApps = androidGames,
                             itemOverrides = itemOverrides,
                             query = searchQuery,
+                            layoutMode = launcherLayoutMode,
                             itemOrder = itemOrders["android_all"].orEmpty(),
                             onSaveItemOrder = { order -> onSaveItemOrder("android_all", order) },
                             onLaunchSelectedChange = { launchSelected = it },
@@ -478,6 +492,7 @@ fun LauncherApp(
                                 installedApps = installedApps,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["favorites"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("favorites", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -498,6 +513,7 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.SWITCH.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.SWITCH.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -517,6 +533,7 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.PSP.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.PSP.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -536,6 +553,7 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.GBA.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.GBA.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -555,6 +573,7 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.GB.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.GB.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -576,6 +595,7 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.SFC.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.SFC.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -595,6 +615,7 @@ fun LauncherApp(
                                 favorites = favorites,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.NES.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.NES.name}", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -614,6 +635,7 @@ fun LauncherApp(
                                 taggedApps = androidGames,
                                 itemOverrides = itemOverrides,
                                 query = searchQuery,
+                                layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["android_games"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("android_games", order) },
                                 onLaunchSelectedChange = { launchSelected = it },
@@ -683,14 +705,20 @@ fun LauncherApp(
                 BeaconBottomBar(
                     onBAction = bottomBAction,
                     bLabel = bottomBDisplayLabel,
-                    onSettings = {
-                        if (tab != BeaconTab.SETTINGS || showAllApps || setupPlatformId != null || appPickerPlatform != null || editTarget != null) {
-                            selectTab(BeaconTab.SETTINGS)
+                    onSettings = if (!isBackPage) {
+                        {
+                            if (tab != BeaconTab.SETTINGS || showAllApps || setupPlatformId != null || appPickerPlatform != null || editTarget != null) {
+                                selectTab(BeaconTab.SETTINGS)
+                            }
                         }
+                    } else {
+                        null
                     },
                     onSearch = bottomSearchAction,
                     onMoveUp = if (!isBackPage) moveSelectionUp else null,
                     onMoveDown = if (!isBackPage) moveSelectionDown else null,
+                    layoutMode = launcherLayoutMode,
+                    onLayoutModeChange = if (!isBackPage) onSetLauncherLayoutMode else null,
                     onLaunchSelected = if (editTarget == null && appPickerPlatform == null) launchSelected else null,
                     centerText = if (editTarget != null) {
                         editCenterText

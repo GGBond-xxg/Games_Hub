@@ -283,6 +283,8 @@
   "launcher.home.dismiss": "Not Now",
   "launcher.home.text": "If this device is mainly used for games, you can set this app as the default home screen. Pressing Home will return here.",
   "launcher.home.title": "Set as default home?",
+  "launcher.layout.list": "List",
+  "launcher.layout.grid": "Grid",
   "launcher.preview.select_android_app": "Select an Android App",
   "launcher.preview.select_favorite": "Select a Favorite",
   "launcher.preview.select_game": "Select a Game",
@@ -447,5 +449,16 @@
   "emulator.virtual.subtitle.hardware_opacity": "Adjust opacity when a real controller is connected",
   "emulator.virtual.subtitle.touch_opacity": "Adjust opacity when using virtual touch controls",
   "emulator.hint.virtual_touch_alpha": "Adjust opacity when using virtual touch controls. Left/right adjust, B back.",
-  "emulator.virtual.touch_alpha_note": "Controls shown while using the touch screen. This does not affect real-controller mode."
+  "emulator.virtual.touch_alpha_note": "Controls shown while using the touch screen. This does not affect real-controller mode.",
+  "edit.preview_image": "Preview Image",
+  "edit.grid_image": "Grid Image",
+  "edit.search_preview_image": "Choose Preview Image Online",
+  "edit.search_grid_image": "Choose Grid Image Online",
+  "edit.pick_preview_image": "Choose Preview Image from Device",
+  "edit.pick_grid_image": "Choose Grid Image from Device",
+  "edit.dual_image_hint": "The preview image is used in the large panel on the right; the grid image is used on game cards on the left. Use portrait for preview and landscape for grid.",
+  "edit.preview_usage": "Right Preview · Portrait",
+  "edit.grid_usage": "Grid Card · Landscape",
+  "edit.choose_online": "Online",
+  "edit.choose_device": "Device"
 }

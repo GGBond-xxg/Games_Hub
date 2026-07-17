@@ -1,3 +1,27 @@
+## v0.1.93 Edit display page rule
+
+- Keep preview and grid artwork as separate image slots, but group each slot's image, usage description, online picker, device picker, and restore action inside one card.
+- Display-name editing belongs in the top current-name button; do not add another full-width name action below the artwork cards.
+- On wide landscape layouts, the preview and grid cards must stay side by side and fill the remaining edit-page height. Narrow layouts may stack and scroll.
+- Back/detail pages only show bottom hints for actions that are currently available. Do not render disabled X / L3 / R3 / A hints or duplicate the edit-page title in the footer.
+- All new visible strings must remain synchronized across `en.json`, `zh.json`, and `zh-Hant.json`.
+
+## v0.1.92 Launcher artwork and layout rule
+
+- `ItemOverride` separates `previewImagePath` and `gridImagePath`. The preview image is only for the large right-side preview; the grid image is for left-side game cards.
+- Legacy `imagePath` data must be migrated to both image fields when loading so existing custom artwork is not lost.
+- Long-press edit actions are arranged as two columns: online preview / online grid, device preview / device grid, with display-name editing on a full-width row.
+- List / grid switching uses icon-only controls beside the A launch hint in the bottom bar. Do not restore the old text switcher below the content area.
+- First launch defaults to GRID on tablet-class devices (`smallestScreenWidthDp >= 600`) and LIST on phones. Once the user switches manually, the stored choice takes priority.
+- Grid remains capped at four columns and the right-side preview remains visible. L3 / R3 ordering, long-press A edit, A launch, and B favorite / add behavior stay identical in both modes.
+
+## v0.1.91 Launcher layout rule (historical, superseded by v0.1.92)
+
+- 收藏、游戏平台、安卓游戏、全部应用统一支持列表 / 宫格切换。
+- v0.1.91 used a text switcher below the content area; v0.1.92 moves it to icon buttons beside A.
+- 宫格最多 4 列，仍保留右侧竖向预览。
+- 非中文底部按键只显示圆形键帽，并使用紧凑间距。
+
 
 ## v0.1.80 I18N / 文本规范补充
 

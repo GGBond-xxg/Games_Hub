@@ -3,21 +3,33 @@ package com.bond.md3elauncher.ui
 import android.view.ViewConfiguration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,9 +66,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.InstalledApp
 import com.bond.md3elauncher.data.ItemOverride
+import com.bond.md3elauncher.data.LauncherLayoutMode
 import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.i18n.I18n
 import kotlinx.coroutines.Job
@@ -90,12 +104,52 @@ private fun reorderedKeys(keys: List<String>, selectedKey: String?, delta: Int):
 }
 
 @Composable
+private fun LibraryContentScaffold(
+    layoutMode: LauncherLayoutMode,
+    listContent: @Composable () -> Unit,
+    gridContent: @Composable () -> Unit,
+    preview: @Composable () -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxSize()
+            .padding(start = 18.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(Modifier.weight(1f).fillMaxHeight()) {
+            if (layoutMode == LauncherLayoutMode.GRID) gridContent() else listContent()
+        }
+        preview()
+    }
+}
+
+@Composable
+private fun ResponsiveLauncherGrid(
+    state: LazyGridState,
+    content: LazyGridScope.() -> Unit
+) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val columns = (maxWidth.value / 148f).toInt().coerceIn(1, 4)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns),
+            state = state,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 1.dp, end = 1.dp, top = 2.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
 internal fun FavoritesBeaconScreen(
     games: List<GameItem>,
     favorites: Set<String>,
     installedApps: List<InstalledApp>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
+    layoutMode: LauncherLayoutMode,
     itemOrder: List<String>,
     onSaveItemOrder: (List<String>) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
@@ -157,7 +211,14 @@ internal fun FavoritesBeaconScreen(
     }
 
     val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
+    LaunchedEffect(layoutMode) {
+        val index = entries.indexOfFirst { it.key == selected?.key }
+        if (index >= 0) {
+            if (layoutMode == LauncherLayoutMode.GRID) gridState.scrollToItem(index) else listState.scrollToItem(index)
+        }
+    }
     fun moveFavoriteSelection(delta: Int) {
         val key = selected?.key ?: return
         val keys = entries.map { it.key }
@@ -167,10 +228,14 @@ internal fun FavoritesBeaconScreen(
         val nextIndex = next.indexOf(key).coerceAtLeast(0)
         scope.launch {
             delay(80L)
-            listState.scrollToItem(nextIndex.coerceAtLeast(0))
+            if (layoutMode == LauncherLayoutMode.GRID) {
+                gridState.scrollToItem(nextIndex.coerceAtLeast(0))
+            } else {
+                listState.scrollToItem(nextIndex.coerceAtLeast(0))
+            }
         }
     }
-    LaunchedEffect(entries, selected?.key, query) {
+    LaunchedEffect(entries, selected?.key, query, layoutMode) {
         val index = entries.indexOfFirst { it.key == selected?.key }
         val canReorder = query.isBlank() && index >= 0
         onMoveSelectionActionsChange(
@@ -186,38 +251,60 @@ internal fun FavoritesBeaconScreen(
             onLaunchSelectedChange = onLaunchSelectedChange
         )
     } else {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(start = 18.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxHeight()) {
-                lazyItems(entries, key = { it.key }) { entry ->
-                    FavoriteRow(
-                        entry = entry,
-                        selected = selected?.key == entry.key,
-                        onFocus = { selectedKey = entry.key },
-                        onClick = {
-                            if (selected?.key == entry.key) {
-                                entry.game?.let(onLaunchGame)
-                                entry.app?.let(onLaunchAndroidApp)
-                            } else {
-                                selectedKey = entry.key
+        LibraryContentScaffold(
+            layoutMode = layoutMode,
+            listContent = {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    lazyItems(entries, key = { it.key }) { entry ->
+                        FavoriteRow(
+                            entry = entry,
+                            selected = selected?.key == entry.key,
+                            onFocus = { selectedKey = entry.key },
+                            onClick = {
+                                if (selected?.key == entry.key) {
+                                    entry.game?.let(onLaunchGame)
+                                    entry.app?.let(onLaunchAndroidApp)
+                                } else {
+                                    selectedKey = entry.key
+                                }
+                            },
+                            onLongClick = { onEdit(entry.toEditTarget(itemOverrides, context)) },
+                            onToggle = {
+                                entry.game?.let(onToggleFavorite)
+                                entry.app?.let(onToggleAndroidFavorite)
                             }
-                        },
-                        onLongClick = {
-                            onEdit(entry.toEditTarget(itemOverrides, context))
-                        },
-                        onToggle = {
-                            entry.game?.let(onToggleFavorite)
-                            entry.app?.let(onToggleAndroidFavorite)
-                        }
-                    )
+                        )
+                    }
                 }
-            }
-            FavoritePreview(entry = selected, itemOverrides = itemOverrides)
-        }
+            },
+            gridContent = {
+                ResponsiveLauncherGrid(state = gridState) {
+                    items(entries.size, key = { entries[it].key }) { index ->
+                        val entry = entries[index]
+                        FavoriteGridCard(
+                            entry = entry,
+                            selected = selected?.key == entry.key,
+                            itemOverrides = itemOverrides,
+                            onFocus = { selectedKey = entry.key },
+                            onClick = {
+                                if (selected?.key == entry.key) {
+                                    entry.game?.let(onLaunchGame)
+                                    entry.app?.let(onLaunchAndroidApp)
+                                } else {
+                                    selectedKey = entry.key
+                                }
+                            },
+                            onLongClick = { onEdit(entry.toEditTarget(itemOverrides, context)) },
+                            onToggle = {
+                                entry.game?.let(onToggleFavorite)
+                                entry.app?.let(onToggleAndroidFavorite)
+                            }
+                        )
+                    }
+                }
+            },
+            preview = { FavoritePreview(entry = selected, itemOverrides = itemOverrides) }
+        )
     }
 }
 
@@ -315,6 +402,7 @@ internal fun PlatformBeaconScreen(
     favorites: Set<String>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
+    layoutMode: LauncherLayoutMode,
     itemOrder: List<String>,
     onSaveItemOrder: (List<String>) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
@@ -350,7 +438,14 @@ internal fun PlatformBeaconScreen(
     }
 
     val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
+    LaunchedEffect(layoutMode) {
+        val index = visible.indexOfFirst { it.id == selected?.id }
+        if (index >= 0) {
+            if (layoutMode == LauncherLayoutMode.GRID) gridState.scrollToItem(index) else listState.scrollToItem(index)
+        }
+    }
     fun moveGameSelection(delta: Int) {
         val key = selected?.id ?: return
         val keys = visible.map { it.id }
@@ -360,10 +455,14 @@ internal fun PlatformBeaconScreen(
         val nextIndex = next.indexOf(key).coerceAtLeast(0)
         scope.launch {
             delay(80L)
-            listState.scrollToItem(nextIndex.coerceAtLeast(0))
+            if (layoutMode == LauncherLayoutMode.GRID) {
+                gridState.scrollToItem(nextIndex.coerceAtLeast(0))
+            } else {
+                listState.scrollToItem(nextIndex.coerceAtLeast(0))
+            }
         }
     }
-    LaunchedEffect(visible, selected?.id, query) {
+    LaunchedEffect(visible, selected?.id, query, layoutMode) {
         val index = visible.indexOfFirst { it.id == selected?.id }
         val canReorder = query.isBlank() && index >= 0
         onMoveSelectionActionsChange(
@@ -384,33 +483,45 @@ internal fun PlatformBeaconScreen(
             onLaunchSelectedChange = onLaunchSelectedChange
         )
     } else {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(start = 18.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxHeight()) {
-                lazyItems(visible, key = { it.id }) { game ->
-                    val isSelected = selected?.id == game.id
-                    GameRow(
-                        game = game,
-                        selected = isSelected,
-                        favorite = game.id in favorites,
-                        itemOverrides = itemOverrides,
-                        onFocus = { selectedId = game.id },
-                        onClick = {
-                            if (isSelected) onLaunchGame(game) else selectedId = game.id
-                        },
-                        onLongClick = {
-                            onEdit(game.toEditTarget(itemOverrides))
-                        },
-                        onToggleFavorite = { onToggleFavorite(game) }
-                    )
+        LibraryContentScaffold(
+            layoutMode = layoutMode,
+            listContent = {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    lazyItems(visible, key = { it.id }) { game ->
+                        val isSelected = selected?.id == game.id
+                        GameRow(
+                            game = game,
+                            selected = isSelected,
+                            favorite = game.id in favorites,
+                            itemOverrides = itemOverrides,
+                            onFocus = { selectedId = game.id },
+                            onClick = { if (isSelected) onLaunchGame(game) else selectedId = game.id },
+                            onLongClick = { onEdit(game.toEditTarget(itemOverrides)) },
+                            onToggleFavorite = { onToggleFavorite(game) }
+                        )
+                    }
                 }
-            }
-            GamePreview(game = selected, itemOverrides = itemOverrides)
-        }
+            },
+            gridContent = {
+                ResponsiveLauncherGrid(state = gridState) {
+                    items(visible.size, key = { visible[it].id }) { index ->
+                        val game = visible[index]
+                        val isSelected = selected?.id == game.id
+                        GameGridCard(
+                            game = game,
+                            selected = isSelected,
+                            favorite = game.id in favorites,
+                            itemOverrides = itemOverrides,
+                            onFocus = { selectedId = game.id },
+                            onClick = { if (isSelected) onLaunchGame(game) else selectedId = game.id },
+                            onLongClick = { onEdit(game.toEditTarget(itemOverrides)) },
+                            onToggleFavorite = { onToggleFavorite(game) }
+                        )
+                    }
+                }
+            },
+            preview = { GamePreview(game = selected, itemOverrides = itemOverrides) }
+        )
     }
 }
 
@@ -445,6 +556,7 @@ internal fun AndroidBeaconScreen(
     taggedApps: Set<String>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
+    layoutMode: LauncherLayoutMode,
     itemOrder: List<String>,
     onSaveItemOrder: (List<String>) -> Unit,
     onLaunchSelectedChange: ((() -> Unit)?) -> Unit,
@@ -488,7 +600,14 @@ internal fun AndroidBeaconScreen(
     }
 
     val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
+    LaunchedEffect(layoutMode) {
+        val index = visible.indexOfFirst { it.packageName == selected?.packageName }
+        if (index >= 0) {
+            if (layoutMode == LauncherLayoutMode.GRID) gridState.scrollToItem(index) else listState.scrollToItem(index)
+        }
+    }
     fun moveAndroidSelection(delta: Int) {
         val selectedApp = selected ?: return
         val key = "app:${selectedApp.packageName}"
@@ -499,10 +618,14 @@ internal fun AndroidBeaconScreen(
         val nextIndex = next.indexOf(key).coerceAtLeast(0)
         scope.launch {
             delay(80L)
-            listState.scrollToItem(nextIndex.coerceAtLeast(0))
+            if (layoutMode == LauncherLayoutMode.GRID) {
+                gridState.scrollToItem(nextIndex.coerceAtLeast(0))
+            } else {
+                listState.scrollToItem(nextIndex.coerceAtLeast(0))
+            }
         }
     }
-    LaunchedEffect(visible, selected?.packageName, query) {
+    LaunchedEffect(visible, selected?.packageName, query, layoutMode) {
         val index = visible.indexOfFirst { it.packageName == selected?.packageName }
         val canReorder = query.isBlank() && index >= 0
         onMoveSelectionActionsChange(
@@ -526,37 +649,53 @@ internal fun AndroidBeaconScreen(
             onLaunchSelectedChange = onLaunchSelectedChange
         )
     } else {
-        Row(
-            Modifier
-                .fillMaxSize()
-                .padding(start = 18.dp, end = 6.dp, top = 2.dp, bottom = 2.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            LazyColumn(state = listState, modifier = Modifier.weight(1f).fillMaxHeight()) {
-                lazyItems(visible, key = { it.packageName }) { app ->
-                    val key = "app:${app.packageName}"
-                    val isSelected = selected?.packageName == app.packageName
-                    AndroidAppRow(
-                        app = app,
-                        selected = isSelected,
-                        favorite = key in favorites,
-                        tagged = key in taggedApps,
-                        itemOverrides = itemOverrides,
-                        showFavoriteButton = onlyTagged,
-                        onFocus = { selectedPackage = app.packageName },
-                        onClick = {
-                            if (isSelected) onLaunchAndroidApp(app) else selectedPackage = app.packageName
-                        },
-                        onLongClick = {
-                            onEdit(app.toEditTarget(itemOverrides, context))
-                        },
-                        onToggleFavorite = { onToggleAndroidFavorite(app) },
-                        onToggleTag = { onToggleAndroidTag(app) }
-                    )
+        LibraryContentScaffold(
+            layoutMode = layoutMode,
+            listContent = {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+                    lazyItems(visible, key = { it.packageName }) { app ->
+                        val key = "app:${app.packageName}"
+                        val isSelected = selected?.packageName == app.packageName
+                        AndroidAppRow(
+                            app = app,
+                            selected = isSelected,
+                            favorite = key in favorites,
+                            tagged = key in taggedApps,
+                            itemOverrides = itemOverrides,
+                            showFavoriteButton = onlyTagged,
+                            onFocus = { selectedPackage = app.packageName },
+                            onClick = { if (isSelected) onLaunchAndroidApp(app) else selectedPackage = app.packageName },
+                            onLongClick = { onEdit(app.toEditTarget(itemOverrides, context)) },
+                            onToggleFavorite = { onToggleAndroidFavorite(app) },
+                            onToggleTag = { onToggleAndroidTag(app) }
+                        )
+                    }
                 }
-            }
-            AndroidAppPreview(app = selected, itemOverrides = itemOverrides)
-        }
+            },
+            gridContent = {
+                ResponsiveLauncherGrid(state = gridState) {
+                    items(visible.size, key = { visible[it].packageName }) { index ->
+                        val app = visible[index]
+                        val key = "app:${app.packageName}"
+                        val isSelected = selected?.packageName == app.packageName
+                        AndroidAppGridCard(
+                            app = app,
+                            selected = isSelected,
+                            favorite = key in favorites,
+                            tagged = key in taggedApps,
+                            itemOverrides = itemOverrides,
+                            showFavoriteButton = onlyTagged,
+                            onFocus = { selectedPackage = app.packageName },
+                            onClick = { if (isSelected) onLaunchAndroidApp(app) else selectedPackage = app.packageName },
+                            onLongClick = { onEdit(app.toEditTarget(itemOverrides, context)) },
+                            onToggleFavorite = { onToggleAndroidFavorite(app) },
+                            onToggleTag = { onToggleAndroidTag(app) }
+                        )
+                    }
+                }
+            },
+            preview = { AndroidAppPreview(app = selected, itemOverrides = itemOverrides) }
+        )
     }
 }
 
@@ -699,7 +838,7 @@ private fun AndroidAppRow(
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AppPreviewImage(app = app, overridePath = itemImagePath(itemOverrides, key), modifier = Modifier.size(34.dp))
+            AppPreviewImage(app = app, overridePath = itemGridImagePath(itemOverrides, key), modifier = Modifier.size(34.dp))
             Spacer(Modifier.width(10.dp))
             Text(itemTitle(itemOverrides, key, app.label), modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
             if (showFavoriteButton) {
@@ -719,6 +858,216 @@ private fun AndroidAppRow(
             }
         }
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LauncherGridCard(
+    title: String,
+    selected: Boolean,
+    onFocus: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    image: @Composable () -> Unit,
+    action: @Composable () -> Unit
+) {
+    val shape = RoundedCornerShape(13.dp)
+    val borderColor = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outline.copy(alpha = 0.36f)
+    }
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(if (selected) 2.dp else 1.dp, borderColor, shape)
+            .clip(shape)
+            .gamepadLongPressEdit(onLongClick)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .onFocusChanged { if (it.isFocused) onFocus() }
+            .focusable(),
+        shape = shape
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1.82f)
+                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.32f)),
+                contentAlignment = Alignment.Center
+            ) {
+                image()
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(34.dp)
+                    .background(
+                        if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.86f)
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                    )
+                    .padding(start = 10.dp, end = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = if (selected) FontWeight.Black else FontWeight.SemiBold
+                )
+                action()
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteGridCard(
+    entry: FavoriteEntry,
+    selected: Boolean,
+    itemOverrides: Map<String, ItemOverride>,
+    onFocus: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onToggle: () -> Unit
+) {
+    LauncherGridCard(
+        title = entry.title,
+        selected = selected,
+        onFocus = onFocus,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        image = {
+            when {
+                entry.game != null -> GameCover(
+                    game = entry.game,
+                    overridePath = itemGridImagePath(itemOverrides, entry.key),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                entry.app != null -> {
+                    val overridePath = itemGridImagePath(itemOverrides, entry.key)
+                    AppPreviewImage(
+                        app = entry.app,
+                        overridePath = overridePath,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(if (overridePath.isNullOrBlank()) 18.dp else 0.dp),
+                        contentScale = if (overridePath.isNullOrBlank()) ContentScale.Fit else ContentScale.Crop
+                    )
+                }
+            }
+        },
+        action = {
+            IconButton(
+                onClick = onToggle,
+                modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
+            ) {
+                Icon(
+                    Icons.Rounded.Star,
+                    contentDescription = I18n.t(LocalContext.current, "launcher.bottom.unfavorite", "取消收藏"),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun GameGridCard(
+    game: GameItem,
+    selected: Boolean,
+    favorite: Boolean,
+    itemOverrides: Map<String, ItemOverride>,
+    onFocus: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onToggleFavorite: () -> Unit
+) {
+    LauncherGridCard(
+        title = itemTitle(itemOverrides, game.id, game.title),
+        selected = selected,
+        onFocus = onFocus,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        image = {
+            GameCover(
+                game = game,
+                overridePath = itemGridImagePath(itemOverrides, game.id),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        },
+        action = {
+            IconButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
+            ) {
+                Icon(
+                    if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                    contentDescription = I18n.t(LocalContext.current, "launcher.bottom.favorite", "收藏"),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun AndroidAppGridCard(
+    app: InstalledApp,
+    selected: Boolean,
+    favorite: Boolean,
+    tagged: Boolean,
+    itemOverrides: Map<String, ItemOverride>,
+    showFavoriteButton: Boolean,
+    onFocus: () -> Unit,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    onToggleTag: () -> Unit
+) {
+    val context = LocalContext.current
+    val key = "app:${app.packageName}"
+    val overridePath = itemGridImagePath(itemOverrides, key)
+    LauncherGridCard(
+        title = itemTitle(itemOverrides, key, app.label),
+        selected = selected,
+        onFocus = onFocus,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        image = {
+            AppPreviewImage(
+                app = app,
+                overridePath = overridePath,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(if (overridePath.isNullOrBlank()) 18.dp else 0.dp),
+                contentScale = if (overridePath.isNullOrBlank()) ContentScale.Fit else ContentScale.Crop
+            )
+        },
+        action = {
+            IconButton(
+                onClick = if (showFavoriteButton) onToggleFavorite else onToggleTag,
+                modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
+            ) {
+                Icon(
+                    imageVector = if (showFavoriteButton) {
+                        if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder
+                    } else {
+                        if (tagged) Icons.Rounded.SportsEsports else Icons.Outlined.SportsEsports
+                    },
+                    contentDescription = if (showFavoriteButton) {
+                        I18n.t(context, "launcher.bottom.favorite", "收藏")
+                    } else {
+                        I18n.t(context, "launcher.action.mark_as_game", "标记为游戏")
+                    },
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -778,7 +1127,11 @@ private fun GamePreview(game: GameItem?, itemOverrides: Map<String, ItemOverride
     PreviewFrame {
         GameCover(
             game = game,
-            overridePath = itemImagePath(itemOverrides, game.id),
+            overridePath = itemPreviewImagePath(
+                itemOverrides,
+                game.id,
+                game.backgroundPath ?: game.coverPath
+            ),
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -793,7 +1146,7 @@ private fun AndroidAppPreview(app: InstalledApp?, itemOverrides: Map<String, Ite
     PreviewFrame {
         AppPreviewImage(
             app = app,
-            overridePath = itemImagePath(itemOverrides, "app:${app.packageName}"),
+            overridePath = itemPreviewImagePath(itemOverrides, "app:${app.packageName}"),
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -848,7 +1201,10 @@ private fun GameItem.toEditTarget(overrides: Map<String, ItemOverride>): EditTar
         key = id,
         defaultTitle = title,
         currentTitle = itemTitle(overrides, id, title),
-        currentImagePath = itemImagePath(overrides, id, coverPath),
+        currentPreviewImagePath = overrides[id]?.previewImagePath,
+        currentGridImagePath = overrides[id]?.gridImagePath,
+        defaultPreviewImagePath = backgroundPath ?: coverPath,
+        defaultGridImagePath = coverPath,
         typeLabel = platformDisplayName(platformTitle)
     )
 
@@ -858,7 +1214,10 @@ private fun InstalledApp.toEditTarget(overrides: Map<String, ItemOverride>, cont
         key = key,
         defaultTitle = label,
         currentTitle = itemTitle(overrides, key, label),
-        currentImagePath = itemImagePath(overrides, key),
+        currentPreviewImagePath = overrides[key]?.previewImagePath,
+        currentGridImagePath = overrides[key]?.gridImagePath,
+        defaultPreviewImagePath = null,
+        defaultGridImagePath = null,
         typeLabel = I18n.t(context, "launcher.type.android_app", "安卓应用")
     )
 }
@@ -866,5 +1225,14 @@ private fun InstalledApp.toEditTarget(overrides: Map<String, ItemOverride>, cont
 private fun FavoriteEntry.toEditTarget(overrides: Map<String, ItemOverride>, context: android.content.Context): EditTarget {
     game?.let { return it.toEditTarget(overrides) }
     app?.let { return it.toEditTarget(overrides, context) }
-    return EditTarget(key = key, defaultTitle = title, currentTitle = title, currentImagePath = itemImagePath(overrides, key), typeLabel = typeLabel)
+    return EditTarget(
+        key = key,
+        defaultTitle = title,
+        currentTitle = title,
+        currentPreviewImagePath = overrides[key]?.previewImagePath,
+        currentGridImagePath = overrides[key]?.gridImagePath,
+        defaultPreviewImagePath = null,
+        defaultGridImagePath = null,
+        typeLabel = typeLabel
+    )
 }

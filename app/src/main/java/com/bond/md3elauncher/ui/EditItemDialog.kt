@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,8 +33,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.PhotoLibrary
+import androidx.compose.material.icons.rounded.Restore
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
@@ -76,32 +82,51 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URL
 
+private enum class EditImageSlot {
+    PREVIEW,
+    GRID
+}
+
 @Composable
 internal fun EditItemPage(
     target: EditTarget,
     scraperSettings: ScraperSettings,
     onBack: () -> Unit,
     onFooterTextChange: (String) -> Unit = {},
-    onSave: (title: String, imageUriString: String?) -> Unit
+    onSave: (
+        title: String,
+        previewImageUriString: String?,
+        gridImageUriString: String?
+    ) -> Unit
 ) {
     val context = LocalContext.current
     var title by rememberSaveable(target.key) { mutableStateOf(target.currentTitle) }
-    var selectedImageUri by rememberSaveable(target.key) { mutableStateOf<String?>(null) }
-    var showScraper by rememberSaveable(target.key) { mutableStateOf(false) }
+    var selectedPreviewImageUri by rememberSaveable(target.key) { mutableStateOf<String?>(null) }
+    var selectedGridImageUri by rememberSaveable(target.key) { mutableStateOf<String?>(null) }
+    var scraperSlot by rememberSaveable(target.key) { mutableStateOf<EditImageSlot?>(null) }
 
-    LaunchedEffect(showScraper, scraperSettings, I18n.languageFor(context)) {
-        onFooterTextChange(if (showScraper) compactSourceText(context, scraperSettings) else I18n.t(context, "edit.title", "编辑显示信息"))
+    LaunchedEffect(scraperSlot, scraperSettings, I18n.languageFor(context)) {
+        onFooterTextChange(
+            if (scraperSlot != null) compactSourceText(context, scraperSettings)
+            else ""
+        )
     }
 
-    if (showScraper) {
+    val activeScraperSlot = scraperSlot
+    if (activeScraperSlot != null) {
         CoverScrapePage(
             target = target,
+            imageSlot = activeScraperSlot,
             queryTitle = title,
             scraperSettings = scraperSettings,
-            onBack = { showScraper = false },
+            onBack = { scraperSlot = null },
             onSelected = { localPath ->
-                selectedImageUri = Uri.fromFile(File(localPath)).toString()
-                showScraper = false
+                val uri = Uri.fromFile(File(localPath)).toString()
+                when (activeScraperSlot) {
+                    EditImageSlot.PREVIEW -> selectedPreviewImageUri = uri
+                    EditImageSlot.GRID -> selectedGridImageUri = uri
+                }
+                scraperSlot = null
             }
         )
         return
@@ -110,14 +135,16 @@ internal fun EditItemPage(
     EditInfoPage(
         target = target,
         title = title,
-        selectedImageUri = selectedImageUri,
+        selectedPreviewImageUri = selectedPreviewImageUri,
+        selectedGridImageUri = selectedGridImageUri,
         onTitleChange = { title = it },
-        onImageSelected = { selectedImageUri = it },
-        onSearchCover = { showScraper = true },
+        onPreviewImageSelected = { selectedPreviewImageUri = it },
+        onGridImageSelected = { selectedGridImageUri = it },
+        onSearchPreviewImage = { scraperSlot = EditImageSlot.PREVIEW },
+        onSearchGridImage = { scraperSlot = EditImageSlot.GRID },
         onBack = onBack,
-        onSave = { onSave(title, selectedImageUri) },
-        onRestoreName = { title = target.defaultTitle },
-        onRemoveImage = { selectedImageUri = "__REMOVE__" }
+        onSave = { onSave(title, selectedPreviewImageUri, selectedGridImageUri) },
+        onRestoreName = { title = target.defaultTitle }
     )
 }
 
@@ -125,128 +152,261 @@ internal fun EditItemPage(
 private fun EditInfoPage(
     target: EditTarget,
     title: String,
-    selectedImageUri: String?,
+    selectedPreviewImageUri: String?,
+    selectedGridImageUri: String?,
     onTitleChange: (String) -> Unit,
-    onImageSelected: (String?) -> Unit,
-    onSearchCover: () -> Unit,
+    onPreviewImageSelected: (String?) -> Unit,
+    onGridImageSelected: (String?) -> Unit,
+    onSearchPreviewImage: () -> Unit,
+    onSearchGridImage: () -> Unit,
     onBack: () -> Unit,
     onSave: () -> Unit,
-    onRestoreName: () -> Unit,
-    onRemoveImage: () -> Unit
+    onRestoreName: () -> Unit
 ) {
     val context = LocalContext.current
     var showNameDialog by rememberSaveable(target.key) { mutableStateOf(false) }
     var draftTitle by rememberSaveable(target.key) { mutableStateOf(title) }
+    var pickerSlot by remember { mutableStateOf<EditImageSlot?>(null) }
+
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) onImageSelected(uri.toString())
-    }
-    val previewBitmap = remember(target.currentImagePath, selectedImageUri) {
-        runCatching {
-            when {
-                selectedImageUri == "__REMOVE__" -> null
-                !selectedImageUri.isNullOrBlank() -> {
-                    val uri = Uri.parse(selectedImageUri)
-                    if (uri.scheme == "file") {
-                        BitmapFactory.decodeFile(uri.path)?.asImageBitmap()
-                    } else {
-                        context.contentResolver.openInputStream(uri)?.use { input ->
-                            BitmapFactory.decodeStream(input)?.asImageBitmap()
-                        }
-                    }
-                }
-                !target.currentImagePath.isNullOrBlank() -> BitmapFactory.decodeFile(target.currentImagePath)?.asImageBitmap()
-                else -> null
+        val slot = pickerSlot
+        pickerSlot = null
+        if (uri != null) {
+            when (slot) {
+                EditImageSlot.PREVIEW -> onPreviewImageSelected(uri.toString())
+                EditImageSlot.GRID -> onGridImageSelected(uri.toString())
+                null -> Unit
             }
-        }.getOrNull()
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 18.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
-            Text(
-                I18n.t(context, "edit.title", "编辑显示信息"),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(
-                title.ifBlank { target.defaultTitle },
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
-            if (previewBitmap != null) {
-                TextButton(onClick = onRemoveImage) { Text(I18n.t(context, "edit.remove_cover", "移除封面"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                Spacer(Modifier.width(6.dp))
-            }
-            OutlinedButton(onClick = onBack) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            Spacer(Modifier.width(8.dp))
-            FilledTonalButton(onClick = onSave, enabled = title.isNotBlank()) { Text(I18n.t(context, "common.save", "保存"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
+    }
 
-        Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-            Surface(
+    val previewBitmap = remember(
+        target.currentPreviewImagePath,
+        target.defaultPreviewImagePath,
+        selectedPreviewImageUri
+    ) {
+        loadEditImageBitmap(
+            context = context,
+            selectedImageUri = selectedPreviewImageUri,
+            currentImagePath = target.currentPreviewImagePath,
+            defaultImagePath = target.defaultPreviewImagePath
+        )
+    }
+    val gridBitmap = remember(
+        target.currentGridImagePath,
+        target.defaultGridImagePath,
+        selectedGridImageUri
+    ) {
+        loadEditImageBitmap(
+            context = context,
+            selectedImageUri = selectedGridImageUri,
+            currentImagePath = target.currentGridImagePath,
+            defaultImagePath = target.defaultGridImagePath
+        )
+    }
+
+    val canRestorePreview = selectedPreviewImageUri != "__REMOVE__" &&
+        (target.currentPreviewImagePath != null || !selectedPreviewImageUri.isNullOrBlank())
+    val canRestoreGrid = selectedGridImageUri != "__REMOVE__" &&
+        (target.currentGridImagePath != null || !selectedGridImageUri.isNullOrBlank())
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val useTwoColumns = maxWidth >= 620.dp
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
                 modifier = Modifier
-                    .width(184.dp)
-                    .fillMaxHeight(),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f),
-                shape = RoundedCornerShape(24.dp)
+                    .fillMaxWidth()
+                    .height(42.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(Modifier.fillMaxSize().padding(10.dp), contentAlignment = Alignment.Center) {
-                    if (previewBitmap != null) {
-                        Image(
-                            bitmap = previewBitmap,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit
-                        )
-                    } else {
-                        Icon(Icons.Rounded.Apps, contentDescription = null, modifier = Modifier.size(74.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
-                    }
+                IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        Icons.Rounded.ArrowBack,
+                        contentDescription = I18n.t(context, "common.back", "返回")
+                    )
                 }
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                FilledTonalButton(onClick = onSearchCover, modifier = Modifier.fillMaxWidth()) { Text(I18n.t(context, "edit.search_cover", "联网搜索封面"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                FilledTonalButton(onClick = { imagePicker.launch("image/*") }, modifier = Modifier.fillMaxWidth()) { Text(I18n.t(context, "edit.pick_cover", "设备选择封面"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                FilledTonalButton(
+                Text(
+                    I18n.t(context, "edit.title", "编辑显示信息"),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(12.dp))
+                OutlinedButton(
                     onClick = {
                         draftTitle = title.ifBlank { target.defaultTitle }
                         showNameDialog = true
                     },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text(I18n.t(context, "edit.edit_display_name", "编辑显示名称"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.36f),
-                    shape = RoundedCornerShape(18.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                    shape = RoundedCornerShape(13.dp)
                 ) {
+                    Icon(
+                        Icons.Rounded.Edit,
+                        contentDescription = I18n.t(context, "edit.edit_display_name", "编辑显示名称"),
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(Modifier.width(7.dp))
                     Text(
-                        I18n.t(context, "edit.cover_hint", "封面建议使用竖版 3:4 图片，推荐 600×800 px；PNG/JPG 都可以，过大图片会自动适配显示。"),
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
+                        title.ifBlank { target.defaultTitle },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+                Spacer(Modifier.width(8.dp))
+                TextButton(
+                    onClick = onBack,
+                    modifier = Modifier.height(38.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
+                ) {
+                    Text(
+                        I18n.t(context, "common.cancel", "取消"),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(Modifier.width(4.dp))
+                Button(
+                    onClick = onSave,
+                    enabled = title.isNotBlank(),
+                    modifier = Modifier.height(38.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
+                    shape = RoundedCornerShape(13.dp)
+                ) {
+                    Text(
+                        I18n.t(context, "common.save", "保存"),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+            }
 
-                Spacer(Modifier.height(6.dp))
+            if (useTwoColumns) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    EditArtworkCard(
+                        title = I18n.t(context, "edit.preview_image", "预览图"),
+                        usageText = I18n.t(context, "edit.preview_usage", "右侧大图 · 建议竖版"),
+                        titleIcon = Icons.Rounded.PhotoLibrary,
+                        bitmap = previewBitmap,
+                        canRestore = canRestorePreview,
+                        onRestore = { onPreviewImageSelected("__REMOVE__") },
+                        onSearch = onSearchPreviewImage,
+                        onPick = {
+                            pickerSlot = EditImageSlot.PREVIEW
+                            imagePicker.launch("image/*")
+                        },
+                        searchAccessibilityLabel = I18n.t(
+                            context,
+                            "edit.search_preview_image",
+                            "联网选择预览图"
+                        ),
+                        pickAccessibilityLabel = I18n.t(
+                            context,
+                            "edit.pick_preview_image",
+                            "设备选择预览图"
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        contentScale = ContentScale.Fit,
+                        portraitPreview = true
+                    )
+                    EditArtworkCard(
+                        title = I18n.t(context, "edit.grid_image", "宫格图"),
+                        usageText = I18n.t(context, "edit.grid_usage", "宫格卡片 · 建议横版"),
+                        titleIcon = Icons.Rounded.Apps,
+                        bitmap = gridBitmap,
+                        canRestore = canRestoreGrid,
+                        onRestore = { onGridImageSelected("__REMOVE__") },
+                        onSearch = onSearchGridImage,
+                        onPick = {
+                            pickerSlot = EditImageSlot.GRID
+                            imagePicker.launch("image/*")
+                        },
+                        searchAccessibilityLabel = I18n.t(
+                            context,
+                            "edit.search_grid_image",
+                            "联网选择宫格图"
+                        ),
+                        pickAccessibilityLabel = I18n.t(
+                            context,
+                            "edit.pick_grid_image",
+                            "设备选择宫格图"
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        contentScale = ContentScale.Crop,
+                        portraitPreview = false
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    EditArtworkCard(
+                        title = I18n.t(context, "edit.preview_image", "预览图"),
+                        usageText = I18n.t(context, "edit.preview_usage", "右侧大图 · 建议竖版"),
+                        titleIcon = Icons.Rounded.PhotoLibrary,
+                        bitmap = previewBitmap,
+                        canRestore = canRestorePreview,
+                        onRestore = { onPreviewImageSelected("__REMOVE__") },
+                        onSearch = onSearchPreviewImage,
+                        onPick = {
+                            pickerSlot = EditImageSlot.PREVIEW
+                            imagePicker.launch("image/*")
+                        },
+                        searchAccessibilityLabel = I18n.t(context, "edit.search_preview_image", "联网选择预览图"),
+                        pickAccessibilityLabel = I18n.t(context, "edit.pick_preview_image", "设备选择预览图"),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(190.dp),
+                        contentScale = ContentScale.Fit,
+                        portraitPreview = true
+                    )
+                    EditArtworkCard(
+                        title = I18n.t(context, "edit.grid_image", "宫格图"),
+                        usageText = I18n.t(context, "edit.grid_usage", "宫格卡片 · 建议横版"),
+                        titleIcon = Icons.Rounded.Apps,
+                        bitmap = gridBitmap,
+                        canRestore = canRestoreGrid,
+                        onRestore = { onGridImageSelected("__REMOVE__") },
+                        onSearch = onSearchGridImage,
+                        onPick = {
+                            pickerSlot = EditImageSlot.GRID
+                            imagePicker.launch("image/*")
+                        },
+                        searchAccessibilityLabel = I18n.t(context, "edit.search_grid_image", "联网选择宫格图"),
+                        pickAccessibilityLabel = I18n.t(context, "edit.pick_grid_image", "设备选择宫格图"),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(190.dp),
+                        contentScale = ContentScale.Crop,
+                        portraitPreview = false
+                    )
+                }
             }
         }
     }
@@ -260,7 +420,14 @@ private fun EditInfoPage(
 
         AlertDialog(
             onDismissRequest = { showNameDialog = false },
-            title = { Text(I18n.t(context, "edit.edit_display_name", "编辑显示名称"), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            title = {
+                Text(
+                    I18n.t(context, "edit.edit_display_name", "编辑显示名称"),
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -270,11 +437,21 @@ private fun EditInfoPage(
                             .fillMaxWidth()
                             .focusRequester(focusRequester),
                         singleLine = true,
-                        label = { Text(I18n.t(context, "edit.display_name", "显示名称"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        label = {
+                            Text(
+                                I18n.t(context, "edit.display_name", "显示名称"),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
                         shape = RoundedCornerShape(18.dp)
                     )
                     Text(
-                        I18n.t(context, "edit.name_length_hint", "名称过长会在顶部和列表中自动以 ... 省略显示。"),
+                        I18n.t(
+                            context,
+                            "edit.name_length_hint",
+                            "名称过长会在顶部和列表中自动以 ... 省略显示。"
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -290,7 +467,13 @@ private fun EditInfoPage(
                         }
                     },
                     enabled = draftTitle.isNotBlank()
-                ) { Text(I18n.t(context, "edit.confirm", "确定"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                ) {
+                    Text(
+                        I18n.t(context, "edit.confirm", "确定"),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             },
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -300,8 +483,20 @@ private fun EditInfoPage(
                             onRestoreName()
                             showNameDialog = false
                         }
-                    ) { Text(I18n.t(context, "common.restore_default", "还原默认"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    TextButton(onClick = { showNameDialog = false }) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    ) {
+                        Text(
+                            I18n.t(context, "common.restore_default", "还原默认"),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    TextButton(onClick = { showNameDialog = false }) {
+                        Text(
+                            I18n.t(context, "common.cancel", "取消"),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         )
@@ -309,8 +504,223 @@ private fun EditInfoPage(
 }
 
 @Composable
+private fun EditArtworkCard(
+    title: String,
+    usageText: String,
+    titleIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    bitmap: ImageBitmap?,
+    canRestore: Boolean,
+    onRestore: () -> Unit,
+    onSearch: () -> Unit,
+    onPick: () -> Unit,
+    searchAccessibilityLabel: String,
+    pickAccessibilityLabel: String,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale,
+    portraitPreview: Boolean
+) {
+    val context = LocalContext.current
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f),
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.32f)),
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(28.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    titleIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(19.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.width(7.dp))
+                Text(
+                    title,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    usageText,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (canRestore) {
+                    IconButton(onClick = onRestore, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            Icons.Rounded.Restore,
+                            contentDescription = I18n.t(
+                                context,
+                                "common.restore_default",
+                                "还原默认"
+                            ),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.26f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = null,
+                        modifier = if (portraitPreview) {
+                            Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(2f / 3f)
+                        } else {
+                            Modifier.fillMaxSize()
+                        },
+                        contentScale = contentScale
+                    )
+                } else {
+                    Icon(
+                        titleIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(44.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.72f)
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                EditArtworkActionButton(
+                    text = I18n.t(context, "edit.choose_online", "联网选择"),
+                    icon = Icons.Rounded.Search,
+                    accessibilityLabel = searchAccessibilityLabel,
+                    onClick = onSearch,
+                    filled = true,
+                    modifier = Modifier.weight(1f)
+                )
+                EditArtworkActionButton(
+                    text = I18n.t(context, "edit.choose_device", "设备选择"),
+                    icon = Icons.Rounded.PhotoLibrary,
+                    accessibilityLabel = pickAccessibilityLabel,
+                    onClick = onPick,
+                    filled = false,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditArtworkActionButton(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accessibilityLabel: String,
+    onClick: () -> Unit,
+    filled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(13.dp)
+    Surface(
+        modifier = modifier
+            .height(40.dp)
+            .clip(shape)
+            .clickable(onClick = onClick),
+        shape = shape,
+        color = if (filled) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
+        },
+        border = BorderStroke(
+            1.dp,
+            if (filled) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = accessibilityLabel,
+                modifier = Modifier.size(18.dp),
+                tint = if (filled) {
+                    MaterialTheme.colorScheme.onSecondaryContainer
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
+            )
+            Spacer(Modifier.width(7.dp))
+            Text(
+                text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+private fun loadEditImageBitmap(
+    context: android.content.Context,
+    selectedImageUri: String?,
+    currentImagePath: String?,
+    defaultImagePath: String?
+): ImageBitmap? {
+    val source = when {
+        selectedImageUri == "__REMOVE__" -> defaultImagePath
+        !selectedImageUri.isNullOrBlank() -> selectedImageUri
+        !currentImagePath.isNullOrBlank() -> currentImagePath
+        else -> defaultImagePath
+    } ?: return null
+
+    return runCatching {
+        val uri = Uri.parse(source)
+        when {
+            uri.scheme == "content" -> context.contentResolver.openInputStream(uri)?.use { input ->
+                BitmapFactory.decodeStream(input)?.asImageBitmap()
+            }
+            uri.scheme == "file" -> BitmapFactory.decodeFile(uri.path)?.asImageBitmap()
+            else -> BitmapFactory.decodeFile(source)?.asImageBitmap()
+        }
+    }.getOrNull()
+}
+
+@Composable
 private fun CoverScrapePage(
     target: EditTarget,
+    imageSlot: EditImageSlot,
     queryTitle: String,
     scraperSettings: ScraperSettings,
     onBack: () -> Unit,
@@ -363,7 +773,18 @@ private fun CoverScrapePage(
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
             Column(Modifier.weight(1f)) {
-                Text(I18n.t(context, "edit.search_cover", "联网搜索封面"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    if (imageSlot == EditImageSlot.PREVIEW) {
+                        I18n.t(context, "edit.search_preview_image", "联网选择预览图")
+                    } else {
+                        I18n.t(context, "edit.search_grid_image", "联网选择宫格图")
+                    },
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(target.typeLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = { showSearchField = !showSearchField }) {

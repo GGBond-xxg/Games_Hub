@@ -64,7 +64,10 @@ internal data class EditTarget(
     val key: String,
     val defaultTitle: String,
     val currentTitle: String,
-    val currentImagePath: String?,
+    val currentPreviewImagePath: String?,
+    val currentGridImagePath: String?,
+    val defaultPreviewImagePath: String?,
+    val defaultGridImagePath: String?,
     val typeLabel: String
 )
 

@@ -283,6 +283,8 @@
   "launcher.home.dismiss": "暂时不要",
   "launcher.home.text": "如果这台设备主要用来玩游戏，可以把这个 App 设为默认桌面。以后按 Home 键会回到这里。",
   "launcher.home.title": "设为默认桌面？",
+  "launcher.layout.list": "列表",
+  "launcher.layout.grid": "宫格",
   "launcher.preview.select_android_app": "选择一个安卓应用",
   "launcher.preview.select_favorite": "选择一个收藏",
   "launcher.preview.select_game": "选择一个游戏",
@@ -447,5 +449,16 @@
   "emulator.virtual.subtitle.hardware_opacity": "调整真实手柄连接时虚拟按键透明度",
   "emulator.virtual.subtitle.touch_opacity": "调整使用触屏虚拟手柄时的按键透明度",
   "emulator.hint.virtual_touch_alpha": "调整使用虚拟手柄时的透明度。左右调整，B 返回。",
-  "emulator.virtual.touch_alpha_note": "使用触屏虚拟手柄时显示的透明度，不影响真实手柄模式。"
+  "emulator.virtual.touch_alpha_note": "使用触屏虚拟手柄时显示的透明度，不影响真实手柄模式。",
+  "edit.preview_image": "预览图",
+  "edit.grid_image": "宫格图",
+  "edit.search_preview_image": "联网选择预览图",
+  "edit.search_grid_image": "联网选择宫格图",
+  "edit.pick_preview_image": "设备选择预览图",
+  "edit.pick_grid_image": "设备选择宫格图",
+  "edit.dual_image_hint": "预览图用于右侧大图；宫格图用于左侧游戏宫格卡片。预览图建议竖版，宫格图建议横版。",
+  "edit.preview_usage": "右侧大图 · 建议竖版",
+  "edit.grid_usage": "宫格卡片 · 建议横版",
+  "edit.choose_online": "联网选择",
+  "edit.choose_device": "设备选择"
 }

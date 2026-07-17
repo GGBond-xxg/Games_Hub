@@ -140,12 +140,23 @@ class LauncherStore(context: Context) {
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
                     val key = obj.getString("key")
+                    val legacyImagePath = obj.optStringOrNull("imagePath")
+                    val hasSeparateImageFields = obj.has("previewImagePath") || obj.has("gridImagePath")
                     put(
                         key,
                         ItemOverride(
                             key = key,
                             title = obj.optStringOrNull("title"),
-                            imagePath = obj.optStringOrNull("imagePath")
+                            previewImagePath = if (hasSeparateImageFields) {
+                                obj.optStringOrNull("previewImagePath")
+                            } else {
+                                legacyImagePath
+                            },
+                            gridImagePath = if (hasSeparateImageFields) {
+                                obj.optStringOrNull("gridImagePath")
+                            } else {
+                                legacyImagePath
+                            }
                         )
                     )
                 }
@@ -156,11 +167,16 @@ class LauncherStore(context: Context) {
     fun saveItemOverride(override: ItemOverride) {
         val next = loadItemOverrides().toMutableMap()
         val title = override.title?.trim()?.takeIf { it.isNotBlank() }
-        val imagePath = override.imagePath?.takeIf { it.isNotBlank() }
-        if (title == null && imagePath == null) {
+        val previewImagePath = override.previewImagePath?.takeIf { it.isNotBlank() }
+        val gridImagePath = override.gridImagePath?.takeIf { it.isNotBlank() }
+        if (title == null && previewImagePath == null && gridImagePath == null) {
             next.remove(override.key)
         } else {
-            next[override.key] = override.copy(title = title, imagePath = imagePath)
+            next[override.key] = override.copy(
+                title = title,
+                previewImagePath = previewImagePath,
+                gridImagePath = gridImagePath
+            )
         }
         saveItemOverrides(next.values.toList())
     }
@@ -172,7 +188,10 @@ class LauncherStore(context: Context) {
                 JSONObject()
                     .put("key", item.key)
                     .putNullable("title", item.title)
-                    .putNullable("imagePath", item.imagePath)
+                    .putNullable("previewImagePath", item.previewImagePath)
+                    .putNullable("gridImagePath", item.gridImagePath)
+                    // Keep a legacy value so older builds can still display at least one custom image.
+                    .putNullable("imagePath", item.gridImagePath ?: item.previewImagePath)
             )
         }
         prefs.edit().putString(KEY_ITEM_OVERRIDES, arr.toString()).apply()
@@ -191,6 +210,15 @@ class LauncherStore(context: Context) {
 
     fun saveLandscapeMode(mode: LandscapeMode) {
         prefs.edit().putString(KEY_LANDSCAPE_MODE, mode.name).apply()
+    }
+
+    fun loadLauncherLayoutMode(defaultMode: LauncherLayoutMode = LauncherLayoutMode.LIST): LauncherLayoutMode {
+        val raw = prefs.getString(KEY_LAUNCHER_LAYOUT_MODE, null) ?: return defaultMode
+        return runCatching { LauncherLayoutMode.valueOf(raw) }.getOrDefault(defaultMode)
+    }
+
+    fun saveLauncherLayoutMode(mode: LauncherLayoutMode) {
+        prefs.edit().putString(KEY_LAUNCHER_LAYOUT_MODE, mode.name).apply()
     }
 
     fun loadThemeMode(): ThemeMode {
@@ -344,6 +372,7 @@ class LauncherStore(context: Context) {
         private const val KEY_HOME_PROMPT_DONE = "home_prompt_done"
         private const val KEY_ANDROID_GAMES = "android_games"
         private const val KEY_LANDSCAPE_MODE = "landscape_mode"
+        private const val KEY_LAUNCHER_LAYOUT_MODE = "launcher_layout_mode"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_SAFE_MARGIN_LEFT = "safe_margin_left"

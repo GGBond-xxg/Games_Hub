@@ -283,6 +283,8 @@
   "launcher.home.dismiss": "暫時不要",
   "launcher.home.text": "如果這台裝置主要用來玩遊戲，可以把這個 App 設為預設桌面。以後按 Home 鍵會回到這裡。",
   "launcher.home.title": "設為預設桌面？",
+  "launcher.layout.list": "列表",
+  "launcher.layout.grid": "宮格",
   "launcher.preview.select_android_app": "選擇一個安卓應用",
   "launcher.preview.select_favorite": "選擇一個收藏",
   "launcher.preview.select_game": "選擇一個遊戲",
@@ -447,5 +449,16 @@
   "emulator.virtual.subtitle.hardware_opacity": "調整連接真實手柄時的虛擬按鍵透明度",
   "emulator.virtual.subtitle.touch_opacity": "調整使用觸控虛擬手柄時的按鍵透明度",
   "emulator.hint.virtual_touch_alpha": "調整使用虛擬手柄時的透明度。左右調整，B 返回。",
-  "emulator.virtual.touch_alpha_note": "使用觸控虛擬手柄時顯示的透明度，不影響真實手柄模式。"
+  "emulator.virtual.touch_alpha_note": "使用觸控虛擬手柄時顯示的透明度，不影響真實手柄模式。",
+  "edit.preview_image": "預覽圖",
+  "edit.grid_image": "宮格圖",
+  "edit.search_preview_image": "連網選擇預覽圖",
+  "edit.search_grid_image": "連網選擇宮格圖",
+  "edit.pick_preview_image": "裝置選擇預覽圖",
+  "edit.pick_grid_image": "裝置選擇宮格圖",
+  "edit.dual_image_hint": "預覽圖用於右側大圖；宮格圖用於左側遊戲宮格卡片。預覽圖建議直式，宮格圖建議橫式。",
+  "edit.preview_usage": "右側大圖 · 建議直式",
+  "edit.grid_usage": "宮格卡片 · 建議橫式",
+  "edit.choose_online": "聯網選擇",
+  "edit.choose_device": "裝置選擇"
 }

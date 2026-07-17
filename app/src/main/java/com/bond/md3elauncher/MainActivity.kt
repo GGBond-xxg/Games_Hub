@@ -29,6 +29,7 @@ import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.InstalledApp
 import com.bond.md3elauncher.data.ItemOverride
 import com.bond.md3elauncher.data.LandscapeMode
+import com.bond.md3elauncher.data.LauncherLayoutMode
 import com.bond.md3elauncher.data.LauncherStore
 import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
@@ -64,6 +65,7 @@ class MainActivity : ComponentActivity() {
     private var androidGames by mutableStateOf<Set<String>>(emptySet())
     private var itemOverrides by mutableStateOf<Map<String, ItemOverride>>(emptyMap())
     private var landscapeMode by mutableStateOf(LandscapeMode.AUTO)
+    private var launcherLayoutMode by mutableStateOf(LauncherLayoutMode.LIST)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var useDynamicColor by mutableStateOf(true)
     private var safeMargins by mutableStateOf(SafeMarginSettings())
@@ -105,6 +107,7 @@ class MainActivity : ComponentActivity() {
         externalLauncher = ExternalLauncher(this)
 
         landscapeMode = store.loadLandscapeMode()
+        launcherLayoutMode = store.loadLauncherLayoutMode(defaultLauncherLayoutModeForDevice())
         themeMode = savedThemeMode
         useDynamicColor = store.loadUseDynamicColor()
         safeMargins = store.loadSafeMargins()
@@ -135,6 +138,7 @@ class MainActivity : ComponentActivity() {
                     itemOverrides = itemOverrides,
                     androidGames = androidGames,
                     landscapeMode = landscapeMode,
+                    launcherLayoutMode = launcherLayoutMode,
                     themeMode = themeMode,
                     useDynamicColor = useDynamicColor,
                     safeMargins = safeMargins,
@@ -215,8 +219,13 @@ class MainActivity : ComponentActivity() {
                         store.setAndroidGame(key, key !in androidGames)
                         androidGames = store.loadAndroidGames()
                     },
-                    onSaveItemOverride = { key, title, imageUriString ->
-                        saveItemOverride(key = key, title = title, imageUriString = imageUriString)
+                    onSaveItemOverride = { key, title, previewImageUriString, gridImageUriString ->
+                        saveItemOverride(
+                            key = key,
+                            title = title,
+                            previewImageUriString = previewImageUriString,
+                            gridImageUriString = gridImageUriString
+                        )
                     },
                     onLaunchAndroidApp = { app -> externalLauncher.launchAndroidApp(app.packageName) },
                     onOpenHomeSettings = { externalLauncher.openHomeSettings() },
@@ -224,6 +233,10 @@ class MainActivity : ComponentActivity() {
                         landscapeMode = mode
                         store.saveLandscapeMode(mode)
                         applyLandscapeMode(mode)
+                    },
+                    onSetLauncherLayoutMode = { mode ->
+                        launcherLayoutMode = mode
+                        store.saveLauncherLayoutMode(mode)
                     },
                     onSetThemeMode = { mode ->
                         themeMode = mode
@@ -476,21 +489,45 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun saveItemOverride(key: String, title: String, imageUriString: String?) {
+
+    private fun defaultLauncherLayoutModeForDevice(): LauncherLayoutMode {
+        // smallestScreenWidthDp remains stable in landscape and avoids treating wide phones as tablets.
+        return if (resources.configuration.smallestScreenWidthDp >= 600) {
+            LauncherLayoutMode.GRID
+        } else {
+            LauncherLayoutMode.LIST
+        }
+    }
+
+    private fun saveItemOverride(
+        key: String,
+        title: String,
+        previewImageUriString: String?,
+        gridImageUriString: String?
+    ) {
         lifecycleScope.launch {
             val old = itemOverrides[key]
-            val nextImagePath = withContext(Dispatchers.IO) {
-                when {
-                    imageUriString == "__REMOVE__" -> null
-                    !imageUriString.isNullOrBlank() -> saveOverrideImage(key, Uri.parse(imageUriString))
-                    else -> old?.imagePath
+            val nextPaths = withContext(Dispatchers.IO) {
+                val previewPath = when {
+                    previewImageUriString == "__REMOVE__" -> null
+                    !previewImageUriString.isNullOrBlank() ->
+                        saveOverrideImage("${key}_preview", Uri.parse(previewImageUriString)) ?: old?.previewImagePath
+                    else -> old?.previewImagePath
                 }
+                val gridPath = when {
+                    gridImageUriString == "__REMOVE__" -> null
+                    !gridImageUriString.isNullOrBlank() ->
+                        saveOverrideImage("${key}_grid", Uri.parse(gridImageUriString)) ?: old?.gridImagePath
+                    else -> old?.gridImagePath
+                }
+                previewPath to gridPath
             }
             store.saveItemOverride(
                 ItemOverride(
                     key = key,
                     title = title.trim().takeIf { it.isNotBlank() },
-                    imagePath = nextImagePath
+                    previewImagePath = nextPaths.first,
+                    gridImagePath = nextPaths.second
                 )
             )
             itemOverrides = store.loadItemOverrides()

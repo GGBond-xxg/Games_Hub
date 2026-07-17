@@ -22,3 +22,14 @@ When exiting an internal emulator, close the emulator process as well. Otherwise
 - User-visible app brand is `GameHub`.
 - Do not add any legacy app-name user-visible strings.
 - Keep Android package id `com.bond.md3elauncher` unless a future release explicitly migrates package identity.
+
+## v0.1.91 Launcher layout text
+
+Launcher list/grid switch labels must use `launcher.layout.list` and `launcher.layout.grid` in all three JSON files. Do not hardcode visible layout labels in Compose UI.
+## v0.1.92 Dual artwork editor text
+
+The dual-image editor must use these keys in all three JSON files: `edit.preview_image`, `edit.grid_image`, `edit.search_preview_image`, `edit.search_grid_image`, `edit.pick_preview_image`, `edit.pick_grid_image`, and `edit.dual_image_hint`. The bottom layout controls remain icon-only, but their accessibility descriptions must use `launcher.layout.list` and `launcher.layout.grid`.
+## v0.1.93 Compact artwork editor text
+
+The compact artwork cards use `edit.preview_usage`, `edit.grid_usage`, `edit.choose_online`, and `edit.choose_device` in all three JSON files. The full slot-specific keys from v0.1.92 remain the accessibility labels and scraper-page titles.
+
