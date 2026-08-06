@@ -30,6 +30,26 @@ enum class PlatformKind(
         subtitle = "内置 SFC/SNES / Snes9x EX+ / RetroArch",
         extensions = setOf("sfc", "smc", "swc", "fig", "bs", "st", "zip", "7z")
     ),
+    MD(
+        title = "MD/Genesis",
+        subtitle = "内置 MD/Genesis / MD.emu / RetroArch",
+        extensions = setOf("md", "gen", "smd", "bin", "zip", "7z")
+    ),
+    PS1(
+        title = "PS1",
+        subtitle = "内置 PS1 / DuckStation / ePSXe / RetroArch",
+        extensions = setOf("chd", "pbp", "iso", "bin")
+    ),
+    N64(
+        title = "N64",
+        subtitle = "N64 / M64Plus FZ / RetroArch",
+        extensions = setOf("n64", "v64", "z64", "bin", "zip", "7z")
+    ),
+    ARCADE(
+        title = "Arcade",
+        subtitle = "MAME 2003-Plus / MAME / RetroArch",
+        extensions = setOf("zip")
+    ),
     NES(
         title = "FC/NES",
         subtitle = "内置 FC/NES / Nes.emu / Nostalgia.NES / RetroArch",
@@ -131,4 +151,3 @@ data class CoverCandidate(
     val imageUrl: String,
     val source: String
 )
-

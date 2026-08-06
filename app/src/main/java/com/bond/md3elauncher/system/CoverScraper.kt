@@ -2,8 +2,10 @@ package com.bond.md3elauncher.system
 
 import android.content.Context
 import android.net.Uri
+import com.bond.md3elauncher.BuildConfig
 import com.bond.md3elauncher.data.CoverCandidate
 import com.bond.md3elauncher.data.ScraperSettings
+import com.bond.md3elauncher.i18n.I18n
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -25,38 +27,38 @@ class CoverScraper(private val context: Context) {
     ): List<CoverCandidate> {
         val cleanTitle = normalizeTitle(title)
         if (cleanTitle.isBlank()) {
-            lastReport = "搜索标题为空"
+            lastReport = I18n.t(context, "cover.report.empty_title", "Search title is empty")
             return emptyList()
         }
 
         val queries = buildSearchQueries(cleanTitle, serial)
         val result = linkedMapOf<String, CoverCandidate>()
         val report = mutableListOf<String>()
-        report.add("标题：$cleanTitle")
-        report.add("关键词：${queries.joinToString(" / ")}")
+        report.add(I18n.t(context, "cover.report.title", "Title: {title}", "title" to cleanTitle))
+        report.add(I18n.t(context, "cover.report.queries", "Queries: {queries}", "queries" to queries.joinToString(" / ")))
 
         if (settings.useLibretro) {
             val libretro = searchLibretro(queries, platformLabel)
-            report.add("Libretro：${libretro.size} 张")
+            report.add(I18n.t(context, "cover.report.libretro_count", "Libretro: {count}", "count" to libretro.size))
             libretro.forEach { result[it.imageUrl] = it }
         } else {
-            report.add("Libretro：已关闭")
+            report.add(I18n.t(context, "cover.report.libretro_disabled", "Libretro: disabled"))
         }
 
         if (settings.steamGridDbApiKey.isNotBlank()) {
             val steam = searchSteamGridDb(queries, settings.steamGridDbApiKey)
-            report.add("SteamGridDB：${steam.size} 张")
+            report.add(I18n.t(context, "cover.report.steamgrid_count", "SteamGridDB: {count}", "count" to steam.size))
             steam.forEach { result[it.imageUrl] = it }
         } else {
-            report.add("SteamGridDB：未填写 Key")
+            report.add(I18n.t(context, "cover.report.steamgrid_no_key", "SteamGridDB: API key not set"))
         }
 
         if (settings.theGamesDbApiKey.isNotBlank()) {
             val tgdb = searchTheGamesDb(queries, platformLabel, settings.theGamesDbApiKey)
-            report.add("TheGamesDB：${tgdb.size} 张")
+            report.add(I18n.t(context, "cover.report.tgdb_count", "TheGamesDB: {count}", "count" to tgdb.size))
             tgdb.forEach { result[it.imageUrl] = it }
         } else {
-            report.add("TheGamesDB：未填写 Key")
+            report.add(I18n.t(context, "cover.report.tgdb_no_key", "TheGamesDB: API key not set"))
         }
 
         lastReport = report.joinToString("\n")
@@ -259,7 +261,7 @@ class CoverScraper(private val context: Context) {
         conn.connectTimeout = 9000
         conn.readTimeout = 15000
         conn.instanceFollowRedirects = true
-        conn.setRequestProperty("User-Agent", "GameHub/0.1.87 Android")
+        conn.setRequestProperty("User-Agent", "GameHub/${BuildConfig.VERSION_NAME} Android")
         conn.setRequestProperty("Accept", "application/json,image/*,*/*")
         headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
         return conn

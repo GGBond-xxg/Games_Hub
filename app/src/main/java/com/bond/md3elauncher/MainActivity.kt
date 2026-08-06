@@ -41,7 +41,11 @@ import com.bond.md3elauncher.system.AndroidAppRepository
 import com.bond.md3elauncher.system.ExternalLauncher
 import com.bond.md3elauncher.emulator.InternalEmulators
 import com.bond.md3elauncher.emulator.gba.InternalGbaActivity
+import com.bond.md3elauncher.emulator.arcade.InternalArcadeActivity
 import com.bond.md3elauncher.emulator.fc.InternalFcActivity
+import com.bond.md3elauncher.emulator.md.InternalMdActivity
+import com.bond.md3elauncher.emulator.n64.InternalN64Activity
+import com.bond.md3elauncher.emulator.ps1.InternalPs1Activity
 import com.bond.md3elauncher.ui.LauncherApp
 import com.bond.md3elauncher.ui.GameHubTheme
 import kotlinx.coroutines.Dispatchers
@@ -188,6 +192,30 @@ class MainActivity : ComponentActivity() {
                                     emulatorName = InternalEmulators.SFC_NAME
                                 )
                             }
+                            PlatformKind.MD -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.MD_PACKAGE,
+                                    emulatorName = InternalEmulators.MD_NAME
+                                )
+                            }
+                            PlatformKind.PS1 -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.PS1_PACKAGE,
+                                    emulatorName = InternalEmulators.PS1_NAME
+                                )
+                            }
+                            PlatformKind.N64 -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.N64_PACKAGE,
+                                    emulatorName = InternalEmulators.N64_NAME
+                                )
+                            }
+                            PlatformKind.ARCADE -> updatePlatform(platform.id) {
+                                it.copy(
+                                    emulatorPackage = InternalEmulators.ARCADE_PACKAGE,
+                                    emulatorName = InternalEmulators.ARCADE_NAME
+                                )
+                            }
                             else -> Unit
                         }
                     },
@@ -199,6 +227,10 @@ class MainActivity : ComponentActivity() {
                                 InternalEmulators.usesInternalGbaCore(platform) -> launchInternalGba(game, platform.kind)
                                 InternalEmulators.usesInternalFc(platform) -> launchInternalFc(game)
                                 InternalEmulators.usesInternalSfc(platform) -> launchInternalSfc(game)
+                                InternalEmulators.usesInternalMd(platform) -> launchInternalMd(game)
+                                InternalEmulators.usesInternalPs1(platform) -> launchInternalPs1(game)
+                                InternalEmulators.usesInternalN64(platform) -> launchInternalN64(game)
+                                InternalEmulators.usesInternalArcade(platform) -> launchInternalArcade(game)
                                 else -> externalLauncher.launchGame(game, platform)
                             }
                             store.pushRecent(game.id)
@@ -331,7 +363,15 @@ class MainActivity : ComponentActivity() {
         if (requestId == lastFcRelayRequestId) return
         lastFcRelayRequestId = requestId
 
-        val launch = Intent(this, InternalFcActivity::class.java).apply {
+        val activityClass = when (source.getStringExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME)) {
+            InternalFcActivity.GENESIS_PLUS_GX_CORE_FILE_NAME -> InternalMdActivity::class.java
+            InternalFcActivity.PCSX_REARMED_CORE_FILE_NAME -> InternalPs1Activity::class.java
+            InternalFcActivity.MUPEN64PLUS_NEXT_GLES2_CORE_FILE_NAME,
+            InternalFcActivity.MUPEN64PLUS_NEXT_GLES3_CORE_FILE_NAME -> InternalN64Activity::class.java
+            InternalFcActivity.MAME2003_PLUS_CORE_FILE_NAME -> InternalArcadeActivity::class.java
+            else -> InternalFcActivity::class.java
+        }
+        val launch = Intent(this, activityClass).apply {
             putExtras(source)
             action = null
             addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
@@ -372,6 +412,50 @@ class MainActivity : ComponentActivity() {
             putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
             putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "SFC/SNES")
             putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.SNES9X_CORE_FILE_NAME)
+        }
+        startActivity(intent)
+    }
+
+    private fun launchInternalMd(game: GameItem) {
+        val intent = Intent(this, InternalMdActivity::class.java).apply {
+            putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
+            putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
+            putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "MD/Genesis")
+            putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.GENESIS_PLUS_GX_CORE_FILE_NAME)
+        }
+        startActivity(intent)
+    }
+
+    private fun launchInternalPs1(game: GameItem) {
+        val intent = Intent(this, InternalPs1Activity::class.java).apply {
+            putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
+            putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
+            putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "PS1")
+            putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.PCSX_REARMED_CORE_FILE_NAME)
+        }
+        startActivity(intent)
+    }
+
+    private fun launchInternalN64(game: GameItem) {
+        val intent = Intent(this, InternalN64Activity::class.java).apply {
+            putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
+            putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
+            putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "N64")
+            putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.MUPEN64PLUS_NEXT_GLES3_CORE_FILE_NAME)
+        }
+        startActivity(intent)
+    }
+
+    private fun launchInternalArcade(game: GameItem) {
+        val intent = Intent(this, InternalArcadeActivity::class.java).apply {
+            putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
+            putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
+            putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "Arcade")
+            putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.MAME2003_PLUS_CORE_FILE_NAME)
         }
         startActivity(intent)
     }

@@ -1,6 +1,8 @@
 package com.bond.md3elauncher.ui
 
 import android.view.ViewConfiguration
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -738,6 +740,15 @@ private fun PublishAndroidFavoriteAction(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FavoriteRow(entry: FavoriteEntry, selected: Boolean, onFocus: () -> Unit, onClick: () -> Unit, onLongClick: () -> Unit, onToggle: () -> Unit) {
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.78f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "favorite-row-selection"
+    )
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -754,7 +765,7 @@ private fun FavoriteRow(entry: FavoriteEntry, selected: Boolean, onFocus: () -> 
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.78f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f))
+                .background(containerColor)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -776,6 +787,15 @@ private fun GameRow(
     onLongClick: () -> Unit,
     onToggleFavorite: () -> Unit
 ) {
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.80f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "game-row-selection"
+    )
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -792,7 +812,7 @@ private fun GameRow(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.80f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f))
+                .background(containerColor)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -818,6 +838,15 @@ private fun AndroidAppRow(
     onToggleTag: () -> Unit
 ) {
     val key = "app:${app.packageName}"
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.80f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "android-row-selection"
+    )
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -834,7 +863,7 @@ private fun AndroidAppRow(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(14.dp))
-                .background(if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.80f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f))
+                .background(containerColor)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -872,11 +901,24 @@ private fun LauncherGridCard(
     action: @Composable () -> Unit
 ) {
     val shape = RoundedCornerShape(13.dp)
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.outline.copy(alpha = 0.36f)
-    }
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.36f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "grid-card-border"
+    )
+    val labelContainerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.86f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "grid-card-label"
+    )
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -902,10 +944,7 @@ private fun LauncherGridCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(34.dp)
-                    .background(
-                        if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.86f)
-                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
-                    )
+                    .background(labelContainerColor)
                     .padding(start = 10.dp, end = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {

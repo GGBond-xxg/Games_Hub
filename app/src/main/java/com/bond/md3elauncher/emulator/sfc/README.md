@@ -1,16 +1,11 @@
-# SFC/SNES Internal Emulator
+# SFC / SNES Runtime
 
-Current implementation:
+Current configuration:
 
 - Platform: `PlatformKind.SFC`
-- Built-in package marker: `internal:sfc`
-- Built-in core: `libsnes9x_libretro_android.so`
-- UI host: shared internal FC activity path with SFC/SNES mode enabled by intent extras
-- ROM extensions: `.sfc`, `.smc`, `.swc`, `.fig`, `.bs`, `.st`, `.zip`, `.7z`
+- Internal marker: `internal:sfc`
+- Core: `libsnes9x_libretro_android.so`
+- Runtime host: `emulator/fc/InternalFcActivity.kt` with SFC mode extras
+- Scan types: `.sfc`, `.smc`, `.swc`, `.fig`, `.bs`, `.st`, `.zip`, `.7z`
 
-Rules:
-
-- Use the common GBA-style virtual button layout.
-- Use the common internal emulator menu structure.
-- All visible text must come from i18n JSON.
-- 7z is scanned but not loaded internally yet; extract it first or use an external emulator.
+SFC/SNES must reuse the common internal emulator menu, save-state model and GBA-style virtual controls. `.7z` is scan-only until a dedicated extractor is added.

@@ -1,3 +1,5 @@
-# NSE / NS Emulator Area
+# Switch / NSE Placeholder
 
-预留目录。后续做 NSE/NS 内置模拟器时，Activity、按键映射、存档、核心接入代码放这里。
+Switch support is currently launcher-side only: local file scanning, external emulator selection and Intent attempts.
+
+Do not add or bundle keys, firmware, BIOS or commercial game resources. There is no internal Switch emulator implementation in this project.

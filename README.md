@@ -1,1080 +1,156 @@
-## v0.1.93 - 编辑显示界面重排
-
-- 编辑页改成两张独立的图片编辑卡片：左侧「预览图」、右侧「宫格图」，图片、用途说明和操作按钮集中在同一卡片内。
-- 「编辑显示名称」合并到顶部当前名称按钮，点击名称即可修改，不再单独占用一整行。
-- 联网选择和设备选择改为卡片底部的紧凑按钮；预览图按竖版比例展示，宫格图继续按横版裁切展示。
-- 横屏宽度充足时两张卡片并排并完整占用剩余高度；较窄设备自动改为上下滚动，避免按钮被底部栏遮挡。
-- 编辑、平台配置等返回页面的底部栏只显示当前可用操作，不再显示无效的 X / L3 / R3 / A，也不重复显示「编辑显示信息」。
-- 新增文本同步维护 `en.json`、`zh.json`、`zh-Hant.json`，三份 key 保持一致。
-
-## v0.1.92 - 双图片编辑、底部图标切换与设备默认排布
-
-- 游戏长按后的编辑页拆分为「预览图」和「宫格图」两套独立图片：预览图用于右侧大图，宫格图用于左侧宫格卡片。
-- 编辑操作按两列排列：联网选择预览图 / 联网选择宫格图、设备选择预览图 / 设备选择宫格图；编辑显示名称保持单独一行。
-- 两种图片均支持恢复默认；v0.1.91 以前保存的单张自定义图片会自动兼容到预览图和宫格图。
-- 列表 / 宫格切换改为底部 A 启动旁边的纯图标按钮，不再占用左侧内容区域，也不再显示底部「收藏」中心文字。
-- 平板首次启动默认宫格，手机首次启动默认列表；判断使用 `smallestScreenWidthDp >= 600`，用户主动切换后继续记住选择。
-- 中文底部 Y / X / L3 / R3 / B 间距进一步缩小；非中文继续使用紧凑按键圆点。
-- 新增文本同步维护 `en.json`、`zh.json`、`zh-Hant.json`，三份 key 保持一致。
-
-## v0.1.91 - 平板宫格排布与底部按键优化
-
-- 启动器收藏、各游戏平台、安卓游戏和全部应用页面新增「列表 / 宫格」切换，并保存上次使用的排布。
-- 宫格模式采用横向卡片，按可用宽度自动显示 1～4 列，平板最多一排 4 个；右侧大图预览继续保留。
-- 排布切换按钮放到左侧内容区下方，避免占用游戏卡片顶部空间。
-- 列表模式保持原有显示方式，不改变现有排序、收藏、长按编辑和 A 键启动逻辑。
-- English 等非中文界面底部 Y / X / L3 / R3 / B / A 改为紧凑按键组，去掉 Material 按钮默认的额外触控留白。
-- 新增文本继续同步维护 `en.json`、`zh.json`、`zh-Hant.json`，三份 key 保持一致。
-
-## v0.1.80 - I18N 补充与语言切换规范
-
-- 设置 > 系统新增「语言」切换：跟随系统、English、简体中文、繁體中文。
-- 默认语言为 English；设备语言不是简体中文或繁体中文时，一律回退 English。
-- 顶部标签、主界面底部提示、平台管理、外观、封面刮削、系统设置、平台配置、模拟器选择、搜索/空状态等文本继续迁移到 JSON。
-- 非中文界面下，底部操作栏只显示 Y / X / L3 / R3 / B / A 按键圆点，不显示动作文字，避免英文过长导致拥挤。
-- 三份 JSON 必须保持 key 完全一致：`app/src/main/assets/i18n/en.json`、`zh.json`、`zh-Hant.json`。
-- 新增文本必须先加 JSON key，再通过 `I18n.t(context, key, fallback)` 读取；长文本必须设置 `maxLines` 和 `TextOverflow.Ellipsis`。
-- `scripts/check_i18n_hardcoded_text.py` 用于检查新代码中的中文硬编码。允许旧内置模拟器运行时菜单/提示逐步迁移，但新写 UI 禁止直接硬编码中文。
-
 # GameHub
 
-GameHub 是一个面向 Android 的轻量级游戏启动器。它不是单一模拟器，而是一个 **游戏启动器 + 模拟器入口管理器**。
+[![Release](https://img.shields.io/github/v/release/GGBond-xxg/Games_Hub?display_name=tag)](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
+[![Android](https://img.shields.io/badge/Android-6.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-项目的核心目标是：把本地 ROM、部分内置模拟器、外部模拟器 App、安卓游戏 App、收藏和基础设置统一放到一个简洁的横屏启动界面里。
+GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以统一整理本地游戏、安卓 App、收藏与封面，并让支持的平台在内置模拟器和第三方模拟器之间自由切换。
 
-当前版本可以理解为两条路线同时存在：
+当前正式版本：`v1.0.0`
 
-```text
-路线 1：内置模拟器
-GameHub 自己打开游戏，例如当前的内置 GBA、内置 FC/NES。
+Android 包名：`com.bond.md3elauncher`
 
-路线 2：外部 App 模拟器
-GameHub 负责扫描游戏、展示游戏、选择模拟器 App、把 ROM 交给外部模拟器 App 打开。
-```
+> GameHub 不提供 ROM、BIOS、固件、密钥或其他受版权保护的游戏内容。请只使用你有权使用的文件。
 
-也就是说，本项目不只是内部模拟器项目。它也支持一部分外部 App 模拟器启动方案，后续 PSP、FC、NSE/NS 等平台也会优先按“内置能力 + 外部 App 模拟器适配”的方式继续扩展。
+## 下载与安装
 
----
+- [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
+- 系统要求：Android 6.0（API 23）或更高版本
+- 推荐设备：ARM64 Android 手机、平板、掌机或横屏设备
 
-## 当前功能状态
+从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
-| 模块 | 状态 | 说明 |
-|---|---:|---|
-| 启动器首页 | 可用 | 支持平台分类、游戏列表、收藏、安卓应用入口、横屏 UI。 |
-| 安卓应用启动 | 可用 | 可以读取已安装 App，并将指定 App 标记为游戏后放入启动器。 |
-| 外部模拟器 App 选择 | 可用 | 每个平台可以选择一个已安装的模拟器 App，用于外部启动 ROM。 |
-| GBA 内置模拟器 | 可用 | 基于 LibretroDroid + mGBA libretro core，支持游戏内菜单、存档、快速存档、作弊码。 |
-| GB/GBC 内置模拟器 | 可用 | 复用 mGBA libretro core，新增 GB/GBC 独立平台，支持 `.gb/.gbc/.sgb` 和普通 `.zip` 内 ROM。 |
-| GBA 外部模拟器 | 可用/兼容中 | 支持选择 My Boy!、Pizza Boy、RetroArch、GBA.emu、John GBA 等同类 App，具体能否直进游戏取决于外部 App 的 Intent 支持。 |
-| PSP 外部模拟器 | 可用/兼容中 | 支持选择 PPSSPP / RetroArch / PSP 类模拟器 App，当前已有 ISO/CSO/PBP/CHD 扫描和基础启动适配。 |
-| Switch / NSE 外部模拟器 | 架构预留 | 已有平台和扩展名预留，后续只做启动器侧适配，不包含 keys、固件或商业资源。 |
-| FC/NES 内置模拟器 | Phase 1 | 基于 LibretroDroid + Nestopia libretro core，支持 `.nes` 和普通 `.zip` 内 ROM，带虚拟按键、菜单、快速存档/读档。 |
-| FC/NES 外部模拟器 | 可用/兼容中 | 支持 `.nes/.fds/.unf/.unif/.zip/.7z` 扫描，推荐选择 Nes.emu、Nostalgia.NES、RetroArch 等外部模拟器启动。 |
-| GBA 作弊码 | 稳定方案 | 开启即时生效；支持多个自定义作弊码分 slot 下发；关闭会自动快速存档、重启当前 GBA 游戏，并在重启后自动快读。 |
+## 主要功能
 
----
+- 横屏 Material Design 3 启动器界面。
+- 平台分类、收藏、搜索和独立排序。
+- 列表与 1～4 列宫格布局，始终保留右侧大图预览。
+- 预览图与宫格图独立设置，并兼容旧版单图数据。
+- 扫描本地 ROM 与已安装安卓 App。
+- 内置模拟器与第三方模拟器自由切换。
+- 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
+- 5 个普通即时存档槽及 1 个快捷存档。
+- English、简体中文、繁體中文三语界面。
 
-## 模拟器接入方式说明
+## 平台支持
 
-### 1. 内置模拟器
+| 平台 | 内置模拟器 | 外部模拟器 | 常用文件格式 |
+|---|---|---|---|
+| GBA | mGBA | My Boy!、Pizza Boy、RetroArch | `.gba`、`.zip`、`.7z` |
+| GB/GBC | mGBA | My OldBoy!、RetroArch | `.gb`、`.gbc`、`.sgb`、`.zip`、`.7z` |
+| FC/NES | Nestopia | Nes.emu、Nostalgia.NES、RetroArch | `.nes`、`.fds`、`.unf`、`.unif`、`.zip`、`.7z` |
+| SFC/SNES | Snes9x | Snes9x EX+、RetroArch | `.sfc`、`.smc`、`.swc`、`.fig`、`.zip`、`.7z` |
+| MD/Genesis | Genesis Plus GX | MD.emu、RetroArch | `.md`、`.gen`、`.smd`、`.bin`、`.zip`、`.7z` |
+| PS1 | PCSX-ReARMed（HLE BIOS） | DuckStation、ePSXe、FPse、RetroArch | `.chd`、`.pbp`、`.iso`、`.bin` |
+| N64 | Mupen64Plus-Next | M64Plus FZ、Mupen64Plus、RetroArch | `.z64`、`.v64`、`.n64`、`.bin`、`.zip`、`.7z` |
+| 街机 | MAME 2003-Plus | MAME4droid、RetroArch、FinalBurn | `.zip` |
+| PSP | — | PPSSPP、RetroArch | `.iso`、`.cso`、`.pbp`、`.chd` |
+| Switch | — | 外部模拟器 | `.nsp`、`.xci`、`.nsz`、`.nro` |
 
-内置模拟器是指：游戏直接在 GameHub 内部打开，不依赖外部 App。
+### ROM 兼容性提示
 
-当前已经实现的内置模拟器：
+- N64 会依据文件头识别真实字节序，并在启动内置核心前自动标准化，因此兼容扩展名不准确的有效 ROM 以及多数正确制作的汉化/修复版本。
+- 街机建议使用与 MAME 2003-Plus 匹配的 Full Non-Merged ROM Set，并保持游戏 ZIP 文件及内部名称不变。
+- `.7z` 可以被游戏库扫描，但当前内置模拟器不直接解压运行。
+- PS1 多轨光盘应保留原始 `.cue` 与全部轨道文件；当前内置路径更适合单文件 `.chd`、`.pbp`、`.iso` 或 `.bin`。
+- 兼容性仍会受到 ROM 完整性、补丁质量、父 ROM、BIOS、CHD 和具体设备 GPU 驱动影响。
 
-```text
-GBA：LibretroDroid + mGBA libretro core
-GB/GBC：LibretroDroid + mGBA libretro core
-FC/NES：LibretroDroid + Nestopia libretro core
-```
+## 操作方式
 
-GBA 内置模拟器包含：
+启动器保留以下手柄操作：
 
-- GBA ROM 启动
-- 横屏触控按键
-- 游戏内菜单
-- 普通存档位
-- 快速存档
-- 作弊码添加、开关、删除
-- 关闭作弊码时自动快速存档、重启当前游戏，并在重启后自动快读
-
-后续如果 PSP 或其他平台要做内置模拟器，会放到对应目录：
-
-```text
-app/src/main/java/com/bond/md3elauncher/emulator/psp/
-app/src/main/java/com/bond/md3elauncher/emulator/fc/
-app/src/main/java/com/bond/md3elauncher/emulator/nse/
-```
-
-### 2. 外部 App 模拟器
-
-外部 App 模拟器是指：GameHub 不自己运行模拟器核心，而是把 ROM 通过 Android Intent 交给用户手机上已经安装的模拟器 App。
-
-流程大致是：
-
-```text
-选择平台文件夹
-↓
-扫描 ROM
-↓
-给平台选择一个外部模拟器 App
-↓
-点击游戏
-↓
-GameHub 生成 ACTION_VIEW / ACTION_SEND / 专用 Intent
-↓
-外部模拟器 App 打开 ROM
-```
-
-外部模拟器的好处：
-
-- 不需要项目内置所有模拟器核心。
-- PSP、部分 GBA、Switch/NSE 等复杂平台可以先走外部 App。
-- 用户可以继续使用自己熟悉的模拟器 App。
-- 项目本身更像游戏前端和统一入口。
-
-外部模拟器的限制：
-
-- 不是所有模拟器 App 都允许第三方 App 直接传 ROM 启动。
-- 有些模拟器只能打开 App 首页，不能自动进入游戏。
-- Android 版本、文件权限、模拟器包名、Intent 参数都会影响兼容性。
-- 对于不支持直进游戏的模拟器，GameHub 会尝试打开模拟器本体，并提示后续需要继续适配专用启动参数。
-
-
-
-### GB/GBC 当前实现方式
-
-GB/GBC 从 v0.1.76 起作为独立平台接入。底层先复用当前稳定的 mGBA libretro core，避免为 `.gb/.gbc` 文件误放到 FC/NES。
-
-当前支持：
-
-```text
-平台标签：GB
-平台名称：GB/GBC
-ROM 扩展名：.gb / .gbc / .sgb / .zip / .7z
-内置核心：mGBA libretro core
-推荐外部模拟器：My OldBoy! / Pizza Boy C / RetroArch / GBC.emu
-```
-
-当前规则：
-
-```text
-GBA 文件继续放 GBA 平台
-GB / GBC 文件放 GB/GBC 平台
-FC/NES 文件放 FC/NES 平台
-```
-
-内置 GB/GBC 启动说明：
-
-- `.gb / .gbc / .sgb` 可直接读取。
-- 普通 `.zip` 会尝试解出里面的 `.gb / .gbc / .sgb / .gba / .agb / .bin`。
-- `.7z` 目前只做扫描，内置模拟器暂不直接解压；需要先解压，或使用外部模拟器。
-- GB/GBC 与 GBA 共用内置模拟器公共 UI、手柄快捷键、虚拟按键布局和存档菜单规范。
-
-### FC/NES 当前实现方式
-
-FC/NES 从 v0.1.57 起先按外部模拟器方案接入；v0.1.60 起从推荐列表移除 John NESS，优先推荐 Nes.emu / Nostalgia.NES / RetroArch；v0.1.64 起加入内置 FC/NES Phase 1，v0.1.73 起固定使用 Nestopia libretro core；v0.1.65 起增加内置模拟器通用手柄快捷键设置，并修正 FC/NES 中文/特殊字符 ROM 路径兼容。
-
-当前支持：
-
-```text
-平台标签：FC
-平台名称：FC/NES
-ROM 扩展名：.nes / .fds / .unf / .unif / .zip / .7z
-内置核心：Nestopia libretro core
-推荐外部模拟器：Nes.emu / RetroArch / Nostalgia.NES
-RetroArch core 候选：FCEUmm / Nestopia / QuickNES / Mesen（仅外部 RetroArch 使用）
-```
-
-当前流程：
-
-```text
-选择 FC/NES ROM 文件夹
-↓
-扫描 ROM
-↓
-默认可直接使用内置 FC/NES 模拟器
-↓
-也可以绑定 Nes.emu / RetroArch 等外部模拟器 App
-↓
-点击游戏启动
-```
-
-内置 FC/NES Phase 1 说明：
-
-- `.nes` 可直接读取。
-- 普通 `.zip` 会尝试解出里面的 `.nes / .fds / .unf / .unif`。
-- `.7z` 暂不在内置模拟器里直接解压；需要先解压成 `.nes`，或者继续使用 Nes.emu / RetroArch 外部模拟器。
-- `.fds` 可能需要 FDS BIOS，当前 Phase 1 只做 core 接入，不额外内置 BIOS。
-
-### v0.1.58 补充
-
-- 编辑显示信息页改为横向紧凑标题栏：返回、标题、当前游戏名省略显示、取消、保存。
-- 显示名称不再放在默认输入框里，改为点击“编辑显示名称”后展开输入框，避免横屏界面拥挤，并修复名称无法编辑的问题。
-- FC/NES 外部启动增加 John NESS 专用候选 Activity / extras，以及 Nes.emu 的 `com.imagine.BaseActivity` 启动候选。
-- 注意：John NESS 部分版本只公开 ROM 列表页，不一定允许第三方启动器直接传 ROM 进入游戏；v0.1.60 起不再把 John NESS 放入 FC/NES 推荐列表，建议优先用 Nes.emu 或 RetroArch 做一键直启。
-
----
-
-## 当前外部模拟器适配范围
-
-外部模拟器启动逻辑主要在：
-
-```text
-app/src/main/java/com/bond/md3elauncher/system/ExternalLauncher.kt
-```
-
-当前使用的启动策略包括：
-
-```text
-ACTION_VIEW + ROM Uri
-ACTION_SEND + ROM Uri
-content:// 授权 Uri
-部分平台缓存临时 ROM 文件后启动
-部分模拟器专用 Intent 参数
-失败后回退到只打开模拟器 App
-```
-
-### GBA 外部模拟器
-
-GBA 目前有两种选择：
-
-```text
-默认：内置 GBA 模拟器
-可选：外部 GBA 模拟器 App
-```
-
-外部 GBA 模拟器适配方向包括：
-
-- My Boy! 专用启动适配
-- Pizza Boy / John GBA / GBA.emu / Nostalgia GBA / mGBA 类 App 的通用启动适配
-- RetroArch GBA core 启动适配，例如 mGBA、gpSP、VBA 系列 core
-
-如果外部 GBA 模拟器不支持直接接收 ROM，启动器会回退为打开该模拟器 App。
-
-### PSP 外部模拟器
-
-PSP 当前主要走外部模拟器 App 方案。
-
-已支持扫描的 PSP 文件类型：
-
-```text
-.iso
-.cso
-.pbp
-.chd
-```
-
-外部 PSP 模拟器适配方向包括：
-
-- PPSSPP 类 App
-- RetroArch 的 PPSSPP core
-- 其他 PSP 模拟器 App 的通用 ACTION_VIEW / ACTION_SEND 方式
-
-PSP 文件通常比较大，所以当前 PSP 启动默认尽量不复制 ROM 到缓存目录，而是优先传原始 Uri。
-
-### Switch / NSE 外部模拟器
-
-Switch / NSE 当前只做启动器侧架构预留。
-
-已预留的文件类型：
-
-```text
-.nsp
-.xci
-.nsz
-.nro
-```
-
-项目不会提供，也不会内置：
-
-```text
-keys
-firmware
-BIOS
-商业游戏资源
-```
-
-后续如果做 Switch / NSE，也只做：
-
-```text
-扫描本地游戏文件
-选择外部模拟器 App
-尝试通过外部 App 启动
-```
-
-### FC
-
-FC 当前只有目录预留，还没有正式接入平台枚举和扫描逻辑。
-
-预留目录：
-
-```text
-app/src/main/java/com/bond/md3elauncher/emulator/fc/
-```
-
-后续 FC 可以走两种方向：
-
-```text
-方案 A：外部 FC 模拟器 App
-方案 B：内置 Libretro FC core
-```
-
----
-
-## GBA 作弊码实现说明
-
-当前 GBA 作弊码采用稳定方案。
-
-### 开启作弊码
-
-在游戏内打开作弊码后，会直接下发到 GBA core。常见 GameShark / CodeBreaker 代码可以即时生效。例如穿墙码开启后，不需要重启游戏。
-
-### 关闭作弊码
-
-关闭或删除已启用的作弊码时，应用会执行下面流程：
-
-```text
-自动快速存档
-↓
-关闭作弊码状态
-↓
-重启当前 GBA 游戏
-↓
-恢复开启作弊前记录的 clean state
-```
-
-也就是说，当前版本的“关闭作弊码”本质上等同于自动执行：
-
-```text
-快速存档 → 关闭作弊码状态 → 退出当前 GBA 游戏 → 重新进入当前 GBA 游戏 → 自动快速读档
-```
-
-这样做的原因是：部分 GBA 作弊码，尤其是穿墙类 GameShark / CodeBreaker 代码，会在 mGBA 当前运行环境里留下 patch。单纯调用 `resetCheat()`、软重置、重新下发空作弊码，都无法稳定清除这类效果。
-
-因此当前正式稳定方案是：**关闭作弊码时自动快速存档、重启当前 GBA 游戏，并在重启后自动快速读档**。这个方案不是 My Boy! 那种完全无感关闭，但稳定性更好，不需要用户手动退出再进入，也尽量保留关闭前的最新进度。
-
-后续如果继续实现 native CheatManager，可以再尝试做到：
-
-```text
-开启作弊码：即时生效
-关闭作弊码：直接恢复 ROM/RAM patch，不重启游戏
-```
-
-如果 native CheatManager 成本过高或效果不稳定，当前方案可以作为 GBA 作弊码正式方案保留。
-
----
-
-## 代码目录说明
-
-### 模拟器相关目录
-
-从当前版本开始，模拟器相关代码统一放在：
-
-```text
-app/src/main/java/com/bond/md3elauncher/emulator/
-```
-
-当前结构：
-
-```text
-emulator/
-├── InternalEmulators.kt          # 内置模拟器注册入口，目前主要是内置 GBA
-├── README.md                     # 模拟器目录说明
-├── gba/
-│   ├── README.md                 # GBA 内置模拟器代码说明
-│   ├── InternalGbaActivity.kt    # GBA Activity 生命周期、ROM 启动、存档、作弊码流程
-│   ├── GbaTouchControlsView.kt   # GBA 虚拟按键、菜单绘制、作弊菜单 UI
-│   ├── GbaModels.kt              # GBA 菜单枚举、按键模型、存档模型、作弊码模型
-│   └── GbaNativeCheatBridge.kt   # GBA native CheatManager 后续预留入口
-├── psp/
-│   └── PspIsoReader.kt           # PSP ISO 元数据读取相关代码
-├── fc/
-│   └── README.md                 # FC 模拟器预留目录
-└── nse/
-    └── README.md                 # NSE/NS 模拟器预留目录
-```
-
-### 外部模拟器启动目录
-
-外部模拟器 App 启动逻辑放在：
-
-```text
-app/src/main/java/com/bond/md3elauncher/system/ExternalLauncher.kt
-```
-
-已安装 App 读取和模拟器 App 识别逻辑在：
-
-```text
-app/src/main/java/com/bond/md3elauncher/system/AndroidAppRepository.kt
-```
-
-ROM 扫描逻辑在：
-
-```text
-app/src/main/java/com/bond/md3elauncher/io/RomScanner.kt
-```
-
-平台、游戏、已安装 App 等基础模型在：
-
-```text
-app/src/main/java/com/bond/md3elauncher/data/Models.kt
-```
-
----
-
-## 后续代码规划
-
-以后新增模拟器，按下面方式区分：
-
-```text
-GBA 内置模拟器相关代码      → emulator/gba/
-PSP 元数据 / 内置能力预研    → emulator/psp/
-FC 元数据 / 内置能力预研     → emulator/fc/
-NSE/NS 元数据 / 启动预留     → emulator/nse/
-内置模拟器注册入口          → emulator/InternalEmulators.kt
-外部模拟器 App 启动适配     → system/ExternalLauncher.kt
-已安装 App / 模拟器识别     → system/AndroidAppRepository.kt
-ROM 扫描                    → io/RomScanner.kt
-```
-
-这样做的目的：
-
-- 内置模拟器和外部模拟器启动逻辑分开。
-- 不同平台代码分开，后续 PSP、FC、NSE/NS 更容易维护。
-- 学习时可以按平台看代码，不用在 MainActivity 里找所有逻辑。
-- 如果某个平台出问题，可以快速定位到对应文件夹。
-
-GBA 目前又进一步拆分了文件：
-
-```text
-InternalGbaActivity.kt   负责 Activity 生命周期、ROM 启动、存档/读档、作弊码开关流程
-GbaTouchControlsView.kt  负责屏幕虚拟按键、菜单绘制、列表交互、作弊菜单 UI
-GbaModels.kt             负责菜单枚举、触控按钮、存档对象、作弊码对象等基础模型
-GbaNativeCheatBridge.kt  保留 native CheatManager 后续入口
-```
-
-这样 `InternalGbaActivity.kt` 不再把 UI 绘制、模型和主流程全部挤在一个 3000 多行文件里，后续看代码会清楚很多。
-
----
-
-## 技术栈
-
-| 类型 | 技术 |
+| 按键 | 功能 |
 |---|---|
-| 语言 | Kotlin |
-| UI | Jetpack Compose / Material 3 |
-| Android | compileSdk 36，minSdk 23，targetSdk 36 |
-| GBA 内置 Core | LibretroDroid + mGBA libretro core |
-| 外部模拟器启动 | Android Intent / content Uri / FileProvider |
-| 构建 | Gradle / Android Gradle Plugin |
+| `A` | 启动游戏或确认 |
+| `B` | 收藏、添加或返回 |
+| `L3` | 当前列表项目上移 |
+| `R3` | 当前列表项目下移 |
 
-当前项目依赖 JitPack，因为 LibretroDroid 来自 GitHub 依赖源。`settings.gradle.kts` 中需要保留：
+内置模拟器支持触屏操作，也支持实体手柄和可配置快捷键。重置、重新开始和退出是相互独立的操作。
 
-```kotlin
-maven("https://jitpack.io")
-```
+## 从源码构建
 
----
+环境要求：
 
-## 构建方式
+- JDK 17+
+- Android SDK 36
+- Windows、Linux 或 macOS
 
-如果项目里已经生成了 Gradle Wrapper：
-
-```bash
-./gradlew clean assembleDebug
-```
-
-Windows：
+Debug 构建：
 
 ```powershell
 .\gradlew.bat clean assembleDebug
 ```
 
-如果没有 Gradle Wrapper，但本机已经安装 Gradle：
+Linux / macOS：
 
 ```bash
-gradle clean assembleDebug
+./gradlew clean assembleDebug
 ```
 
-安装到设备：
+正式构建需要在项目根目录创建：
 
-```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+```text
+.release-signing/keystore.properties
 ```
 
-或：
+内容格式：
 
-```bash
-gradle installDebug
+```properties
+storeFile=/absolute/path/to/gamehub-release.jks
+storePassword=your-store-password
+keyAlias=gamehub
+keyPassword=your-key-password
 ```
 
----
-
-## 调试日志
-
-GBA 内置模拟器相关日志：
-
-```bash
-adb logcat -d -v time | grep -i "GameHub_GBA\|InternalGbaActivity\|Libretro\|AndroidRuntime\|FATAL\|ANR"
-```
-
-Windows PowerShell：
+然后运行：
 
 ```powershell
-adb logcat -d -v time | findstr /i "GameHub_GBA InternalGbaActivity Libretro AndroidRuntime FATAL ANR"
+.\gradlew.bat clean testDebugUnitTest assembleRelease
 ```
 
-外部模拟器启动相关日志可以重点看：
+发布签名文件和密码已被 `.gitignore` 排除，切勿提交到 GitHub。请妥善备份签名文件；丢失后将无法为已安装用户提供可覆盖升级的安装包。
+
+## 项目结构
 
 ```text
-ExternalLauncher
-ActivityNotFoundException
-Permission Denial
-FileProvider
-ACTION_VIEW
-ACTION_SEND
+app/src/main/java/com/bond/md3elauncher/
+├── MainActivity.kt
+├── data/                # 平台模型与本地设置
+├── emulator/
+│   ├── common/          # 内置模拟器公共菜单与触控布局
+│   ├── gba/             # GBA / GB / GBC
+│   ├── fc/              # FC / NES / SFC
+│   ├── md/              # MD / Genesis
+│   ├── ps1/             # PlayStation
+│   ├── n64/             # Nintendo 64
+│   └── arcade/          # MAME 2003-Plus
+├── i18n/                # 三语 JSON 文本
+├── io/                  # ROM 扫描
+├── system/              # 外部模拟器与安卓 App
+└── ui/                  # Compose / Material 3 界面
 ```
 
-清空日志后重新测试：
+更多开发资料：
 
-```bash
-adb logcat -c
-```
+- [架构说明](docs/ARCHITECTURE.md)
+- [更新记录](docs/CHANGELOG.md)
+- [已知限制](docs/KNOWN_ISSUES.md)
+- [国际化规范](docs/I18N.md)
+- [第三方组件说明](THIRD_PARTY_NOTICES.md)
+- [免责声明](DISCLAIMER.md)
 
----
+## 许可证与责任
 
-## ROM、BIOS、固件与版权说明
+GameHub 自有代码采用 [MIT License](LICENSE)。LibretroDroid、各模拟器核心及其他第三方组件继续使用各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-本项目不提供任何商业游戏 ROM、BIOS、密钥、固件或受版权保护的游戏资源。
+MAME 2003-Plus 等组件包含独立的非商业许可限制。MIT 许可证和项目免责声明不会改变第三方组件的许可条件。任何人修改、再分发或使用本项目时，都应自行检查第三方授权、游戏内容版权和目标分发渠道政策。
 
-请只使用你自己合法拥有并自行备份的游戏文件。不同地区对 ROM、BIOS、密钥、固件和模拟器使用的规定不同，上传公开仓库前请自行确认当地法律与相关开源许可证要求。
+## 参与贡献
 
-尤其是 Switch / NSE 相关内容，本项目只做启动器侧架构预留，不会提供：
+欢迎提交 Issue 和 Pull Request。修改前请阅读 [AGENTS.md](AGENTS.md) 中的项目约束，特别注意：
 
-```text
-keys
-firmware
-prod.keys
-title.keys
-商业游戏资源
-```
-
-如果后续公开发布 APK，建议补充：
-
-```text
-LICENSE
-THIRD_PARTY_NOTICES.md
-```
-
-用于说明项目自身许可证以及第三方依赖许可证。
-
----
-
-## 后续计划
-
-当前 GBA 作弊码已经作为稳定断点保留。后续优先进入 PSP 模块，而不是继续在 GBA 作弊码上绕方案。
-
-计划顺序：
-
-1. 完善 PSP 游戏扫描和 ISO 信息识别。
-2. 优化 PSP 外部模拟器 App 启动适配。
-3. 整理 PSP 平台详情页和封面识别。
-4. 补充 FC 平台枚举、扫描规则和外部模拟器启动方案。
-5. NSE/NS 只保留启动器侧目录和架构预留，不包含任何密钥、固件或商业资源。
-6. 如果以后有时间，再回头尝试 GBA native CheatManager。
-
----
-
-## 当前版本断点
-
-当前建议将 v0.1.56 作为 GBA 作弊码稳定断点版：
-
-```text
-GBA 开启作弊码：即时生效
-GBA 关闭作弊码：自动快速存档 + 自动重启当前 GBA 游戏 + 自动快速读档
-GBA 运行方式：支持内置 GBA，也支持部分外部 GBA 模拟器 App
-PSP 运行方式：主要支持外部 PSP 模拟器 App
-模拟器代码：已整理到 emulator/ 分平台目录，GBA 已拆分 Activity / TouchControls / Models
-外部模拟器启动：统一在 system/ExternalLauncher.kt
-```
-
-如果后续 native CheatManager 无法稳定实现，就以当前方案作为 GBA 金手指正式方案，继续开发 PSP / FC / NSE 等后续模块。
-
-### v0.1.56 多作弊码下发修复
-
-修复同时开启多个 GBA 作弊码时，后开启的作弊码可能不生效的问题。
-
-之前版本会把所有开启的作弊码全部合并到一个 libretro cheat slot 中：
-
-```text
-slot 0 = 穿墙代码 + 闪光代码
-```
-
-这在部分 mGBA/libretro 场景下不稳定，可能出现“先开穿墙再开闪光，穿墙正常但闪光不生效；退出重进后才正常”的情况。
-
-v0.1.56 改为一个自定义作弊码对应一个 slot：
-
-```text
-slot 0 = 穿墙代码
-slot 1 = 闪光代码
-```
-
-单个作弊码内部如果有多行，仍然使用 `+` 合并后下发，保证 My Boy! 常见多行码格式继续可用。
-
-### v0.1.55 快速读档修复
-
-修复关闭 GBA 作弊码后，冷重启游戏大概率没有读取最新快捷存档的问题。
-
-关闭作弊码的顺序固定为：
-
-```text
-快速存档
-↓
-关闭作弊码状态
-↓
-冷重启当前 GBA 游戏
-↓
-重启完成后自动快速读档
-```
-
-同时对重启后的自动快读增加多次重试，避免 mGBA core 刚启动第一帧时读档失败。
-
-### v0.1.54 编译修复
-
-本版本只修复 v0.1.53 代码拆分后的 Kotlin 编译错误，不改变 GBA 金手指关闭逻辑。
-
-修复内容：
-
-- `GbaTouchControlsView.kt` 补充 `java.util.Locale` import。
-- `InternalGbaActivity.releaseAllGameInputs()` 改为 GBA 控件可调用，修复 SELECT + X 退出组合键释放输入时的引用错误。
-
-
-
-### v0.1.59 补充
-
-- 编辑显示信息页的“编辑显示名称”改为弹窗输入，避免横屏页面空间不足导致输入框被压扁。
-- FC/NES 外部启动增加 SAF 文档 URI 到真实外部存储路径的解析，额外尝试 file:// 路径与常见 NES MIME。
-- John NESS 不再把普通启动页当作直启成功；如果当前版本未开放外部 ROM 直启入口，会提示改用 Nes.emu 或 RetroArch。
-
-
-### v0.1.60 补充
-
-- 编辑显示信息页的“移除封面”从底部移动到顶部操作区，顶部操作顺序为：移除封面 / 取消 / 保存。
-- FC/NES 推荐模拟器列表移除 John NESS；John NESS 仍可在“全部”里手动选择，但因为当前版本无法稳定外部 ROM 直启，不再作为推荐项。
-- FC/NES 推荐文案调整为 Nes.emu / Nostalgia.NES / RetroArch。
-
-
-### v0.1.63 补充
-
-- GBA 金手指逻辑回退到 v0.1.60 稳定方案：一个自定义作弊码对应一个 libretro cheat slot。
-- 不再保留 v0.1.61/v0.1.62 的多作弊码排序/闪光穿墙组合兼容尝试。
-- GBA 作弊码菜单增加非阻挡提示：穿墙和闪光同时开启可能会失效，建议最好只开一个。
-
-
-### v0.1.64 补充
-
-- FC/NES 新增内置模拟器 Phase 1。
-- 历史版本曾使用 FCEUmm；v0.1.73 起内置 FC/NES 固定使用 Nestopia core：`libnestopia_libretro_android.so`。
-- 新增 `InternalFcActivity.kt`、`FcTouchControlsView.kt`、`FcModels.kt`。
-- 设置页中 FC/NES 增加“内置 FC/NES 模拟器”选项；清除外部模拟器后会回到内置模拟器。
-- FC/NES 内置模式支持基础虚拟按键、游戏内菜单、快速存档、快速读档、快进、重启、退出。
-- `.7z` 仍建议使用外部模拟器或先解压，内置 Phase 1 暂不直接解压 7z。
-- 已添加 `THIRD_PARTY_NOTICES.md`，记录 Nestopia / 历史 FCEUmm core 来源和许可提醒。
-
-
-### v0.1.65 补充
-
-- FC/NES 内置模式复制 ROM 到 ASCII 缓存路径后再交给内置 core，降低中文/特殊字符文件名导致无法启动的概率。
-- FC/NES 内置模式会检测 NES 头信息，遇到高 Mapper / 大容量改版 ROM 只做兼容性提示，不阻挡启动。
-- FC/NES 虚拟按键调整为接近 GBA 的布局，并补充屏幕“退出”按键。
-- 设置 > 系统 新增“手柄操作”，GBA / FC/NES 内置模拟器共用。
-- 默认快捷键：快速保存=L1，快速读取=R1，快进=R3，菜单=L2，退出=SELECT+X，连发A=X，连发B=Y。
-- 修改快捷键时支持 1~3 键组合，停止输入约 360ms 后保存；完全相同组合会弹窗提示冲突。
-
-
-## v0.1.66
-
-- 修复 v0.1.65 在部分 Compose 版本下 `nativeKeyEvent` 不可用导致的编译失败。
-- 仅补兼容桥，不改变 GBA / FC/NES 模拟器逻辑。
-
-
-## v0.1.69
-
-- 修复 FC/NES 内置存档菜单文字上下重叠：存档列表改成和 GBA 一样的单行自适应列表，小屏横屏自动滚动选中项。
-- FC/NES 内置启动增加无首帧渲染检测；v0.1.73 起固定使用 Nestopia 后，Mapper 115 汉化/改版 ROM 兼容性改善。
-- 扩展 NES 头信息提示：遇到非普通 Mapper / NES2.0 高 Mapper / 大容量改版 ROM 时，只提示兼容性风险，不阻挡启动。
-
-## v0.1.68
-
-- FC/NES 内置模拟器：连接手柄并使用实体按键后，自动隐藏屏幕虚拟按键；触摸屏幕后恢复显示。
-- FC/NES 内置菜单改成接近 GBA 的结构：存档、虚拟按键设置、作弊、重置、退出游戏。
-- FC/NES 存档页支持 A 保存、Y 读取、X 删除，触屏也有保存 / 读取 / 删除按钮。
-- FC/NES 屏幕虚拟按键布局改成更接近 GBA 内置模拟器布局。
-
-## v0.1.67
-
-- 修复设置页输入框会被手柄焦点卡住的问题：封面刮削输入框默认只读，不再抢占手柄焦点。
-- 封面刮削输入框右侧新增“编辑 / 保存”按钮，点编辑后才能输入，点保存后重新锁定。
-- 修复“设置 > 系统 > 手柄操作”页面用手柄下键选择时页面不跟随滚动的问题。
-- 手柄快捷键列表拆成独立滚动项，选中下面项目时会自动滚动到可见区域。
-
-
-## v0.1.73 FC/NES Nestopia only
-
-- 手动测试确认：Nestopia 可以启动洛克人 5 Mapper 115 汉化版，也可以启动原版 ROM。
-- 内置 FC/NES 固定使用 Nestopia，不再做 Mesen / FCEUmm 自动切换。
-- 删除内置 FC/NES 的 Mesen / FCEUmm core 文件，降低闪退和黑屏差异。
-
-
-### v0.1.73
-- FC/NES 内置模拟核心固定为 Nestopia。
-- 删除内置 FC/NES 的 Mesen / FCEUmm core，避免 Mesen native 闪退和 FCEUmm 对部分 Mapper 115 汉化 ROM 黑屏。
-- FC/NES 核心选择页不再提供多核心切换；外部模拟器 Nes.emu / RetroArch 仍可照常使用。
-
-## v0.1.74 内置模拟器 UI 统一规范
-
-从 v0.1.74 开始，所有内置模拟器都必须以现有 GBA 模拟器为 UI 标准，后续不要再为 FC/NES、SFC、MD、PS1 等内置模拟器单独写一套不同风格的虚拟按键或菜单。
-
-### 1. 公共模块位置
-
-```text
-app/src/main/java/com/bond/md3elauncher/emulator/common/
-├── CommonEmulatorUiSpec.kt      # 内置菜单、提示文案、快捷键提示规范
-└── CommonTouchLayout.kt         # GBA 标准虚拟按键排布生成器
-CommonEmulatorHost.kt        # 后续完整公共菜单调用的功能接口
-```
-
-### 2. 虚拟按键统一规范
-
-所有内置模拟器默认使用 GBA 标准排布：
-
-```text
-左侧：方向键 ↑ ↓ ← →
-右侧：Y / X / B / A
-中下：SELECT / START
-辅助：L / R / 菜单 / 快存 / 快读 / 快进 / 退出
-```
-
-FC/NES 虽然只需要 A/B，但仍然保留 X/Y/L/R 的统一位置。X/Y 可以作为连发或扩展键使用。用户在不同内置模拟器之间切换时，虚拟按键位置不应变化。
-
-### 3. 内置菜单统一规范
-
-所有内置模拟器主菜单统一为：
-
-```text
-存档
-虚拟按键设置
-作弊
-重置
-重启游戏
-退出游戏
-```
-
-顶部操作提示统一为：
-
-```text
-上下选择，A 进入，B 返回，当前退出快捷键退出
-```
-
-如果可以读取软件内手柄设置，则显示用户设置的退出组合键；读取失败时显示默认 `SELECT + X`。
-
-### 4. 存档菜单统一规范
-
-存档菜单统一包含：
-
-```text
-存档 1
-存档 2
-存档 3
-存档 4
-存档 5
-快捷存档
-```
-
-统一操作：
-
-```text
-A = 存档
-Y = 读档
-X = 删除
-B = 返回
-```
-
-### 5. 虚拟按键设置统一规范
-
-虚拟按键设置统一分为：
-
-```text
-透明度设置
-虚拟键编辑
-```
-
-透明度设置用于真实手柄模式下的虚拟键显示透明度。默认应为 0%，也就是使用真实手柄时不挡屏幕。虚拟键编辑用于触屏虚拟键透明度、大小、位置编辑。GBA 已有完整编辑逻辑；FC/NES 从 v0.1.74 开始接入公共排布和入口，后续继续接公共编辑器。
-
-### 6. 重置 / 重启游戏 / 退出游戏定义
-
-```text
-重置：关闭当前模拟器核心，冷重载当前 ROM，从头开始游戏，不清除存档。
-重启游戏：不退出游戏界面，调用当前 core reset，直接从头开始。
-退出游戏：退出当前内置模拟器，返回启动器列表。
-```
-
-### 7. 后续开发要求
-
-新增任何内置模拟器时必须遵守：
-
-```text
-1. 优先复用 CommonTouchLayoutBuilder.buildGbaStyleLayout。
-2. 主菜单必须使用 CommonEmulatorUiSpec.MAIN_MENU_ITEMS。
-3. 存档菜单必须保留 5 个普通槽 + 1 个快捷存档。
-4. 作弊入口可以按模拟器能力实现，未接入时只显示“暂未支持”。
-5. 不允许单独设计一套不同风格的内置菜单和虚拟按键排布。
-```
-
-### 8. v0.1.74 实际改动
-
-```text
-- 新增 emulator/common 公共 UI 规范模块。
-- FC/NES 虚拟按键改为复用 GBA 标准排布生成器。
-- GBA / FC/NES 主菜单统一为：存档 / 虚拟按键设置 / 作弊 / 重置 / 重启游戏 / 退出游戏。
-- GBA 新增“重启游戏”入口，直接调用 core reset，不退出 Activity。
-- FC/NES 增加真实手柄模式透明度设置，手柄模式默认隐藏虚拟键。
-- FC/NES 继续固定使用 Nestopia core。
-```
-
-## v0.1.75 Launcher list reorder and fixed launcher hotkeys
-
-- 设置 > 系统 已移除「FC/NES 模拟核心」入口。FC/NES 内置模拟器继续固定使用 Nestopia core，不再在设置里展示核心选择。
-- 启动器底部按键提示增加固定顺序调整入口：
-  - `L3 / 左摇杆按下`：上移当前选中的条目。
-  - `R3 / 右摇杆按下`：下移当前选中的条目。
-- 上移 / 下移只作用于当前顶部游戏 / 应用列表的显示顺序，不影响模拟器内部按键绑定，不占用「设置 > 系统 > 手柄操作」里的快捷键。
-- 条目已经置顶时，上移按钮显示为灰色不可用；条目已经在底部时，下移按钮显示为灰色不可用。
-- 搜索结果页面不允许调整顺序，避免只移动过滤后的局部列表导致顺序混乱。
-- 排序会保存到本地：收藏、各游戏平台列表、安卓游戏列表、全部应用列表分别使用独立排序。
-- 后续新增模拟器或新的列表页面时，应该继续复用这套固定规则：底部显示 `Y 设置 / X 搜索 / B 返回或收藏 / L3 上移 / R3 下移 / A 启动`，列表顺序调整不得再绑定到方向键，方向键只用于正常移动焦点。
-
-
-## v0.1.76 补充
-
-- 新增 GB/GBC 平台，支持 `.gb/.gbc/.sgb/.zip/.7z` 扫描。
-- GB/GBC 默认使用内置 mGBA core 启动；GBA 平台不变。
-- `.zip` 内置启动时现在支持解出 `.gb/.gbc/.sgb`。
-- 启动器底部提示顺序固定为 `Y 设置 / X 搜索 / L3 上移 / R3 下移 / B 操作`，B 的文案变化不再影响前面按钮位置。
-- 列表上移 / 下移后会延迟滚动到当前选中项，修复移动到顶部时选中游戏看不到的问题。
-
-## v0.1.77 设置说明与编辑封面提示
-
-- `设置 > 系统 > 手柄操作` 的简介统一精简为：`设置内置模拟器通用快捷键，支持1~3键组合。`
-- `设置 > 系统 > 手柄操作` 详情页顶部说明也使用同一条短文案，避免占用过多空间。
-- 游戏列表长按进入 `编辑显示信息` 后，在 `联网搜索封面 / 设备选择封面 / 编辑显示名称` 下方增加封面尺寸提示：建议竖版 3:4，推荐 `600×800 px`。
-- 编辑显示信息页右侧操作区允许垂直滚动；后续再增加按钮或提示时，不允许因为内容变多导致底部溢出。
-- 封面图片规范：推荐 PNG/JPG，竖版 3:4；过大的图片由界面使用 `ContentScale.Fit` 自动适配显示，不要强制裁剪用户图片。
-
----
-
-## v0.1.78 国际化文本规范
-
-从 v0.1.78 开始，新增用户可见文本必须先写入 JSON，再通过 key 读取，不再直接把中文写死在业务代码里。
-
-### JSON 位置
-
-```text
-app/src/main/assets/i18n/en.json
-app/src/main/assets/i18n/zh.json
-app/src/main/assets/i18n/zh-Hant.json
-```
-
-从 v0.1.79 开始，默认语言是英文。App 会读取系统语言：简体中文设备使用 `zh.json`，繁体中文设备使用 `zh-Hant.json`，其他语言暂时全部使用 `en.json`。缺 key 时按 `当前语言 -> en -> zh -> fallback` 回退。
-
-### 调用规范
-
-```kotlin
-I18n.t(context, "common.back", "返回")
-I18n.t(context, "toast.scan_failed", "扫描失败：{error}", "error" to errorMessage)
-```
-
-Compose 文本也可以直接使用：
-
-```kotlin
-I18nText(
-    key = "settings.system.controller_shortcut.subtitle",
-    fallback = "设置内置模拟器通用快捷键，支持1~3键组合。",
-    maxLines = 2
-)
-```
-
-### 新增文本规则
-
-1. 新增按钮、标题、Toast、Dialog、菜单项、提示文案时，必须同步加到 `en.json`、`zh.json`、`zh-Hant.json`。
-2. 代码中只能通过 `I18n.t(context, key, fallback)` 读取。
-3. key 命名按模块分组，例如：
-
-```text
-common.back
-launcher.bottom.search
-settings.system.controller_shortcut.subtitle
-edit.cover_hint
-emulator.menu.save
-toast.scan_failed
-```
-
-4. fallback 可以保留中文或英文，但正式界面文本必须优先来自 JSON。
-5. 新增语言时复制 `en.json` 结构，不允许删 key。
-6. 默认显示规则固定为：非中文系统显示英文；中文系统按简体 / 繁体分别显示。
-
-### 文本过长预防规范
-
-国际化后文本可能比中文长很多，所以 UI 必须默认防溢出：
-
-```kotlin
-Text(
-    text = I18n.t(context, "common.save", "保存"),
-    maxLines = 1,
-    overflow = TextOverflow.Ellipsis
-)
-```
-
-按钮、顶部标题、底部按键提示：
-
-```text
-maxLines = 1
-overflow = TextOverflow.Ellipsis
-```
-
-说明文字、提示文字：
-
-```text
-maxLines = 2~4
-overflow = TextOverflow.Ellipsis
-```
-
-游戏名、App 名、ROM 名：
-
-```text
-maxLines = 1
-overflow = TextOverflow.Ellipsis
-```
-
-Canvas 绘制的内置模拟器菜单和虚拟按键，必须继续使用 `drawFittedText` 或短文本 key，不能直接 drawText 长句。
-
-### v0.1.78 已接入 JSON 的重点区域
-
-```text
-启动器底部按键
-启动器中心标题
-搜索弹窗标题
-默认桌面弹窗
-编辑显示信息页
-封面搜索页
-设置 > 系统 > 手柄操作入口
-手柄操作页面标题、说明、冲突提示
-内置模拟器公共菜单标题 / 提示
-FC/NES 公共虚拟按键短文本
-主要 Toast 文案
-```
-
-后续改其他页面时，继续按这个规范把剩余历史硬编码文本迁移到 JSON。
-
-### 硬编码文本检查脚本
-
-为了防止后续又把中文写回 Kotlin 里，新增检查脚本：
-
-```powershell
-python scripts/check_i18n_hardcoded_text.py
-```
-
-它会列出 Kotlin 里仍然存在的中文字符串。历史代码可以逐步迁移，但新增和修改的页面必须优先清理。
-
----
-
-## v0.1.79 语言选择与编译修复
-
-- 修复 `SettingsScreens.kt` 中两个页面缺少 `LocalContext.current` 导致的 Kotlin 编译错误。
-- JSON 默认语言改为英文：`DEFAULT_LANG = "en"`。
-- 语言判断规则：
-
-```text
-zh-Hant / zh-TW / zh-HK / zh-MO -> zh-Hant.json
-其他 zh* -> zh.json
-其他所有语言 -> en.json
-```
-
-- 新增繁体中文文件：
-
-```text
-app/src/main/assets/i18n/zh-Hant.json
-```
-
-- `en.json / zh.json / zh-Hant.json` 必须保持 key 完全一致，后续新增文案要三份一起补。
-- 长文本仍必须使用 `maxLines + TextOverflow.Ellipsis`，Canvas 菜单继续使用 fitted text，避免国际化后撑爆布局。
-
-
-## v0.1.81
-Completed i18n cleanup baseline. All new visible text must be JSON based.
-
-## v0.1.82
-
-- I18n cleanup pass for built-in emulator screens.
-- GBA / GB/GBC canvas menu text now uses JSON i18n instead of hardcoded Chinese for menu titles, save-state UI, virtual button editor, quick-save/load labels, cheat dialogs, and toast messages.
-- FC/NES Nestopia canvas menu text now uses JSON i18n for menu titles, save-state UI, virtual button settings, reset page, and toast messages.
-- English is the default fallback for every newly migrated user-facing string; zh and zh-Hant keys are synchronized.
-- Remaining Chinese in emulator Kotlin is limited to comments or accepted input aliases such as 快存/快读 for custom button parsing, not visible UI text.
-
-
-## v0.1.84
-
-- I18n: language switching now invalidates current Compose UI immediately.
-- I18n: bottom shortcut labels are refreshed after changing language without requiring an app restart.
-- Rule: every I18n.t()/I18n.languageFor() call observes the global language revision state.
-
-## v0.1.83
-- Fix build failure introduced during v0.1.82 i18n cleanup: `InternalGbaActivity` now defines the same `tr(...)` helper used by FC/NES and touch-control modules.
-- Keep GBA / GB / FC emulator i18n cleanup changes from v0.1.82.
-
-## v0.1.85
-
-- I18n: language mode is now also written to `filesDir/i18n_language_mode.txt` and read from that file first.
-- Reason: built-in emulators run in separate processes (`:internal_gba`, `:internal_fc`). SharedPreferences may stay cached in those processes after the main launcher changes language.
-- GBA / GB/GBC and FC/NES normal Exit now finishes the Activity and then kills the internal emulator process after a short delay.
-- Result: after changing language in Settings, re-entering a built-in emulator starts a fresh process and reads the latest language immediately.
-- Rule: internal emulator Exit must mean closing the internal emulator process, not only hiding the Activity.
-
-## v0.1.86
-
-- Launcher footer: English / non-Chinese mode keeps icon-only bottom hints but removes the default TextButton minimum width, so `Y / X / L3 / R3 / B / A` no longer appear too far apart.
-- Launcher footer: Chinese / Traditional Chinese mode keeps text labels unchanged.
-
-### Next emulator priority note
-
-Recommended next platform after PSP / NS / GBA / GB/GBC / FC/NES is **SFC/SNES**. It is common, lightweight, touch-control mapping is close to the current common emulator UI, and can be integrated with a libretro SNES core before heavier systems such as MD/Genesis, PS1, N64, or arcade.
-
-## v0.1.87
-
-- Branding: all user-visible legacy app-name text has been changed to `GameHub`.
-- App label is now `GameHub` for all locales.
-- I18n app name, controller shortcut subtitle, Appearance descriptions, cover scraper User-Agent, project display name, theme display identifiers, and README branding now use `GameHub`.
-- Internal Android package id remains `com.bond.md3elauncher` to avoid changing install identity or breaking app data updates.
-
-## v0.1.88 - SFC/SNES internal emulator
-
-- Added SFC/SNES platform tab and platform manager entry.
-- Added built-in SFC/SNES launch path using the Snes9x libretro core.
-- Supported SFC/SNES ROM extensions: `.sfc`, `.smc`, `.swc`, `.fig`, `.bs`, `.st`, plus regular `.zip` containing those ROMs.
-- SFC/SNES reuses the existing internal emulator common UI: GBA-style virtual buttons, save-state menu, virtual button settings, reset, restart game, and exit.
-- SFC/SNES supports external emulator selection as an optional fallback: Snes9x EX+, SuperRetro16, RetroArch, or compatible apps.
-- PSP and NS remain external-emulator based.
-
-## v0.1.89
-- GB/GBC：增加 My OldBoy! 专用外部启动尝试，优先调用可能的 EmulatorActivity，而不是直接落到普通启动器页。
-- 如果当前 My OldBoy! 版本未开放稳定的外部 ROM 直启入口，会提示使用内置 GB/GBC 模拟器；内置 GB/GBC 仍是最稳定的一键启动方案。
-
-## v0.1.90
-- Built-in emulator virtual button settings were normalized across GBA, GB/GBC, FC/NES, and SFC/SNES.
-- Virtual button settings now use three separate entries:
-  - Real Controller Opacity: opacity used only after a physical controller is connected.
-  - Virtual Controller Opacity: opacity used when touching on-screen virtual controls.
-  - Virtual Button Editor: position/size/custom combo editor entry.
-- Real controller opacity and virtual controller opacity are independent and no longer mixed.
-- FC/NES and SFC/SNES now read the common internal virtual-control preference store used by GBA/GB, so shared opacity and saved layout values stay aligned across internal emulators.
+- 不要提交 ROM、BIOS、固件、密钥或商业游戏素材。
+- 不要改变 `applicationId`，以免破坏升级和本地数据兼容性。
+- 新增可见文本时同步更新 English、简体中文和繁體中文。
+- 保留右侧预览、最多四列宫格以及现有手柄操作。

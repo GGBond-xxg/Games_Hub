@@ -1,6 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val releaseSigningPropertiesFile = rootProject.file(".release-signing/keystore.properties")
+val releaseSigningProperties = Properties().apply {
+    if (releaseSigningPropertiesFile.exists()) {
+        releaseSigningPropertiesFile.inputStream().use(::load)
+    }
 }
 
 android {
@@ -11,11 +20,31 @@ android {
         applicationId = "com.bond.md3elauncher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 93
-        versionName = "0.1.93"
+        versionCode = 100
+        versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        if (releaseSigningPropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(releaseSigningProperties.getProperty("storeFile"))
+                storePassword = releaseSigningProperties.getProperty("storePassword")
+                keyAlias = releaseSigningProperties.getProperty("keyAlias")
+                keyPassword = releaseSigningProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            if (releaseSigningPropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 
@@ -40,5 +69,6 @@ dependencies {
     implementation(libs.androidx.documentfile)
     implementation(libs.kotlinx.coroutines.android)
     implementation("com.github.Swordfish90:LibretroDroid:0.13.2")
+    testImplementation(libs.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

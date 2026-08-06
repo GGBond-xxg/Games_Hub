@@ -1,8 +1,0 @@
-com.bond.md3elauncher.app-pngs-0 D:\Code\ProJect\GameHub\app\build\generated\res\pngs\debug
-com.bond.md3elauncher.app-updated_navigation_xml-1 D:\Code\ProJect\GameHub\app\build\generated\updated_navigation_xml\debug
-com.bond.md3elauncher.app-packageDebugResources-2 D:\Code\ProJect\GameHub\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.bond.md3elauncher.app-packageDebugResources-3 D:\Code\ProJect\GameHub\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.bond.md3elauncher.app-debug-4 D:\Code\ProJect\GameHub\app\build\intermediates\merged_res\debug\mergeDebugResources
-com.bond.md3elauncher.app-debug-5 D:\Code\ProJect\GameHub\app\src\debug\res
-com.bond.md3elauncher.app-main-6 D:\Code\ProJect\GameHub\app\src\main\res
-gradleHome-0 C:\Users\Administrator\.gradle

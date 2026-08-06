@@ -264,7 +264,7 @@ class LauncherStore(context: Context) {
     }
 
     fun saveTabOrder(order: List<String>) {
-        val allowed = setOf("NS", "PSP", "GBA", "GB", "SFC", "NES", "ANDROID")
+        val allowed = setOf("NS", "PSP", "GBA", "GB", "SFC", "NES", "MD", "PS1", "N64", "ARCADE", "ANDROID")
         val clean = (order.filter { it in allowed } + defaultTabOrder()).distinct()
         val arr = JSONArray()
         clean.forEach { arr.put(it) }
@@ -345,7 +345,11 @@ class LauncherStore(context: Context) {
         PlatformConfig(id = PlatformKind.GBA.name, kind = PlatformKind.GBA),
         PlatformConfig(id = PlatformKind.GB.name, kind = PlatformKind.GB),
         PlatformConfig(id = PlatformKind.SFC.name, kind = PlatformKind.SFC),
-        PlatformConfig(id = PlatformKind.NES.name, kind = PlatformKind.NES)
+        PlatformConfig(id = PlatformKind.NES.name, kind = PlatformKind.NES),
+        PlatformConfig(id = PlatformKind.MD.name, kind = PlatformKind.MD),
+        PlatformConfig(id = PlatformKind.PS1.name, kind = PlatformKind.PS1),
+        PlatformConfig(id = PlatformKind.N64.name, kind = PlatformKind.N64),
+        PlatformConfig(id = PlatformKind.ARCADE.name, kind = PlatformKind.ARCADE)
     )
 
     private fun mergeDefaultPlatforms(platforms: List<PlatformConfig>): List<PlatformConfig> {
@@ -353,7 +357,7 @@ class LauncherStore(context: Context) {
         return platforms + defaultPlatforms().filter { it.id !in existingIds }
     }
 
-    private fun defaultTabOrder(): List<String> = listOf("PSP", "NS", "GBA", "GB", "SFC", "NES", "ANDROID")
+    private fun defaultTabOrder(): List<String> = listOf("PSP", "NS", "GBA", "GB", "SFC", "NES", "MD", "PS1", "N64", "ARCADE", "ANDROID")
 
     private fun JSONObject.optStringOrNull(key: String): String? =
         if (has(key) && !isNull(key)) optString(key).takeIf { it.isNotBlank() } else null

@@ -14,6 +14,7 @@ import com.bond.md3elauncher.emulator.common.CommonTouchKeyMap
 import com.bond.md3elauncher.emulator.common.CommonTouchLabels
 import com.bond.md3elauncher.emulator.common.CommonTouchLayoutBuilder
 import com.bond.md3elauncher.i18n.I18n
+import com.swordfish.libretrodroid.GLRetroView
 import java.io.File
 import kotlin.math.hypot
 import kotlin.math.max
@@ -30,6 +31,9 @@ private enum class FcMenuPage {
     CHEATS,
     RESET_CONFIRM
 }
+
+private const val N64_LEFT_ANALOG_ID = "n64_left_analog"
+private const val N64_RIGHT_ANALOG_ID = "n64_right_analog"
 
 internal class FcTouchControlsView(context: Context) : View(context) {
     private val activity = context as InternalFcActivity
@@ -105,14 +109,57 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             height = h,
             density = resources.displayMetrics.density,
             keys = CommonTouchKeyMap(
-                x = if (activity.isSfcMode) KeyEvent.KEYCODE_BUTTON_X else FC_VIRTUAL_TURBO_A,
-                y = if (activity.isSfcMode) KeyEvent.KEYCODE_BUTTON_Y else FC_VIRTUAL_TURBO_B,
+                l2 = KeyEvent.KEYCODE_BUTTON_L2.takeIf { activity.isPs1Mode || activity.isN64Mode },
+                r2 = KeyEvent.KEYCODE_BUTTON_R2.takeIf { activity.isPs1Mode },
+                a = if (activity.isN64Mode) KeyEvent.KEYCODE_BUTTON_B else KeyEvent.KEYCODE_BUTTON_A,
+                b = if (activity.isN64Mode) KeyEvent.KEYCODE_BUTTON_Y else KeyEvent.KEYCODE_BUTTON_B,
+                x = if (activity.isN64Mode) KeyEvent.KEYCODE_BUTTON_A else if (activity.isSfcMode || activity.isMdMode || activity.isPs1Mode || activity.isArcadeMode) KeyEvent.KEYCODE_BUTTON_X else FC_VIRTUAL_TURBO_A,
+                y = if (activity.isN64Mode) KeyEvent.KEYCODE_BUTTON_X else if (activity.isSfcMode || activity.isMdMode || activity.isPs1Mode || activity.isArcadeMode) KeyEvent.KEYCODE_BUTTON_Y else FC_VIRTUAL_TURBO_B,
                 quickSave = FC_VIRTUAL_QUICK_SAVE,
                 quickLoad = FC_VIRTUAL_QUICK_LOAD,
                 fastForward = FC_VIRTUAL_FAST_FORWARD,
                 exit = FC_VIRTUAL_EXIT
             ),
             labels = CommonTouchLabels(
+                l1 = when {
+                    activity.isArcadeMode -> "5"
+                    activity.isPs1Mode -> "L1"
+                    activity.isMdMode -> "Y"
+                    else -> "L"
+                },
+                r1 = when {
+                    activity.isArcadeMode -> "6"
+                    activity.isPs1Mode -> "R1"
+                    activity.isMdMode -> "Z"
+                    else -> "R"
+                },
+                a = when {
+                    activity.isArcadeMode -> "2"
+                    activity.isN64Mode -> "A"
+                    activity.isPs1Mode -> "○"
+                    activity.isMdMode -> "C"
+                    else -> "A"
+                },
+                b = when {
+                    activity.isArcadeMode -> "1"
+                    activity.isPs1Mode -> "×"
+                    else -> "B"
+                },
+                x = when {
+                    activity.isArcadeMode -> "4"
+                    activity.isN64Mode -> "C↓"
+                    activity.isPs1Mode -> "△"
+                    else -> "X"
+                },
+                y = when {
+                    activity.isArcadeMode -> "3"
+                    activity.isN64Mode -> "C↑"
+                    activity.isPs1Mode -> "□"
+                    activity.isMdMode -> "A"
+                    else -> "Y"
+                },
+                l2 = if (activity.isN64Mode) "Z" else "L2",
+                select = if (activity.isMdMode) "MODE" else if (activity.isN64Mode) "C" else if (activity.isArcadeMode) "COIN" else "SELECT",
                 quickSave = I18n.short(context, "emulator.short.quick_save", "Save", maxChars = 4),
                 quickLoad = I18n.short(context, "emulator.short.quick_load", "Load", maxChars = 4),
                 fastForward = I18n.short(context, "emulator.short.fast_forward", "Fast", maxChars = 4),
@@ -318,13 +365,18 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     private fun handlePointerDown(pointerId: Int, x: Float, y: Float) {
         val button = findButton(x, y) ?: return
         activePointers[pointerId] = button
-        pressButton(button)
+        if (isN64AnalogButton(button)) updateN64Analog(button, x, y) else pressButton(button)
         checkVirtualExitCombo()
         invalidate()
     }
 
     private fun handlePointerMove(pointerId: Int, x: Float, y: Float) {
         val old = activePointers[pointerId]
+        if (old != null && isN64AnalogButton(old)) {
+            updateN64Analog(old, x, y)
+            invalidate()
+            return
+        }
         val next = findButton(x, y)
         if (old?.id == next?.id) return
         if (old != null) releaseButton(old)
@@ -349,7 +401,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
 
     private fun checkVirtualExitCombo() {
         val keys = activePointers.values.flatMap { it.keyCodes }.toSet()
-        val exitComboKey = if (activity.isSfcMode) KeyEvent.KEYCODE_BUTTON_X else FC_VIRTUAL_TURBO_A
+        val exitComboKey = if (activity.isSfcMode || activity.isMdMode || activity.isPs1Mode || activity.isN64Mode || activity.isArcadeMode) KeyEvent.KEYCODE_BUTTON_X else FC_VIRTUAL_TURBO_A
         if (KeyEvent.KEYCODE_BUTTON_SELECT in keys && exitComboKey in keys) {
             releaseAll()
             activity.exitGame()
@@ -357,6 +409,14 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     }
 
     private fun findButton(x: Float, y: Float): FcTouchButton? {
+        if (activity.isN64Mode) {
+            if (leftStickOuter.contains(x, y)) {
+                return FcTouchButton(N64_LEFT_ANALOG_ID, "", emptySet(), RectF(leftStickOuter), circle = true)
+            }
+            if (rightStickOuter.contains(x, y)) {
+                return FcTouchButton(N64_RIGHT_ANALOG_ID, "", emptySet(), RectF(rightStickOuter), circle = true)
+            }
+        }
         directionalButtonFromStick(x, y, leftStickOuter, leftStickCenter, "left")?.let { return it }
         directionalButtonFromStick(x, y, rightStickOuter, rightStickCenter, "right")?.let { return it }
         return buttons.lastOrNull { button ->
@@ -396,6 +456,15 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     }
 
     private fun releaseButton(button: FcTouchButton) {
+        if (isN64AnalogButton(button)) {
+            val source = if (button.id == N64_LEFT_ANALOG_ID) {
+                GLRetroView.MOTION_SOURCE_ANALOG_LEFT
+            } else {
+                GLRetroView.MOTION_SOURCE_ANALOG_RIGHT
+            }
+            activity.sendVirtualMotion(source, 0f, 0f)
+            return
+        }
         when (button.keyCode) {
             FC_VIRTUAL_TURBO_A -> activity.stopTurbo(FC_VIRTUAL_TURBO_A)
             FC_VIRTUAL_TURBO_B -> activity.stopTurbo(FC_VIRTUAL_TURBO_B)
@@ -411,6 +480,24 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         activePointers.values.forEach { releaseButton(it) }
         activePointers.clear()
         invalidate()
+    }
+
+    private fun isN64AnalogButton(button: FcTouchButton): Boolean =
+        button.id == N64_LEFT_ANALOG_ID || button.id == N64_RIGHT_ANALOG_ID
+
+    private fun updateN64Analog(button: FcTouchButton, x: Float, y: Float) {
+        val outer = button.rect
+        val radius = (min(outer.width(), outer.height()) / 2f).coerceAtLeast(1f)
+        val source = if (button.id == N64_LEFT_ANALOG_ID) {
+            GLRetroView.MOTION_SOURCE_ANALOG_LEFT
+        } else {
+            GLRetroView.MOTION_SOURCE_ANALOG_RIGHT
+        }
+        activity.sendVirtualMotion(
+            source,
+            (x - outer.centerX()) / radius,
+            (y - outer.centerY()) / radius
+        )
     }
 
     fun isMenuOpen(): Boolean = menuOpen
@@ -563,7 +650,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             FcMenuPage.VIRTUAL_ALPHA -> Unit
             FcMenuPage.VIRTUAL_TOUCH_ALPHA -> Unit
             FcMenuPage.VIRTUAL_EDITOR -> activity.showToast(tr("emulator.hint.fc_virtual_editor", "Common virtual button editor is reserved for this core."))
-            FcMenuPage.CHEATS -> activity.showToast(if (activity.isSfcMode) tr("emulator.hint.sfc_cheats", "SFC/SNES built-in cheats are reserved for later.") else tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later."))
+            FcMenuPage.CHEATS -> activity.showToast(cheatsHint())
             FcMenuPage.RESET_CONFIRM -> {
                 if (resetSelected == 0) activity.restartGameFresh() else backFromMenu()
             }
@@ -725,7 +812,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             FcMenuPage.VIRTUAL_ALPHA -> drawVirtualAlphaSettings(canvas, isTouch = false)
             FcMenuPage.VIRTUAL_TOUCH_ALPHA -> drawVirtualAlphaSettings(canvas, isTouch = true)
             FcMenuPage.VIRTUAL_EDITOR -> drawList(canvas, virtualEditorLabels(), 0, menuPanelRect.top + 64f * dp) { index -> virtualEditorSubtitle(index) }
-            FcMenuPage.CHEATS -> drawList(canvas, listOf(if (activity.isSfcMode) tr("emulator.hint.sfc_cheats", "SFC/SNES built-in cheats are reserved for later.") else tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later.")), 0, menuPanelRect.top + 76f * dp) { _ -> tr("emulator.hint.fc_cheats_external", "You can still use cheat features in an external emulator.") }
+            FcMenuPage.CHEATS -> drawList(canvas, listOf(cheatsHint()), 0, menuPanelRect.top + 76f * dp) { _ -> tr("emulator.hint.fc_cheats_external", "You can still use cheat features in an external emulator.") }
             FcMenuPage.RESET_CONFIRM -> drawList(canvas, listOf(tr("emulator.reset.confirm", "A: Confirm reload game"), tr("common.back", "Back")), resetSelected, menuPanelRect.top + 92f * dp) { index -> if (index == 0) CommonEmulatorUiSpec.resetHint(context) else tr("emulator.reset.cancel", "B: Cancel and return") }
         }
         textPaint.textAlign = Paint.Align.CENTER
@@ -938,7 +1025,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     }
 
     private fun menuTitle(): String = when (menuPage) {
-        FcMenuPage.MAIN -> tr("emulator.menu.title", "Built-in {platform} Menu", "platform" to if (activity.isSfcMode) "SFC/SNES" else "FC/NES")
+        FcMenuPage.MAIN -> tr("emulator.menu.title", "Built-in {platform} Menu", "platform" to activity.platformLabel)
         FcMenuPage.SAVE -> tr("emulator.menu.save", "Save States")
         FcMenuPage.VIRTUAL_KEYS -> tr("emulator.menu.virtual_keys", "Virtual Buttons")
         FcMenuPage.VIRTUAL_ALPHA -> tr("emulator.menu.hardware_opacity", "Real Controller Opacity")
@@ -955,14 +1042,21 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         FcMenuPage.VIRTUAL_ALPHA -> tr("emulator.hint.virtual_alpha", "Adjust opacity when a real controller is connected. Left/right adjust, B back.")
         FcMenuPage.VIRTUAL_TOUCH_ALPHA -> tr("emulator.hint.virtual_touch_alpha", "Adjust opacity when using virtual touch controls. Left/right adjust, B back.")
         FcMenuPage.VIRTUAL_EDITOR -> tr("emulator.hint.fc_virtual_editor", "Common virtual button editor is reserved for this core.")
-        FcMenuPage.CHEATS -> if (activity.isSfcMode) tr("emulator.hint.sfc_cheats", "SFC/SNES built-in cheats are reserved for later.") else tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later.")
+        FcMenuPage.CHEATS -> cheatsHint()
         FcMenuPage.RESET_CONFIRM -> CommonEmulatorUiSpec.resetHint(context)
     }
 
     private fun subtitleForMain(index: Int): String = when (index) {
         0 -> tr("emulator.subtitle.save", "Manage saves, loads, deletes, and quick save")
         1 -> tr("emulator.subtitle.fc_virtual", "Real-controller opacity, virtual-controller opacity, and common editor entry")
-        2 -> if (activity.isSfcMode) tr("emulator.subtitle.sfc_cheat", "SFC/SNES cheat entry reserved") else tr("emulator.subtitle.fc_cheat", "FC/NES cheat entry reserved")
+        2 -> when {
+            activity.isArcadeMode -> tr("emulator.subtitle.arcade_cheat", "Arcade cheat entry reserved")
+            activity.isN64Mode -> tr("emulator.subtitle.n64_cheat", "N64 cheat entry reserved")
+            activity.isPs1Mode -> tr("emulator.subtitle.ps1_cheat", "PS1 cheat entry reserved")
+            activity.isMdMode -> tr("emulator.subtitle.md_cheat", "MD/Genesis cheat entry reserved")
+            activity.isSfcMode -> tr("emulator.subtitle.sfc_cheat", "SFC/SNES cheat entry reserved")
+            else -> tr("emulator.subtitle.fc_cheat", "FC/NES cheat entry reserved")
+        }
         3 -> CommonEmulatorUiSpec.resetHint(context)
         4 -> CommonEmulatorUiSpec.restartHint(context)
         5 -> tr("emulator.subtitle.exit", "Exit to launcher")
@@ -983,6 +1077,15 @@ internal class FcTouchControlsView(context: Context) : View(context) {
     private fun virtualEditorSubtitle(index: Int): String = when (index) {
         0 -> tr("emulator.virtual.editor_sub.common_editor_pending", "Common editor entry reserved; later it will share GBA drag/resize logic")
         else -> ""
+    }
+
+    private fun cheatsHint(): String = when {
+        activity.isArcadeMode -> tr("emulator.hint.arcade_cheats", "Arcade built-in cheats are reserved for later.")
+        activity.isN64Mode -> tr("emulator.hint.n64_cheats", "N64 built-in cheats are reserved for later.")
+        activity.isPs1Mode -> tr("emulator.hint.ps1_cheats", "PS1 built-in cheats are reserved for later.")
+        activity.isMdMode -> tr("emulator.hint.md_cheats", "MD/Genesis built-in cheats are reserved for later.")
+        activity.isSfcMode -> tr("emulator.hint.sfc_cheats", "SFC/SNES built-in cheats are reserved for later.")
+        else -> tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later.")
     }
 
     private fun drawVirtualAlphaSettings(canvas: Canvas, isTouch: Boolean) {

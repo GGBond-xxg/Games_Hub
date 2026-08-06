@@ -13,6 +13,10 @@ internal enum class BeaconTab(val label: String) {
     GBA("GBA"),
     GB("GB"),
     SFC("SFC"),
+    MD("MD"),
+    PS1("PS1"),
+    N64("N64"),
+    ARCADE("ARC"),
     NES("FC"),
     SETTINGS("Settings")
 }
@@ -26,11 +30,15 @@ internal fun BeaconTab.localizedLabel(context: Context): String = when (this) {
     BeaconTab.GBA -> "GBA"
     BeaconTab.GB -> "GB"
     BeaconTab.SFC -> "SFC"
+    BeaconTab.MD -> "MD"
+    BeaconTab.PS1 -> "PS1"
+    BeaconTab.N64 -> "N64"
+    BeaconTab.ARCADE -> I18n.t(context, "tab.arcade", "街机")
     BeaconTab.NES -> "FC"
     BeaconTab.SETTINGS -> I18n.t(context, "tab.settings", "设置")
 }
 
-internal val emulatorTabsDefault: List<BeaconTab> = listOf(BeaconTab.PSP, BeaconTab.NS, BeaconTab.GBA, BeaconTab.GB, BeaconTab.SFC, BeaconTab.NES)
+internal val emulatorTabsDefault: List<BeaconTab> = listOf(BeaconTab.PSP, BeaconTab.NS, BeaconTab.GBA, BeaconTab.GB, BeaconTab.SFC, BeaconTab.NES, BeaconTab.MD, BeaconTab.PS1, BeaconTab.N64, BeaconTab.ARCADE)
 
 internal val sortableTabs: List<BeaconTab> = emulatorTabsDefault + BeaconTab.ANDROID
 

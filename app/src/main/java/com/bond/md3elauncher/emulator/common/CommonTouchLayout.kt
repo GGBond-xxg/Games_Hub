@@ -40,6 +40,8 @@ internal data class CommonTouchLayout(
 internal data class CommonTouchKeyMap(
     val l1: Int = KeyEvent.KEYCODE_BUTTON_L1,
     val r1: Int = KeyEvent.KEYCODE_BUTTON_R1,
+    val l2: Int? = null,
+    val r2: Int? = null,
     val a: Int = KeyEvent.KEYCODE_BUTTON_A,
     val b: Int = KeyEvent.KEYCODE_BUTTON_B,
     val x: Int,
@@ -53,6 +55,16 @@ internal data class CommonTouchKeyMap(
 )
 
 internal data class CommonTouchLabels(
+    val l1: String = "L",
+    val r1: String = "R",
+    val l2: String = "L2",
+    val r2: String = "R2",
+    val a: String = "A",
+    val b: String = "B",
+    val x: String = "X",
+    val y: String = "Y",
+    val start: String = "START",
+    val select: String = "SELECT",
     val quickSave: String = "Save",
     val quickLoad: String = "Load",
     val fastForward: String = "Fast",
@@ -99,8 +111,10 @@ internal object CommonTouchLayoutBuilder {
         val smallPillH = min(dp(32f), safeH * 0.065f).coerceAtLeast(dp(26f))
         val shoulderW = min(dp(108f), safeW * 0.15f)
         val shoulderY = margin + smallPillH / 2f
-        pillButton("l1", "L", keys.l1, margin + shoulderW / 2f, shoulderY, shoulderW, smallPillH)
-        pillButton("r1", "R", keys.r1, safeW - margin - shoulderW / 2f, shoulderY, shoulderW, smallPillH)
+        pillButton("l1", labels.l1, keys.l1, margin + shoulderW / 2f, shoulderY, shoulderW, smallPillH)
+        pillButton("r1", labels.r1, keys.r1, safeW - margin - shoulderW / 2f, shoulderY, shoulderW, smallPillH)
+        keys.l2?.let { pillButton("l2", labels.l2, it, margin + shoulderW * 1.6f, shoulderY, shoulderW * 0.72f, smallPillH) }
+        keys.r2?.let { pillButton("r2", labels.r2, it, safeW - margin - shoulderW * 1.6f, shoulderY, shoulderW * 0.72f, smallPillH) }
 
         val stickRadius = min(primarySize * 0.36f, dp(48f))
         val leftStickCx = leftCx + primarySize * 1.08f
@@ -111,14 +125,14 @@ internal object CommonTouchLayoutBuilder {
         val rightStickCenter = RectF(rightStickCx - stickRadius * 0.35f, clusterCy - stickRadius * 0.35f, rightStickCx + stickRadius * 0.35f, clusterCy + stickRadius * 0.35f)
 
         val faceRadius = min(dp(30f), primarySize * 0.25f)
-        circularButton("b", "B", keys.b, rightCx - primarySize * 0.32f, clusterCy + primarySize * 0.18f, faceRadius)
-        circularButton("a", "A", keys.a, rightCx + primarySize * 0.26f, clusterCy - primarySize * 0.20f, faceRadius)
-        circularButton("y", "Y", keys.y, rightCx - primarySize * 0.34f, clusterCy - primarySize * 0.36f, faceRadius * 0.88f)
-        circularButton("x", "X", keys.x, rightCx + primarySize * 0.26f, clusterCy + primarySize * 0.36f, faceRadius * 0.88f)
+        circularButton("b", labels.b, keys.b, rightCx - primarySize * 0.32f, clusterCy + primarySize * 0.18f, faceRadius)
+        circularButton("a", labels.a, keys.a, rightCx + primarySize * 0.26f, clusterCy - primarySize * 0.20f, faceRadius)
+        circularButton("y", labels.y, keys.y, rightCx - primarySize * 0.34f, clusterCy - primarySize * 0.36f, faceRadius * 0.88f)
+        circularButton("x", labels.x, keys.x, rightCx + primarySize * 0.26f, clusterCy + primarySize * 0.36f, faceRadius * 0.88f)
 
         val bottomPillY = safeH - margin - smallPillH / 2f
-        pillButton("start", "START", keys.start, safeW / 2f + dp(62f), bottomPillY, dp(88f), smallPillH)
-        pillButton("select", "SELECT", keys.select, safeW / 2f - dp(62f), bottomPillY, dp(92f), smallPillH)
+        pillButton("start", labels.start, keys.start, safeW / 2f + dp(62f), bottomPillY, dp(88f), smallPillH)
+        pillButton("select", labels.select, keys.select, safeW / 2f - dp(62f), bottomPillY, dp(92f), smallPillH)
         pillButton("quick_save", labels.quickSave, keys.quickSave, margin + shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
         pillButton("quick_load", labels.quickLoad, keys.quickLoad, safeW - margin - shoulderW / 2f, shoulderY + smallPillH + dp(8f), dp(76f), smallPillH)
         pillButton("fast_forward", labels.fastForward, keys.fastForward, safeW - margin - shoulderW / 2f, shoulderY + (smallPillH + dp(8f)) * 2f, dp(76f), smallPillH)

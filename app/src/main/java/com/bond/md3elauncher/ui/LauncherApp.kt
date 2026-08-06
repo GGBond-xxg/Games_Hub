@@ -119,6 +119,7 @@ fun LauncherApp(
     var showSearchDialog by rememberSaveable { mutableStateOf(false) }
     var showAllApps by rememberSaveable { mutableStateOf(false) }
     var launchSelected by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var launchSelectedTabName by remember { mutableStateOf<String?>(null) }
     var bottomBSelected by remember { mutableStateOf<(() -> Unit)?>(null) }
     var editSelected by remember { mutableStateOf<(() -> Unit)?>(null) }
     var bottomBLabel by rememberSaveable { mutableStateOf(favoriteText) }
@@ -136,6 +137,10 @@ fun LauncherApp(
                 BeaconTab.GB -> games.any { it.platformId == PlatformKind.GB.name } || tab == BeaconTab.GB
                 BeaconTab.SFC -> games.any { it.platformId == PlatformKind.SFC.name } || tab == BeaconTab.SFC
                 BeaconTab.NES -> games.any { it.platformId == PlatformKind.NES.name } || tab == BeaconTab.NES
+                BeaconTab.MD -> games.any { it.platformId == PlatformKind.MD.name } || tab == BeaconTab.MD
+                BeaconTab.PS1 -> games.any { it.platformId == PlatformKind.PS1.name } || tab == BeaconTab.PS1
+                BeaconTab.N64 -> games.any { it.platformId == PlatformKind.N64.name } || tab == BeaconTab.N64
+                BeaconTab.ARCADE -> games.any { it.platformId == PlatformKind.ARCADE.name } || tab == BeaconTab.ARCADE
                 BeaconTab.ANDROID -> true
                 else -> false
             }
@@ -144,7 +149,8 @@ fun LauncherApp(
     }
 
     val gamepadScope = rememberCoroutineScope()
-    val currentLaunchSelected by rememberUpdatedState(launchSelected)
+    val activeLaunchSelected = launchSelected.takeIf { launchSelectedTabName == tabName }
+    val currentLaunchSelected by rememberUpdatedState(activeLaunchSelected)
     val currentEditSelected by rememberUpdatedState(editSelected)
     var aLongPressJob by remember { mutableStateOf<Job?>(null) }
     var aLongPressFired by remember { mutableStateOf(false) }
@@ -232,6 +238,22 @@ fun LauncherApp(
                 val first = games.firstOrNull { it.platformId == PlatformKind.NES.name }
                 if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
+            BeaconTab.MD -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.MD.name }
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
+            }
+            BeaconTab.PS1 -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.PS1.name }
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
+            }
+            BeaconTab.N64 -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.N64.name }
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
+            }
+            BeaconTab.ARCADE -> {
+                val first = games.firstOrNull { it.platformId == PlatformKind.ARCADE.name }
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
+            }
             BeaconTab.ANDROID -> {
                 val first = installedApps.firstOrNull { "app:${it.packageName}" in androidGames }
                 val key = first?.let { "app:${it.packageName}" }
@@ -253,7 +275,6 @@ fun LauncherApp(
         setupPlatformId = null
         searchQuery = ""
         showSearchDialog = false
-        launchSelected = null
         bottomBSelected = null
         editSelected = null
         cancelPrimaryPress()
@@ -262,6 +283,11 @@ fun LauncherApp(
         bottomBLabel = estimatedBottomBLabel(next)
         editTarget = null
         tabName = next.name
+    }
+
+    fun publishLaunchSelected(action: (() -> Unit)?) {
+        launchSelected = action
+        launchSelectedTabName = tabName
     }
 
     fun goBackOneStep() {
@@ -473,7 +499,7 @@ fun LauncherApp(
                             layoutMode = launcherLayoutMode,
                             itemOrder = itemOrders["android_all"].orEmpty(),
                             onSaveItemOrder = { order -> onSaveItemOrder("android_all", order) },
-                            onLaunchSelectedChange = { launchSelected = it },
+                            onLaunchSelectedChange = { publishLaunchSelected(it) },
                             onToggleSelectedChange = { bottomBSelected = it },
                             onEditSelectedChange = { editSelected = it },
                             onBottomBLabelChange = { bottomBLabel = it },
@@ -495,7 +521,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["favorites"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("favorites", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -516,7 +542,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.SWITCH.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.SWITCH.name}", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -536,7 +562,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.PSP.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.PSP.name}", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -556,7 +582,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.GBA.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.GBA.name}", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -576,7 +602,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.GB.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.GB.name}", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -598,7 +624,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.SFC.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.SFC.name}", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -618,7 +644,87 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["platform:${PlatformKind.NES.name}"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.NES.name}", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
+                            BeaconTab.MD -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.MD },
+                                games = games.filter { it.platformId == PlatformKind.MD.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                layoutMode = launcherLayoutMode,
+                                itemOrder = itemOrders["platform:${PlatformKind.MD.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.MD.name}", order) },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
+                            BeaconTab.PS1 -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.PS1 },
+                                games = games.filter { it.platformId == PlatformKind.PS1.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                layoutMode = launcherLayoutMode,
+                                itemOrder = itemOrders["platform:${PlatformKind.PS1.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.PS1.name}", order) },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
+                            BeaconTab.N64 -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.N64 },
+                                games = games.filter { it.platformId == PlatformKind.N64.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                layoutMode = launcherLayoutMode,
+                                itemOrder = itemOrders["platform:${PlatformKind.N64.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.N64.name}", order) },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
+                            BeaconTab.ARCADE -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.kind == PlatformKind.ARCADE },
+                                games = games.filter { it.platformId == PlatformKind.ARCADE.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                layoutMode = launcherLayoutMode,
+                                itemOrder = itemOrders["platform:${PlatformKind.ARCADE.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${PlatformKind.ARCADE.name}", order) },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -638,7 +744,7 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["android_games"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("android_games", order) },
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
                                 onBottomBLabelChange = { bottomBLabel = it },
@@ -687,7 +793,7 @@ fun LauncherApp(
                                 onSaveScraperSettings = onSaveScraperSettings,
                                 onSaveTabOrder = onSaveTabOrder,
                                 onSetLanguageMode = onSetLanguageMode,
-                                onLaunchSelectedChange = { launchSelected = it },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onControllerShortcutCaptureHandlerChange = { controllerShortcutCaptureHandler = it }
                             )
                         }
@@ -719,7 +825,15 @@ fun LauncherApp(
                     onMoveDown = if (!isBackPage) moveSelectionDown else null,
                     layoutMode = launcherLayoutMode,
                     onLayoutModeChange = if (!isBackPage) onSetLauncherLayoutMode else null,
-                    onLaunchSelected = if (editTarget == null && appPickerPlatform == null) launchSelected else null,
+                    onLaunchSelected = if (
+                        editTarget == null &&
+                        appPickerPlatform == null &&
+                        launchSelected != null
+                    ) {
+                        { activeLaunchSelected?.invoke() }
+                    } else {
+                        null
+                    },
                     centerText = if (editTarget != null) {
                         editCenterText
                     } else if (showAllApps) {
@@ -734,6 +848,10 @@ fun LauncherApp(
                             BeaconTab.GB -> I18n.t(context, "launcher.center.gb", "GB/GBC 游戏")
                             BeaconTab.SFC -> I18n.t(context, "launcher.center.sfc", "SFC/SNES 游戏")
                             BeaconTab.NES -> I18n.t(context, "launcher.center.nes", "FC 游戏")
+                            BeaconTab.MD -> I18n.t(context, "launcher.center.md", "MD/Genesis 游戏")
+                            BeaconTab.PS1 -> I18n.t(context, "launcher.center.ps1", "PS1 游戏")
+                            BeaconTab.N64 -> I18n.t(context, "launcher.center.n64", "N64 游戏")
+                            BeaconTab.ARCADE -> I18n.t(context, "launcher.center.arcade", "街机游戏")
                             BeaconTab.SETTINGS -> I18n.t(context, "launcher.center.settings", "设置")
                         }
                     }
@@ -755,6 +873,10 @@ fun LauncherApp(
                 tab == BeaconTab.GB -> I18n.t(context, "launcher.search.gb", "搜索 GB/GBC 游戏")
                 tab == BeaconTab.SFC -> I18n.t(context, "launcher.search.sfc", "搜索 SFC/SNES 游戏")
                 tab == BeaconTab.NES -> I18n.t(context, "launcher.search.nes", "搜索 FC/NES 游戏")
+                tab == BeaconTab.MD -> I18n.t(context, "launcher.search.md", "搜索 MD/Genesis 游戏")
+                tab == BeaconTab.PS1 -> I18n.t(context, "launcher.search.ps1", "搜索 PS1 游戏")
+                tab == BeaconTab.N64 -> I18n.t(context, "launcher.search.n64", "搜索 N64 游戏")
+                tab == BeaconTab.ARCADE -> I18n.t(context, "launcher.search.arcade", "搜索街机游戏")
                 tab == BeaconTab.SETTINGS -> I18n.t(context, "launcher.search.settings", "搜索设置")
                 else -> I18n.t(context, "common.search", "搜索")
             },

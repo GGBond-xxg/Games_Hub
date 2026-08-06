@@ -1,0 +1,32 @@
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+build/
+**/build/
+
+# Android Studio / native build
+.idea/
+*.iml
+local.properties
+.externalNativeBuild/
+.cxx/
+**/.cxx/
+
+# Generated packages and logs
+*.apk
+*.aab
+*.apks
+*.log
+captures/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Local secrets
+*.jks
+*.keystore
+keystore.properties
+.release-signing/

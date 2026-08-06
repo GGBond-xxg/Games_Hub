@@ -41,6 +41,9 @@
         <package android:name="com.johnemulators.johnneslite" />
         <package android:name="com.nostalgiaemulators.neslite" />
         <package android:name="com.nostalgiaemulators.nesfull" />
+        <package android:name="org.mupen64plusae.v3.fzurita" />
+        <package android:name="org.mupen64plusae.v3.fzurita.pro" />
+        <package android:name="com.seleuco.mame4droid" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:mimeType="application/x-iso9660-image" />
@@ -122,6 +125,38 @@
             android:name=".emulator.fc.InternalFcActivity"
             android:exported="false"
             android:process=":internal_fc"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.GameHub"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".emulator.md.InternalMdActivity"
+            android:exported="false"
+            android:process=":internal_md"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.GameHub"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".emulator.ps1.InternalPs1Activity"
+            android:exported="false"
+            android:process=":internal_ps1"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.GameHub"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".emulator.n64.InternalN64Activity"
+            android:exported="false"
+            android:process=":internal_n64"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.GameHub"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" />
+
+        <activity
+            android:name=".emulator.arcade.InternalArcadeActivity"
+            android:exported="false"
+            android:process=":internal_arcade"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.GameHub"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" />

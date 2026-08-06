@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.BatteryManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -103,13 +105,28 @@ internal fun BeaconTopBar(
 private fun TopTabPill(label: String, selected: Boolean, width: Dp, onClick: () -> Unit) {
     val shape = RoundedCornerShape(12.dp)
     val colors = MaterialTheme.colorScheme
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) colors.primaryContainer else colors.surfaceVariant.copy(alpha = 0.22f),
+        animationSpec = tween(durationMillis = 180),
+        label = "top-tab-container"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) colors.primaryContainer else colors.outline.copy(alpha = 0.70f),
+        animationSpec = tween(durationMillis = 180),
+        label = "top-tab-border"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) colors.onPrimaryContainer else colors.onSurface,
+        animationSpec = tween(durationMillis = 180),
+        label = "top-tab-content"
+    )
     Box(
         modifier = Modifier
             .width(width)
             .height(34.dp)
             .clip(shape)
-            .background(if (selected) colors.primaryContainer else colors.surfaceVariant.copy(alpha = 0.22f))
-            .border(1.dp, if (selected) colors.primaryContainer else colors.outline.copy(alpha = 0.70f), shape)
+            .background(containerColor)
+            .border(1.dp, borderColor, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = if (width <= 40.dp) 0.dp else 2.dp),
         contentAlignment = Alignment.Center
@@ -117,7 +134,7 @@ private fun TopTabPill(label: String, selected: Boolean, width: Dp, onClick: () 
         Text(
             label,
             fontWeight = if (selected) FontWeight.Black else FontWeight.Bold,
-            color = if (selected) colors.onPrimaryContainer else colors.onSurface,
+            color = contentColor,
             textAlign = TextAlign.Center,
             maxLines = 1
         )
@@ -343,18 +360,41 @@ private fun LayoutModeIconButton(
 ) {
     val shape = RoundedCornerShape(10.dp)
     val accessibilityLabel = contentDescription
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "layout-mode-container"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.58f)
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "layout-mode-border"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(durationMillis = 180),
+        label = "layout-mode-content"
+    )
     Box(
         modifier = Modifier
             .size(36.dp)
             .clip(shape)
-            .background(
-                if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f)
-            )
+            .background(containerColor)
             .border(
                 width = 1.dp,
-                color = if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.outline.copy(alpha = 0.58f),
+                color = borderColor,
                 shape = shape
             )
             .semantics { this.contentDescription = accessibilityLabel }
@@ -362,11 +402,7 @@ private fun LayoutModeIconButton(
         contentAlignment = Alignment.Center
     ) {
         androidx.compose.runtime.CompositionLocalProvider(
-            androidx.compose.material3.LocalContentColor provides if (selected) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
+            androidx.compose.material3.LocalContentColor provides contentColor
         ) {
             Box(contentAlignment = Alignment.Center) {
                 icon()
