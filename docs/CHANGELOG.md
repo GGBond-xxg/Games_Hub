@@ -8,6 +8,7 @@ Only current and high-value milestones are retained here. Detailed experimental 
 - Added per-platform selection between built-in and supported external emulators.
 - Added N64 header detection and automatic byte-order normalization for `.z64`, `.v64`, `.n64` and incorrectly named compatible files.
 - Added the MAME 2003-Plus Arcade runtime with six-button touch controls and shared save/menu behavior.
+- Added ARM64 and ARM32 release APK splits to reduce download size without removing emulator features.
 - Preserved launcher list/grid layouts, right-side preview artwork, favorites, custom ordering and controller shortcuts.
 - Added release signing support, synchronized English/Simplified Chinese/Traditional Chinese text and refreshed public documentation.
 
