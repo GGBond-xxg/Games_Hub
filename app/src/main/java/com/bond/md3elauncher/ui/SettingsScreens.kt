@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +81,7 @@ import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.data.SafeMarginSettings
+import com.bond.md3elauncher.data.ThemeColor
 import com.bond.md3elauncher.data.ThemeMode
 import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
@@ -99,6 +101,7 @@ internal fun SettingsBeaconScreen(
     landscapeMode: LandscapeMode,
     themeMode: ThemeMode,
     useDynamicColor: Boolean,
+    themeColor: ThemeColor,
     safeMargins: SafeMarginSettings,
     scraperSettings: ScraperSettings,
     tabOrder: List<String>,
@@ -111,6 +114,7 @@ internal fun SettingsBeaconScreen(
     onSetLandscapeMode: (LandscapeMode) -> Unit,
     onSetThemeMode: (ThemeMode) -> Unit,
     onSetDynamicColor: (Boolean) -> Unit,
+    onSetThemeColor: (ThemeColor) -> Unit,
     onSetSafeMargins: (SafeMarginSettings) -> Unit,
     onSaveScraperSettings: (ScraperSettings) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit,
@@ -208,10 +212,17 @@ internal fun SettingsBeaconScreen(
                 Spacer(Modifier.height(8.dp))
                 ToggleSettingRow(
                     title = I18n.t(context, "settings.appearance.dynamic_color.title", "莫奈主题"),
-                    subtitle = I18n.t(context, "settings.appearance.dynamic_color.subtitle", "跟随系统壁纸动态取色，Android 12 及以上效果更明显。"),
+                    subtitle = I18n.t(context, "settings.appearance.dynamic_color.subtitle", "跟随系统壁纸动态取色，需要 Android 12 或以上。"),
                     checked = useDynamicColor,
                     onCheckedChange = onSetDynamicColor
                 )
+                if (!useDynamicColor) {
+                    Spacer(Modifier.height(12.dp))
+                    ThemeColorSetting(
+                        themeColor = themeColor,
+                        onSetThemeColor = onSetThemeColor
+                    )
+                }
                 Spacer(Modifier.height(10.dp))
                 Text(I18n.t(context, "settings.appearance.orientation.title", "横屏方向"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
@@ -1015,6 +1026,64 @@ private fun SettingSection(title: String, content: @Composable () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun ThemeColorSetting(
+    themeColor: ThemeColor,
+    onSetThemeColor: (ThemeColor) -> Unit
+) {
+    val context = LocalContext.current
+    Text(
+        I18n.t(context, "settings.appearance.theme_color.title", "主题色"),
+        fontWeight = FontWeight.Black,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+    )
+    Spacer(Modifier.height(4.dp))
+    Text(
+        I18n.t(context, "settings.appearance.theme_color.subtitle", "选择关闭莫奈主题时使用的颜色"),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ThemeColor.entries.forEach { color ->
+            FilterChip(
+                selected = themeColor == color,
+                onClick = { onSetThemeColor(color) },
+                leadingIcon = {
+                    Box(
+                        Modifier
+                            .size(14.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(themeColorPreview(color))
+                    )
+                },
+                label = {
+                    Text(
+                        localizedThemeColorName(context, color),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            )
+        }
+    }
+}
+
+private fun localizedThemeColorName(context: android.content.Context, themeColor: ThemeColor): String = when (themeColor) {
+    ThemeColor.PINK -> I18n.t(context, "settings.appearance.theme_color.pink", "粉色")
+    ThemeColor.BLUE -> I18n.t(context, "settings.appearance.theme_color.blue", "蓝色")
+    ThemeColor.PURPLE -> I18n.t(context, "settings.appearance.theme_color.purple", "紫色")
+    ThemeColor.GREEN -> I18n.t(context, "settings.appearance.theme_color.green", "绿色")
+    ThemeColor.ORANGE -> I18n.t(context, "settings.appearance.theme_color.orange", "橙色")
 }
 
 

@@ -236,6 +236,15 @@ class LauncherStore(context: Context) {
         prefs.edit().putBoolean(KEY_DYNAMIC_COLOR, enabled).apply()
     }
 
+    fun loadThemeColor(): ThemeColor {
+        val raw = prefs.getString(KEY_THEME_COLOR, ThemeColor.PINK.name) ?: ThemeColor.PINK.name
+        return runCatching { ThemeColor.valueOf(raw) }.getOrDefault(ThemeColor.PINK)
+    }
+
+    fun saveThemeColor(color: ThemeColor) {
+        prefs.edit().putString(KEY_THEME_COLOR, color.name).apply()
+    }
+
     fun loadSafeMargins(): SafeMarginSettings = SafeMarginSettings(
         leftDp = prefs.getInt(KEY_SAFE_MARGIN_LEFT, SafeMarginSettings.DEFAULT_DP),
         rightDp = prefs.getInt(KEY_SAFE_MARGIN_RIGHT, SafeMarginSettings.DEFAULT_DP)
@@ -379,6 +388,7 @@ class LauncherStore(context: Context) {
         private const val KEY_LAUNCHER_LAYOUT_MODE = "launcher_layout_mode"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+        private const val KEY_THEME_COLOR = "theme_color"
         private const val KEY_SAFE_MARGIN_LEFT = "safe_margin_left"
         private const val KEY_SAFE_MARGIN_RIGHT = "safe_margin_right"
         private const val KEY_TAB_ORDER = "tab_order"

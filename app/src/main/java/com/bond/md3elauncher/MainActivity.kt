@@ -35,6 +35,7 @@ import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.data.SafeMarginSettings
+import com.bond.md3elauncher.data.ThemeColor
 import com.bond.md3elauncher.data.ThemeMode
 import com.bond.md3elauncher.io.RomScanner
 import com.bond.md3elauncher.system.AndroidAppRepository
@@ -72,6 +73,7 @@ class MainActivity : ComponentActivity() {
     private var launcherLayoutMode by mutableStateOf(LauncherLayoutMode.LIST)
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var useDynamicColor by mutableStateOf(true)
+    private var themeColor by mutableStateOf(ThemeColor.PINK)
     private var safeMargins by mutableStateOf(SafeMarginSettings())
     private var scraperSettings by mutableStateOf(ScraperSettings())
     private var tabOrder by mutableStateOf<List<String>>(emptyList())
@@ -114,6 +116,7 @@ class MainActivity : ComponentActivity() {
         launcherLayoutMode = store.loadLauncherLayoutMode(defaultLauncherLayoutModeForDevice())
         themeMode = savedThemeMode
         useDynamicColor = store.loadUseDynamicColor()
+        themeColor = store.loadThemeColor()
         safeMargins = store.loadSafeMargins()
         scraperSettings = store.loadScraperSettings()
         tabOrder = store.loadTabOrder()
@@ -132,7 +135,7 @@ class MainActivity : ComponentActivity() {
         isDefaultHome = isDefaultHomeLauncher()
 
         setContent {
-            GameHubTheme(themeMode = themeMode, useDynamicColor = useDynamicColor) {
+            GameHubTheme(themeMode = themeMode, useDynamicColor = useDynamicColor, themeColor = themeColor) {
                 LauncherApp(
                     platforms = platforms,
                     games = games,
@@ -145,6 +148,7 @@ class MainActivity : ComponentActivity() {
                     launcherLayoutMode = launcherLayoutMode,
                     themeMode = themeMode,
                     useDynamicColor = useDynamicColor,
+                    themeColor = themeColor,
                     safeMargins = safeMargins,
                     scraperSettings = scraperSettings,
                     tabOrder = tabOrder,
@@ -278,6 +282,10 @@ class MainActivity : ComponentActivity() {
                     onSetDynamicColor = { enabled ->
                         useDynamicColor = enabled
                         store.saveUseDynamicColor(enabled)
+                    },
+                    onSetThemeColor = { color ->
+                        themeColor = color
+                        store.saveThemeColor(color)
                     },
                     onSetSafeMargins = { settings ->
                         val clean = settings.clamped()

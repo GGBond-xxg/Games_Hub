@@ -113,6 +113,14 @@ enum class ThemeMode(val title: String) {
     DARK("夜间模式")
 }
 
+enum class ThemeColor {
+    PINK,
+    BLUE,
+    PURPLE,
+    GREEN,
+    ORANGE
+}
+
 
 data class SafeMarginSettings(
     val leftDp: Int = 24,

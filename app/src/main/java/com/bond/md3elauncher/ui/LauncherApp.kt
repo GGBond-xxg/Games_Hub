@@ -48,6 +48,7 @@ import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.data.SafeMarginSettings
+import com.bond.md3elauncher.data.ThemeColor
 import com.bond.md3elauncher.data.ThemeMode
 import com.bond.md3elauncher.i18n.I18n
 
@@ -64,6 +65,7 @@ fun LauncherApp(
     launcherLayoutMode: LauncherLayoutMode,
     themeMode: ThemeMode,
     useDynamicColor: Boolean,
+    themeColor: ThemeColor,
     safeMargins: SafeMarginSettings,
     scraperSettings: ScraperSettings,
     tabOrder: List<String>,
@@ -93,6 +95,7 @@ fun LauncherApp(
     onSetLauncherLayoutMode: (LauncherLayoutMode) -> Unit,
     onSetThemeMode: (ThemeMode) -> Unit,
     onSetDynamicColor: (Boolean) -> Unit,
+    onSetThemeColor: (ThemeColor) -> Unit,
     onSetSafeMargins: (SafeMarginSettings) -> Unit,
     onSaveScraperSettings: (ScraperSettings) -> Unit,
     onSaveTabOrder: (List<String>) -> Unit,
@@ -764,6 +767,7 @@ fun LauncherApp(
                                 landscapeMode = landscapeMode,
                                 themeMode = themeMode,
                                 useDynamicColor = useDynamicColor,
+                                themeColor = themeColor,
                                 safeMargins = safeMargins,
                                 scraperSettings = scraperSettings,
                                 tabOrder = tabOrder,
@@ -789,6 +793,7 @@ fun LauncherApp(
                                 onSetLandscapeMode = onSetLandscapeMode,
                                 onSetThemeMode = onSetThemeMode,
                                 onSetDynamicColor = onSetDynamicColor,
+                                onSetThemeColor = onSetThemeColor,
                                 onSetSafeMargins = onSetSafeMargins,
                                 onSaveScraperSettings = onSaveScraperSettings,
                                 onSaveTabOrder = onSaveTabOrder,

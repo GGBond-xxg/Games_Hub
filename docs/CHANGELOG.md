@@ -2,6 +2,13 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.0.1
+
+- Fixed Monet dynamic colors being bypassed while the launcher was in dark mode.
+- Changed the default manual theme color to pink.
+- Added persistent pink, blue, purple, green and orange theme presets when Monet is disabled.
+- Kept dynamic wallpaper colors active on Android 12 and later while preserving the existing launcher layout and controls.
+
 ## 1.0.0
 
 - Completed the planned built-in emulator lineup: GBA, GB/GBC, FC/NES, SFC/SNES, MD/Genesis, PS1, N64 and Arcade.
