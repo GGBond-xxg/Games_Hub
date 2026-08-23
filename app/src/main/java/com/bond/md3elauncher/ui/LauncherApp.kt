@@ -776,7 +776,6 @@ fun LauncherApp(
                                 isScanning = isScanning,
                                 onOpenPlatform = { setupPlatformId = it.id },
                                 onOpenAndroid = {
-                                    onRefreshInstalledApps()
                                     appPickerPlatform = null
                                     showAllApps = true
                                     searchQuery = ""
@@ -789,6 +788,7 @@ fun LauncherApp(
                                     moveSelectionDown = null
                                     bottomBLabel = estimatedAndroidAddLabel()
                                     editTarget = null
+                                    onRefreshInstalledApps()
                                 },
                                 onOpenHomeSettings = onOpenHomeSettings,
                                 onRescanAll = onRescanAll,

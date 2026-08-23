@@ -265,7 +265,12 @@ class MainActivity : ComponentActivity() {
                     },
                     onLaunchAndroidApp = { app -> externalLauncher.launchAndroidApp(app.packageName) },
                     onRefreshInstalledApps = {
-                        installedApps = androidApps.loadLaunchableApps()
+                        lifecycleScope.launch {
+                            val refreshedApps = withContext(Dispatchers.IO) {
+                                androidApps.loadLaunchableApps()
+                            }
+                            installedApps = refreshedApps
+                        }
                     },
                     onOpenHomeSettings = { externalLauncher.openHomeSettings() },
                     onSetLandscapeMode = { mode ->
