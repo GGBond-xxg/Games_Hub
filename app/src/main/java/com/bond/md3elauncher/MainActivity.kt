@@ -264,6 +264,9 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     onLaunchAndroidApp = { app -> externalLauncher.launchAndroidApp(app.packageName) },
+                    onRefreshInstalledApps = {
+                        installedApps = androidApps.loadLaunchableApps()
+                    },
                     onOpenHomeSettings = { externalLauncher.openHomeSettings() },
                     onSetLandscapeMode = { mode ->
                         landscapeMode = mode

@@ -2,6 +2,12 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.0.2
+
+- Refresh the installed Android app list every time Android app management is opened from Settings.
+- Newly installed launchable apps now appear without restarting GameHub.
+- Preserve existing Android game tags, favorites, ordering and launch behavior during refresh.
+
 ## 1.0.1
 
 - Fixed Monet dynamic colors being bypassed while the launcher was in dark mode.

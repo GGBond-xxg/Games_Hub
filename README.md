@@ -6,7 +6,7 @@
 
 GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以统一整理本地游戏、安卓 App、收藏与封面，并让支持的平台在内置模拟器和第三方模拟器之间自由切换。
 
-当前正式版本：`v1.0.1`
+当前正式版本：`v1.0.2`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -16,8 +16,8 @@ Android 包名：`com.bond.md3elauncher`
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 - 系统要求：Android 6.0（API 23）或更高版本
-- `GameHub-v1.0.1-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.0.1-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- `GameHub-v1.0.2-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.0.2-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 

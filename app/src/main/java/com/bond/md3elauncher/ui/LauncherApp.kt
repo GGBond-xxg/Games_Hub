@@ -90,6 +90,7 @@ fun LauncherApp(
         gridImageUriString: String?
     ) -> Unit,
     onLaunchAndroidApp: (InstalledApp) -> Unit,
+    onRefreshInstalledApps: () -> Unit,
     onOpenHomeSettings: () -> Unit,
     onSetLandscapeMode: (LandscapeMode) -> Unit,
     onSetLauncherLayoutMode: (LauncherLayoutMode) -> Unit,
@@ -775,6 +776,7 @@ fun LauncherApp(
                                 isScanning = isScanning,
                                 onOpenPlatform = { setupPlatformId = it.id },
                                 onOpenAndroid = {
+                                    onRefreshInstalledApps()
                                     appPickerPlatform = null
                                     showAllApps = true
                                     searchQuery = ""
