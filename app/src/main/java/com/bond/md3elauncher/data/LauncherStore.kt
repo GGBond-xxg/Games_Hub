@@ -49,52 +49,23 @@ class LauncherStore(context: Context) {
         prefs.edit().putString(KEY_PLATFORMS, arr.toString()).apply()
     }
 
+    var recoveredLibrary: Boolean = false
+        private set
+
     fun loadGames(): List<GameItem> {
-        val raw = prefs.getString(KEY_GAMES, null) ?: return emptyList()
-        return runCatching {
-            val arr = JSONArray(raw)
-            buildList {
-                for (i in 0 until arr.length()) {
-                    val obj = arr.getJSONObject(i)
-                    add(
-                        GameItem(
-                            id = obj.getString("id"),
-                            platformId = obj.getString("platformId"),
-                            platformTitle = obj.getString("platformTitle"),
-                            title = obj.getString("title"),
-                            fileName = obj.getString("fileName"),
-                            extension = obj.getString("extension"),
-                            uri = obj.getString("uri"),
-                            addedAt = obj.optLong("addedAt", 0L),
-                            serial = obj.optStringOrNull("serial"),
-                            coverPath = obj.optStringOrNull("coverPath"),
-                            backgroundPath = obj.optStringOrNull("backgroundPath")
-                        )
-                    )
-                }
-            }
-        }.getOrElse { emptyList() }
+        val result = GameLibraryCodec.recover(prefs.getString(KEY_GAMES, null), prefs.getString(KEY_GAMES_BACKUP, null))
+        recoveredLibrary = result.rejected > 0
+        return result.games
     }
 
     fun saveGames(games: List<GameItem>) {
-        val arr = JSONArray()
-        games.forEach { g ->
-            arr.put(
-                JSONObject()
-                    .put("id", g.id)
-                    .put("platformId", g.platformId)
-                    .put("platformTitle", g.platformTitle)
-                    .put("title", g.title)
-                    .put("fileName", g.fileName)
-                    .put("extension", g.extension)
-                    .put("uri", g.uri)
-                    .put("addedAt", g.addedAt)
-                    .putNullable("serial", g.serial)
-                    .putNullable("coverPath", g.coverPath)
-                    .putNullable("backgroundPath", g.backgroundPath)
-            )
+        val next = GameLibraryCodec.encode(games)
+        val editor = prefs.edit()
+        val previous = prefs.getString(KEY_GAMES, null)
+        if (previous != null && GameLibraryCodec.decode(previous)?.rejected == 0 && previous != next) {
+            editor.putString(KEY_GAMES_BACKUP, previous)
         }
-        prefs.edit().putString(KEY_GAMES, arr.toString()).apply()
+        editor.putString(KEY_GAMES, next).apply()
     }
 
     fun loadFavorites(): Set<String> = prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
@@ -130,6 +101,7 @@ class LauncherStore(context: Context) {
         val arr = JSONArray()
         next.take(20).forEach { arr.put(it) }
         prefs.edit().putString(KEY_RECENT, arr.toString()).apply()
+        saveItemOrder("recent", emptyList())
     }
 
     fun loadItemOverrides(): Map<String, ItemOverride> {
@@ -335,7 +307,9 @@ class LauncherStore(context: Context) {
         theGamesDbApiKey = prefs.getString(KEY_SCRAPER_TGDB, "").orEmpty(),
         steamGridDbApiKey = prefs.getString(KEY_SCRAPER_STEAMGRID, "").orEmpty(),
         screenScraperUser = prefs.getString(KEY_SCRAPER_SCREEN_USER, "").orEmpty(),
-        screenScraperPassword = prefs.getString(KEY_SCRAPER_SCREEN_PASS, "").orEmpty()
+        screenScraperPassword = prefs.getString(KEY_SCRAPER_SCREEN_PASS, "").orEmpty(),
+        screenScraperDevId = prefs.getString("scraper_screenscraper_dev_id", "").orEmpty(),
+        screenScraperDevPassword = prefs.getString("scraper_screenscraper_dev_pass", "").orEmpty()
     )
 
     fun saveScraperSettings(settings: ScraperSettings) {
@@ -345,6 +319,8 @@ class LauncherStore(context: Context) {
             .putString(KEY_SCRAPER_STEAMGRID, settings.steamGridDbApiKey.trim())
             .putString(KEY_SCRAPER_SCREEN_USER, settings.screenScraperUser.trim())
             .putString(KEY_SCRAPER_SCREEN_PASS, settings.screenScraperPassword.trim())
+            .putString("scraper_screenscraper_dev_id", settings.screenScraperDevId.trim())
+            .putString("scraper_screenscraper_dev_pass", settings.screenScraperDevPassword.trim())
             .apply()
     }
 
@@ -379,6 +355,7 @@ class LauncherStore(context: Context) {
     companion object {
         private const val KEY_PLATFORMS = "platforms"
         private const val KEY_GAMES = "games"
+        private const val KEY_GAMES_BACKUP = "games_previous_valid"
         private const val KEY_FAVORITES = "favorites"
         private const val KEY_RECENT = "recent"
         private const val KEY_ITEM_OVERRIDES = "item_overrides"

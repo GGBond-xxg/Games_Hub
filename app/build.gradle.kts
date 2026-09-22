@@ -20,8 +20,8 @@ android {
         applicationId = "com.bond.md3elauncher"
         minSdk = 23
         targetSdk = 36
-        versionCode = 102
-        versionName = "1.0.2"
+        versionCode = 110
+        versionName = "1.1.0"
     }
 
     signingConfigs {
@@ -79,5 +79,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation("com.github.Swordfish90:LibretroDroid:0.13.2")
     testImplementation(libs.junit4)
+    testImplementation("org.json:json:20240303")
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

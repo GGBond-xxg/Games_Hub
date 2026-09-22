@@ -7,6 +7,7 @@ import com.bond.md3elauncher.i18n.I18n
 
 internal enum class BeaconTab(val label: String) {
     NOW("★"),
+    RECENT("Recent"),
     ANDROID("Android"),
     NS("NS"),
     PSP("PSP"),
@@ -24,6 +25,7 @@ internal enum class BeaconTab(val label: String) {
 
 internal fun BeaconTab.localizedLabel(context: Context): String = when (this) {
     BeaconTab.NOW -> "★"
+    BeaconTab.RECENT -> I18n.t(context, "launcher.recent", "Recent")
     BeaconTab.ANDROID -> I18n.t(context, "tab.android", "安卓")
     BeaconTab.NS -> "NS"
     BeaconTab.PSP -> "PSP"

@@ -18,7 +18,15 @@ import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
+import android.util.LruCache
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,12 +38,11 @@ import androidx.compose.ui.unit.dp
 import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.InstalledApp
 import com.bond.md3elauncher.data.ItemOverride
-import java.io.File
 
 @Composable
 internal fun AppIcon(app: InstalledApp, size: Int) {
     val context = LocalContext.current
-    val imageBitmap = remember(app.packageName) {
+    val imageBitmap = asyncBitmap("icon:${app.packageName}") {
         runCatching { drawableToBitmap(context.packageManager.getApplicationIcon(app.packageName)).asImageBitmap() }.getOrNull()
     }
     Box(
@@ -61,8 +68,7 @@ internal fun AppPreviewImage(
     contentScale: ContentScale = ContentScale.Fit
 ) {
     val context = LocalContext.current
-    val overrideVersion = imagePathVersion(overridePath)
-    val bitmap = remember(app.packageName, overridePath, overrideVersion) {
+    val bitmap = asyncBitmap("app:${app.packageName}:$overridePath") {
         loadBitmapFromPath(overridePath)
             ?: runCatching { drawableToBitmap(context.packageManager.getApplicationIcon(app.packageName)).asImageBitmap() }.getOrNull()
     }
@@ -81,9 +87,7 @@ internal fun GameCover(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit
 ) {
-    val overrideVersion = imagePathVersion(overridePath)
-    val coverVersion = if (overridePath.isNullOrBlank()) imagePathVersion(game.coverPath) else 0L
-    val coverBitmap = remember(game.coverPath, overridePath, overrideVersion, coverVersion) {
+    val coverBitmap = asyncBitmap("cover:${game.coverPath}:$overridePath") {
         loadBitmapFromPath(overridePath) ?: loadBitmapFromPath(game.coverPath)
     }
     PreviewBitmapOrIcon(
@@ -141,15 +145,42 @@ internal fun platformDisplayName(title: String): String = when (title.lowercase(
 
 private fun loadBitmapFromPath(path: String?): ImageBitmap? {
     if (path.isNullOrBlank()) return null
-    return runCatching { BitmapFactory.decodeFile(path)?.asImageBitmap() }.getOrNull()
+    return runCatching {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(path, options)
+        options.inSampleSize = 1
+        while (maxOf(options.outWidth, options.outHeight) / options.inSampleSize > 768) options.inSampleSize *= 2
+        options.inJustDecodeBounds = false
+        BitmapFactory.decodeFile(path, options)?.asImageBitmap()
+    }.getOrNull()
 }
 
-private fun imagePathVersion(path: String?): Long {
-    if (path.isNullOrBlank()) return 0L
-    return runCatching {
-        val file = File(path)
-        file.lastModified().takeIf { it > 0L } ?: file.length()
-    }.getOrDefault(0L)
+private val imageCache = object : LruCache<String, ImageBitmap>(16 * 1024 * 1024) {
+    override fun sizeOf(key: String, value: ImageBitmap): Int = value.width * value.height * 4
+}
+private val imageDecoders = Semaphore(2)
+private var imageGeneration by mutableIntStateOf(0)
+
+internal fun clearLauncherImageCache() {
+    imageCache.evictAll()
+    imageGeneration++
+}
+
+@Composable
+private fun asyncBitmap(key: String, load: () -> ImageBitmap?): ImageBitmap? {
+    // New artwork uses a new filename; restore explicitly clears the shared cache.
+    // Key the producer's state too, so recycled cards never briefly show another game.
+    val cacheKey = "$imageGeneration:$key"
+    return androidx.compose.runtime.key(cacheKey) {
+        val bitmap by produceState<ImageBitmap?>(imageCache.get(cacheKey), cacheKey) {
+            value = withContext(Dispatchers.IO) {
+                imageDecoders.withPermit {
+                    imageCache.get(cacheKey) ?: load()?.also { imageCache.put(cacheKey, it) }
+                }
+            }
+        }
+        bitmap
+    }
 }
 
 private fun drawableToBitmap(drawable: Drawable): Bitmap {

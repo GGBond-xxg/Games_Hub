@@ -81,6 +81,8 @@ class MainActivity : ComponentActivity() {
     private var languageMode by mutableStateOf(I18n.LANG_SYSTEM)
     private var isDefaultHome by mutableStateOf(false)
     private var isScanning by mutableStateOf(false)
+    private var isLaunching = false
+    private var requestedPlatformId by mutableStateOf<String?>(null)
     private var showHomePrompt by mutableStateOf(false)
     private var pendingFolderPlatformId: String? = null
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -126,6 +128,7 @@ class MainActivity : ComponentActivity() {
         applyLandscapeMode(landscapeMode)
         platforms = store.loadPlatforms()
         games = store.loadGames()
+        if (store.recoveredLibrary) Toast.makeText(this, I18n.t(this, "library.recovered", "Some library records were recovered or skipped. Please rescan if games are missing."), Toast.LENGTH_LONG).show()
         favorites = store.loadFavorites()
         recent = store.loadRecent()
         itemOverrides = store.loadItemOverrides()
@@ -138,6 +141,8 @@ class MainActivity : ComponentActivity() {
             GameHubTheme(themeMode = themeMode, useDynamicColor = useDynamicColor, themeColor = themeColor) {
                 LauncherApp(
                     platforms = platforms,
+                    requestedPlatformId = requestedPlatformId,
+                    onPlatformRequestHandled = { requestedPlatformId = null },
                     games = games,
                     favorites = favorites,
                     recentIds = recent,
@@ -225,22 +230,7 @@ class MainActivity : ComponentActivity() {
                     },
                     onScanPlatform = { platform -> scanPlatform(platform) },
                     onRescanAll = { scanAllPlatforms() },
-                    onLaunchGame = { game ->
-                        platforms.firstOrNull { it.id == game.platformId }?.let { platform ->
-                            when {
-                                InternalEmulators.usesInternalGbaCore(platform) -> launchInternalGba(game, platform.kind)
-                                InternalEmulators.usesInternalFc(platform) -> launchInternalFc(game)
-                                InternalEmulators.usesInternalSfc(platform) -> launchInternalSfc(game)
-                                InternalEmulators.usesInternalMd(platform) -> launchInternalMd(game)
-                                InternalEmulators.usesInternalPs1(platform) -> launchInternalPs1(game)
-                                InternalEmulators.usesInternalN64(platform) -> launchInternalN64(game)
-                                InternalEmulators.usesInternalArcade(platform) -> launchInternalArcade(game)
-                                else -> externalLauncher.launchGame(game, platform)
-                            }
-                            store.pushRecent(game.id)
-                            recent = store.loadRecent()
-                        }
-                    },
+                    onLaunchGame = ::launchCheckedGame,
                     onToggleFavorite = { game ->
                         store.setFavorite(game.id, game.id !in favorites)
                         favorites = store.loadFavorites()
@@ -263,7 +253,12 @@ class MainActivity : ComponentActivity() {
                             gridImageUriString = gridImageUriString
                         )
                     },
-                    onLaunchAndroidApp = { app -> externalLauncher.launchAndroidApp(app.packageName) },
+                    onLaunchAndroidApp = { app ->
+                        externalLauncher.launchAndroidApp(app.packageName)
+                        store.pushRecent("app:${app.packageName}")
+                        recent = store.loadRecent()
+                        itemOrders = store.loadItemOrders()
+                    },
                     onRefreshInstalledApps = {
                         lifecycleScope.launch {
                             val refreshedApps = withContext(Dispatchers.IO) {
@@ -398,6 +393,39 @@ class MainActivity : ComponentActivity() {
                 overridePendingTransition(0, 0)
             }
         }, 900L)
+    }
+
+    private fun launchCheckedGame(game: GameItem) {
+        if (isLaunching) return
+        val platform = platforms.firstOrNull { it.id == game.platformId } ?: return
+        isLaunching = true
+        lifecycleScope.launch {
+            try {
+                val issue = withContext(Dispatchers.IO) { com.bond.md3elauncher.system.LaunchPreflight.check(this@MainActivity, game, platform) }
+                if (issue != null) {
+                    android.app.AlertDialog.Builder(this@MainActivity)
+                        .setTitle(I18n.t(this@MainActivity, "launch.check.title", "Cannot launch yet"))
+                        .setMessage(I18n.t(this@MainActivity, issue, issue))
+                        .setPositiveButton(I18n.t(this@MainActivity, "launch.check.settings", "Platform settings")) { _, _ -> requestedPlatformId = platform.id }
+                        .setNegativeButton(I18n.t(this@MainActivity, "common.cancel", "Cancel"), null)
+                        .show()
+                    return@launch
+                }
+                when {
+                    InternalEmulators.usesInternalGbaCore(platform) -> launchInternalGba(game, platform.kind)
+                    InternalEmulators.usesInternalFc(platform) -> launchInternalFc(game)
+                    InternalEmulators.usesInternalSfc(platform) -> launchInternalSfc(game)
+                    InternalEmulators.usesInternalMd(platform) -> launchInternalMd(game)
+                    InternalEmulators.usesInternalPs1(platform) -> launchInternalPs1(game)
+                    InternalEmulators.usesInternalN64(platform) -> launchInternalN64(game)
+                    InternalEmulators.usesInternalArcade(platform) -> launchInternalArcade(game)
+                    else -> externalLauncher.launchGame(game, platform)
+                }
+                store.pushRecent(game.id)
+                recent = store.loadRecent()
+                itemOrders = store.loadItemOrders()
+            } finally { isLaunching = false }
+        }
     }
 
     private fun launchInternalGba(game: GameItem, platformKind: PlatformKind = PlatformKind.GBA) {
@@ -547,45 +575,53 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun scanPlatform(platform: PlatformConfig) {
+        if (isScanning) return
         if (platform.folderUri.isNullOrBlank()) return
         lifecycleScope.launch {
             isScanning = true
-            runCatching {
+            try {
                 val scanned = withContext(Dispatchers.IO) { scanner.scan(platform) }
+                com.bond.md3elauncher.ui.clearLauncherImageCache()
                 val nextGames = games.filterNot { it.platformId == platform.id } + scanned
                 games = nextGames.sortedWith(compareBy<GameItem> { it.platformTitle }.thenBy { it.title })
-                store.saveGames(games)
+                withContext(Dispatchers.IO) { store.saveGames(games) }
                 updatePlatform(platform.id) {
                     it.copy(gameCount = scanned.size, lastScanAt = System.currentTimeMillis())
                 }
-            }.onFailure { error ->
-                Toast.makeText(this@MainActivity, I18n.t(this@MainActivity, "toast.scan_failed", "扫描失败：{error}", "error" to (error.message ?: I18n.t(this@MainActivity, "common.unknown_error", "未知错误"))), Toast.LENGTH_LONG).show()
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                Toast.makeText(this@MainActivity, I18n.t(this@MainActivity, "toast.scan_preserved", "Scan failed. Your library was kept. Re-select the ROM folder in platform settings and try again."), Toast.LENGTH_LONG).show()
+            } finally {
+                isScanning = false
             }
-            isScanning = false
         }
     }
 
     private fun scanAllPlatforms() {
+        if (isScanning) return
         lifecycleScope.launch {
             isScanning = true
-            runCatching {
+            try {
                 val scanTargets = platforms.filter { !it.folderUri.isNullOrBlank() }
                 val scannedPairs = withContext(Dispatchers.IO) {
                     scanTargets.associate { it.id to scanner.scan(it) }
                 }
+                com.bond.md3elauncher.ui.clearLauncherImageCache()
                 val untouched = games.filterNot { it.platformId in scannedPairs.keys }
                 games = (untouched + scannedPairs.values.flatten())
                     .sortedWith(compareBy<GameItem> { it.platformTitle }.thenBy { it.title })
-                store.saveGames(games)
+                withContext(Dispatchers.IO) { store.saveGames(games) }
                 val now = System.currentTimeMillis()
                 platforms = platforms.map { p ->
                     scannedPairs[p.id]?.let { p.copy(gameCount = it.size, lastScanAt = now) } ?: p
                 }
                 store.savePlatforms(platforms)
-            }.onFailure { error ->
-                Toast.makeText(this@MainActivity, I18n.t(this@MainActivity, "toast.rescan_failed", "重新扫描失败：{error}", "error" to (error.message ?: I18n.t(this@MainActivity, "common.unknown_error", "未知错误"))), Toast.LENGTH_LONG).show()
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                Toast.makeText(this@MainActivity, I18n.t(this@MainActivity, "toast.scan_preserved", "Scan failed. Your library was kept. Re-select the ROM folder in platform settings and try again."), Toast.LENGTH_LONG).show()
+            } finally {
+                isScanning = false
             }
-            isScanning = false
         }
     }
 

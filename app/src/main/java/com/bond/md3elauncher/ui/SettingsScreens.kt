@@ -241,6 +241,7 @@ internal fun SettingsBeaconScreen(
             }
         }
 
+        item(key = "aboutAndBackup") { AboutAndBackupSettings(isScanning) }
         if (showDeferredSections) {
             item(key = "scraper") {
                 ScraperSettingSection(
@@ -1299,6 +1300,8 @@ private fun ScraperSettingSection(
     var screenUser by rememberSaveable(scraperSettings.screenScraperUser) { mutableStateOf(scraperSettings.screenScraperUser) }
     var screenPass by rememberSaveable(scraperSettings.screenScraperPassword) { mutableStateOf(scraperSettings.screenScraperPassword) }
 
+    var screenDevId by rememberSaveable(scraperSettings.screenScraperDevId) { mutableStateOf(scraperSettings.screenScraperDevId) }
+    var screenDevPass by rememberSaveable(scraperSettings.screenScraperDevPassword) { mutableStateOf(scraperSettings.screenScraperDevPassword) }
     SettingSection(title = I18n.t(context, "settings.section.cover_scraper", "封面刮削")) {
         ToggleSettingRow(
             title = I18n.t(context, "settings.cover.libretro.title", "Libretro 缩略图"),
@@ -1328,18 +1331,24 @@ private fun ScraperSettingSection(
                 label = I18n.t(context, "settings.cover.screenscraper.user", "ScreenScraper 账号"),
                 value = screenUser,
                 onValueChange = { screenUser = it },
-                placeholder = I18n.t(context, "settings.cover.reserved", "预留"),
+                placeholder = I18n.t(context, "settings.cover.optional", "Optional"),
                 modifier = Modifier.weight(1f)
             )
             ScraperTextField(
                 label = I18n.t(context, "settings.cover.screenscraper.password", "ScreenScraper 密码"),
                 value = screenPass,
                 onValueChange = { screenPass = it },
-                placeholder = I18n.t(context, "settings.cover.reserved", "预留"),
+                placeholder = I18n.t(context, "settings.cover.optional", "Optional"),
                 isSecret = true,
                 modifier = Modifier.weight(1f)
             )
         }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ScraperTextField(label = I18n.t(context, "settings.cover.screenscraper.dev_id", "Developer ID"), value = screenDevId, onValueChange = { screenDevId = it }, placeholder = "", modifier = Modifier.weight(1f))
+            ScraperTextField(label = I18n.t(context, "settings.cover.screenscraper.dev_password", "Developer password"), value = screenDevPass, onValueChange = { screenDevPass = it }, placeholder = "", isSecret = true, modifier = Modifier.weight(1f))
+        }
+        Text(I18n.t(context, "settings.cover.screenscraper.requirements", "ScreenScraper requires your own developer credentials; a user account alone is insufficient."), maxLines = 4, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.height(8.dp))
         Text(
             I18n.t(context, "settings.cover.empty_source_tip", "未填写 Key / 账号的来源会自动跳过；长按游戏进入编辑后，可点“联网搜索封面”。"),
@@ -1355,7 +1364,9 @@ private fun ScraperSettingSection(
                             theGamesDbApiKey = theGamesDbKey,
                             steamGridDbApiKey = steamGridKey,
                             screenScraperUser = screenUser,
-                            screenScraperPassword = screenPass
+                            screenScraperPassword = screenPass,
+                            screenScraperDevId = screenDevId,
+                            screenScraperDevPassword = screenDevPass
                         )
                     )
                 }

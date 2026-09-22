@@ -104,7 +104,9 @@ fun LauncherApp(
     onSetLanguageMode: (String) -> Unit,
     isDefaultHome: Boolean,
     onExitApp: () -> Unit,
-    onDismissHomePrompt: () -> Unit
+    onDismissHomePrompt: () -> Unit,
+    requestedPlatformId: String? = null,
+    onPlatformRequestHandled: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lang = I18n.languageFor(context)
@@ -118,6 +120,14 @@ fun LauncherApp(
     val tab = BeaconTab.valueOf(tabName)
     var setupPlatformId by rememberSaveable { mutableStateOf<String?>(null) }
     val setupPlatform = platforms.firstOrNull { it.id == setupPlatformId }
+    LaunchedEffect(requestedPlatformId) {
+        requestedPlatformId?.let {
+            tabName = BeaconTab.SETTINGS.name
+            setupPlatformId = it
+            onPlatformRequestHandled()
+        }
+    }
+
     var appPickerPlatform by remember { mutableStateOf<PlatformConfig?>(null) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var showSearchDialog by rememberSaveable { mutableStateOf(false) }
@@ -149,7 +159,7 @@ fun LauncherApp(
                 else -> false
             }
         }
-        (listOf(BeaconTab.NOW) + orderedMiddle).distinct()
+        (listOf(BeaconTab.NOW, BeaconTab.RECENT) + orderedMiddle).distinct()
     }
 
     val gamepadScope = rememberCoroutineScope()
@@ -263,6 +273,7 @@ fun LauncherApp(
                 val key = first?.let { "app:${it.packageName}" }
                 if (key != null && key in favorites) unfavoriteText else favoriteText
             }
+            BeaconTab.RECENT -> if (recentIds.firstOrNull() in favorites) unfavoriteText else favoriteText
             BeaconTab.SETTINGS -> favoriteText
         }
     }
@@ -525,6 +536,28 @@ fun LauncherApp(
                                 layoutMode = launcherLayoutMode,
                                 itemOrder = itemOrders["favorites"].orEmpty(),
                                 onSaveItemOrder = { order -> onSaveItemOrder("favorites", order) },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite,
+                                onLaunchAndroidApp = onLaunchAndroidApp,
+                                onToggleAndroidFavorite = onToggleAndroidFavorite
+                            )
+
+                            BeaconTab.RECENT -> FavoritesBeaconScreen(
+                                games = games,
+                                favorites = favorites,
+                                recentIds = recentIds,
+                                installedApps = installedApps,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                layoutMode = launcherLayoutMode,
+                                itemOrder = itemOrders["recent"].orEmpty() + recentIds,
+                                onSaveItemOrder = { order -> onSaveItemOrder("recent", order) },
                                 onLaunchSelectedChange = { publishLaunchSelected(it) },
                                 onToggleSelectedChange = { bottomBSelected = it },
                                 onEditSelectedChange = { editSelected = it },
@@ -848,6 +881,7 @@ fun LauncherApp(
                     } else {
                         when (tab) {
                             BeaconTab.NOW -> I18n.t(context, "launcher.center.favorites", "收藏")
+                            BeaconTab.RECENT -> I18n.t(context, "launcher.recent", "Recent")
                             BeaconTab.NS -> I18n.t(context, "launcher.center.ns", "NS 游戏")
                             BeaconTab.ANDROID -> I18n.t(context, "launcher.center.android", "安卓游戏")
                             BeaconTab.PSP -> I18n.t(context, "launcher.center.psp", "PSP 游戏")
@@ -873,6 +907,7 @@ fun LauncherApp(
                 setupPlatform != null -> I18n.t(context, "launcher.search.current_page", "搜索当前页面")
                 showAllApps -> I18n.t(context, "launcher.search.all_apps", "搜索全部应用")
                 tab == BeaconTab.NOW -> I18n.t(context, "launcher.search.favorites", "搜索收藏")
+                tab == BeaconTab.RECENT -> I18n.t(context, "launcher.recent", "Recent")
                 tab == BeaconTab.NS -> I18n.t(context, "launcher.search.ns", "搜索 NS 游戏")
                 tab == BeaconTab.ANDROID -> I18n.t(context, "launcher.search.android", "搜索安卓游戏")
                 tab == BeaconTab.PSP -> I18n.t(context, "launcher.search.psp", "搜索 PSP 游戏")

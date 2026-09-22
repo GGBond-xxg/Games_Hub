@@ -148,6 +148,7 @@ private fun ResponsiveLauncherGrid(
 internal fun FavoritesBeaconScreen(
     games: List<GameItem>,
     favorites: Set<String>,
+    recentIds: List<String>? = null,
     installedApps: List<InstalledApp>,
     itemOverrides: Map<String, ItemOverride>,
     query: String,
@@ -169,9 +170,10 @@ internal fun FavoritesBeaconScreen(
     val lang = I18n.languageFor(context)
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val entries = remember(games, installedApps, favorites, query, itemOverrides, itemOrder, lang) {
+    val entries = remember(games, installedApps, favorites, recentIds, query, itemOverrides, itemOrder, lang) {
+        val included = recentIds?.toSet() ?: favorites
         val base = buildList {
-            games.filter { it.id in favorites }.forEach { game ->
+            games.filter { it.id in included }.forEach { game ->
                 add(
                     FavoriteEntry(
                         key = game.id,
@@ -182,7 +184,7 @@ internal fun FavoritesBeaconScreen(
                     )
                 )
             }
-            installedApps.filter { "app:${it.packageName}" in favorites }.forEach { app ->
+            installedApps.filter { "app:${it.packageName}" in included }.forEach { app ->
                 val key = "app:${app.packageName}"
                 add(
                     FavoriteEntry(
@@ -208,8 +210,8 @@ internal fun FavoritesBeaconScreen(
     PublishFavoriteLaunchAction(selected, onLaunchSelectedChange, onLaunchGame, onLaunchAndroidApp)
     PublishFavoriteToggleAction(selected, onToggleSelectedChange, onToggleFavorite, onToggleAndroidFavorite)
     PublishFavoriteEditAction(selected, itemOverrides, onEditSelectedChange, onEdit)
-    LaunchedEffect(selected?.key, lang) {
-        onBottomBLabelChange(if (selected != null) I18n.t(context, "launcher.bottom.unfavorite", "取消收藏") else I18n.t(context, "launcher.bottom.favorite", "收藏"))
+    LaunchedEffect(selected?.key, favorites, lang) {
+        onBottomBLabelChange(if (selected?.key in favorites) I18n.t(context, "launcher.bottom.unfavorite", "取消收藏") else I18n.t(context, "launcher.bottom.favorite", "收藏"))
     }
 
     val listState = rememberLazyListState()
@@ -248,8 +250,8 @@ internal fun FavoritesBeaconScreen(
 
     if (entries.isEmpty()) {
         EmptyBeaconState(
-            title = if (query.isBlank()) I18n.t(context, "launcher.empty.favorites.title", "还没有收藏") else I18n.t(context, "launcher.empty.favorites.search_title", "没有匹配的收藏"),
-            subtitle = if (query.isBlank()) I18n.t(context, "launcher.empty.favorites.subtitle", "进入设置里的平台管理，或进入安卓应用列表后点击星标收藏。") else I18n.t(context, "launcher.empty.search_subtitle", "按 X 修改搜索内容，或清空搜索。"),
+            title = if (recentIds != null) I18n.t(context, "launcher.recent.empty", "No recent games found") else if (query.isBlank()) I18n.t(context, "launcher.empty.favorites.title", "还没有收藏") else I18n.t(context, "launcher.empty.favorites.search_title", "没有匹配的收藏"),
+            subtitle = if (recentIds != null) I18n.t(context, "launcher.recent.hint", "Launch a game or app to see it here. Search filters this list.") else if (query.isBlank()) I18n.t(context, "launcher.empty.favorites.subtitle", "进入设置里的平台管理，或进入安卓应用列表后点击星标收藏。") else I18n.t(context, "launcher.empty.search_subtitle", "按 X 修改搜索内容，或清空搜索。"),
             onLaunchSelectedChange = onLaunchSelectedChange
         )
     } else {
@@ -260,6 +262,7 @@ internal fun FavoritesBeaconScreen(
                     lazyItems(entries, key = { it.key }) { entry ->
                         FavoriteRow(
                             entry = entry,
+                            favorite = entry.key in favorites,
                             selected = selected?.key == entry.key,
                             onFocus = { selectedKey = entry.key },
                             onClick = {
@@ -285,6 +288,7 @@ internal fun FavoritesBeaconScreen(
                         val entry = entries[index]
                         FavoriteGridCard(
                             entry = entry,
+                            favorite = entry.key in favorites,
                             selected = selected?.key == entry.key,
                             itemOverrides = itemOverrides,
                             onFocus = { selectedKey = entry.key },
@@ -381,15 +385,17 @@ private fun PublishFavoriteToggleAction(
     onToggleFavorite: (GameItem) -> Unit,
     onToggleAndroidFavorite: (InstalledApp) -> Unit
 ) {
+    val currentToggleGame by rememberUpdatedState(onToggleFavorite)
+    val currentToggleApp by rememberUpdatedState(onToggleAndroidFavorite)
     LaunchedEffect(selected?.key) {
         val toggle: (() -> Unit)? = when {
             selected?.game != null -> {
                 val game = selected.game
-                { onToggleFavorite(game) }
+                { currentToggleGame(game) }
             }
             selected?.app != null -> {
                 val app = selected.app
-                { onToggleAndroidFavorite(app) }
+                { currentToggleApp(app) }
             }
             else -> null
         }
@@ -739,7 +745,7 @@ private fun PublishAndroidFavoriteAction(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FavoriteRow(entry: FavoriteEntry, selected: Boolean, onFocus: () -> Unit, onClick: () -> Unit, onLongClick: () -> Unit, onToggle: () -> Unit) {
+private fun FavoriteRow(entry: FavoriteEntry, favorite: Boolean, selected: Boolean, onFocus: () -> Unit, onClick: () -> Unit, onLongClick: () -> Unit, onToggle: () -> Unit) {
     val containerColor by animateColorAsState(
         targetValue = if (selected) {
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.78f)
@@ -770,7 +776,7 @@ private fun FavoriteRow(entry: FavoriteEntry, selected: Boolean, onFocus: () -> 
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(entry.title, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
-            IconButton(onClick = onToggle, modifier = Modifier.focusProperties { canFocus = false }) { Icon(Icons.Rounded.Star, contentDescription = I18n.t(LocalContext.current, "launcher.bottom.unfavorite", "取消收藏")) }
+            IconButton(onClick = onToggle, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = I18n.t(LocalContext.current, if (favorite) "launcher.bottom.unfavorite" else "launcher.bottom.favorite", "Favorite")) }
         }
     }
 }
@@ -964,6 +970,7 @@ private fun LauncherGridCard(
 @Composable
 private fun FavoriteGridCard(
     entry: FavoriteEntry,
+    favorite: Boolean,
     selected: Boolean,
     itemOverrides: Map<String, ItemOverride>,
     onFocus: () -> Unit,
@@ -1004,8 +1011,8 @@ private fun FavoriteGridCard(
                 modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
             ) {
                 Icon(
-                    Icons.Rounded.Star,
-                    contentDescription = I18n.t(LocalContext.current, "launcher.bottom.unfavorite", "取消收藏"),
+                    if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                    contentDescription = I18n.t(LocalContext.current, if (favorite) "launcher.bottom.unfavorite" else "launcher.bottom.favorite", "Favorite"),
                     modifier = Modifier.size(20.dp)
                 )
             }

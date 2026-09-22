@@ -2,7 +2,10 @@ package com.bond.md3elauncher.io
 
 import android.content.Context
 import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
+import android.provider.DocumentsContract
+import java.io.IOException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import com.bond.md3elauncher.data.GameItem
 import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
@@ -15,38 +18,37 @@ import java.util.Locale
 class RomScanner(private val context: Context) {
     private val pspReader = PspIsoReader(context)
 
-    fun scan(platform: PlatformConfig): List<GameItem> {
+    suspend fun scan(platform: PlatformConfig): List<GameItem> {
         val folderUri = platform.folderUri ?: return emptyList()
-        val root = runCatching { DocumentFile.fromTreeUri(context, Uri.parse(folderUri)) }
-            .getOrNull() ?: return emptyList()
+        val tree = Uri.parse(folderUri)
+        val root = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
         val allowed = platform.kind.extensions
         val result = linkedMapOf<String, GameItem>()
 
-        fun addFile(file: DocumentFile) {
-            val name = runCatching { file.name.orEmpty() }.getOrDefault("")
+        fun addFile(uri: Uri, name: String) {
             if (name.isBlank()) return
 
             val ext = name.substringAfterLast('.', missingDelimiterValue = "")
                 .lowercase(Locale.ROOT)
             if (ext !in allowed) return
 
-            val uriString = runCatching { file.uri.toString() }.getOrNull() ?: return
+            val uriString = uri.toString()
             if (platform.kind == PlatformKind.N64 && ext !in setOf("zip", "7z")) {
-                val header = runCatching {
-                    context.contentResolver.openInputStream(file.uri).use { input ->
+                val header = run {
+                    context.contentResolver.openInputStream(uri).use { input ->
                         requireNotNull(input)
                         val probe = ByteArray(516)
                         val size = input.read(probe).coerceAtLeast(0)
                         probe.copyOf(size)
                     }
-                }.getOrNull() ?: return
+                }
                 if (!isLikelyN64Rom(header)) return
             }
 
             // PSP metadata is best-effort only.
             // If PARAM.SFO / ICON0 fails, the ROM still appears using the cleaned file name.
             val pspMeta = if (platform.kind == PlatformKind.PSP && ext == "iso") {
-                runCatching { pspReader.read(file.uri) }.getOrNull()
+                runCatching { pspReader.read(uri) }.getOrNull()
             } else {
                 null
             }
@@ -69,15 +71,28 @@ class RomScanner(private val context: Context) {
             )
         }
 
-        fun walk(dir: DocumentFile, depth: Int = 0) {
-            if (depth > 12) return
-            val files = runCatching { dir.listFiles().toList() }.getOrDefault(emptyList())
-            files.forEach { file ->
-                val isDirectory = runCatching { file.isDirectory }.getOrDefault(false)
-                val isFile = runCatching { file.isFile }.getOrDefault(false)
-                when {
-                    isDirectory -> walk(file, depth + 1)
-                    isFile -> runCatching { addFile(file) }
+        suspend fun walk(dir: Uri, depth: Int = 0) {
+            currentCoroutineContext().ensureActive()
+            if (depth > 12) throw IOException("Directory nesting exceeds scan limit")
+            context.contentResolver.query(dir, arrayOf(DocumentsContract.Document.COLUMN_MIME_TYPE), null, null, null).use { info ->
+                if (info == null || !info.moveToFirst() || info.getString(0) != DocumentsContract.Document.MIME_TYPE_DIR) {
+                    throw IOException("ROM folder no longer exists")
+                }
+            }
+            val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getDocumentId(dir))
+            val projection = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE)
+            // DocumentFile.listFiles swallows provider errors and can return a partial/empty list.
+            // Query directly so a failed scan never replaces the previous library.
+            val cursor = context.contentResolver.query(children, projection, null, null, null)
+                ?: throw IOException("Cannot read ROM folder")
+            cursor.use {
+                if (it.extras.getBoolean(DocumentsContract.EXTRA_LOADING, false) || it.extras.containsKey(DocumentsContract.EXTRA_ERROR)) throw IOException("Folder is not ready")
+                while (it.moveToNext()) {
+                    currentCoroutineContext().ensureActive()
+                    val child = DocumentsContract.buildDocumentUriUsingTree(tree, it.getString(0))
+                    if (it.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) walk(child, depth + 1)
+                    else addFile(child, it.getString(1).orEmpty())
                 }
             }
         }

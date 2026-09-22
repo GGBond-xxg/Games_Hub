@@ -151,7 +151,9 @@ data class ScraperSettings(
     val theGamesDbApiKey: String = "",
     val steamGridDbApiKey: String = "",
     val screenScraperUser: String = "",
-    val screenScraperPassword: String = ""
+    val screenScraperPassword: String = "",
+    val screenScraperDevId: String = "",
+    val screenScraperDevPassword: String = ""
 )
 
 data class CoverCandidate(

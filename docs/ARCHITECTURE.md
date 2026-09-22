@@ -42,6 +42,7 @@ A launch request chooses one path:
 - `ui/BeaconChrome.kt`: shared top/bottom chrome and shortcut hints.
 - `ui/EditItemDialog.kt`: display-name, preview-image and grid-image editor.
 - `ui/SettingsScreens.kt`: system, platform, appearance, scraper and controller settings.
+- `ui/AboutAndBackup.kt`: backup document pickers, restore confirmation, project/legal information and sponsorship addresses.
 - `ui/UiWidgets.kt`: reusable Compose UI pieces.
 
 ### Data and scanning
@@ -49,6 +50,8 @@ A launch request chooses one path:
 - `data/Models.kt`: `PlatformKind`, platform configuration, games, layout mode and artwork overrides.
 - `data/LauncherStore.kt`: local persistence and migration logic.
 - `io/RomScanner.kt`: platform extension filtering and metadata extraction.
+- `io/LauncherBackup.kt`: versioned user-data backup, staged restore and rollback on handled write failures; excludes ROMs, BIOS and scraper credentials.
+- `io/BackupArchive.kt`, `io/BackupPaths.kt`: bounded ZIP extraction and the portable user-file allowlist.
 - `emulator/psp/PspIsoReader.kt`: PSP ISO `PARAM.SFO` and local artwork extraction.
 
 ### Emulator selection
@@ -101,6 +104,16 @@ Older data used one artwork path. Migration must copy that value into both curre
 - Phone-class first launch defaults to list.
 - Manual user selection overrides the device default.
 - Grid has 1–4 columns and does not replace the right preview pane.
+- Recent launches reuse the favorites list/grid and preview components, with independent membership and actual favorite state. Launching resets any manual recent ordering to chronological order.
+- Artwork decoding runs on IO with bounded dimensions, two concurrent decoders and a shared 16 MB cache. Scans and restores invalidate the cache.
+
+## Backups and scan safety
+
+ROM scans query document providers directly so unreadable, missing or still-loading directories fail instead of returning an empty replacement library. All-platform scans update only after every configured directory succeeds.
+
+Backups use a versioned `manifest.json` with typed preferences and allowlisted files. Restore validates into a cache staging directory before touching live data, rewrites local artwork paths, and retains replaced files for rollback if a handled write failure occurs. It replaces settings and merges file data, overwriting matching saves only. Document permissions must be re-granted on another device; changed document URIs are not automatically matched to old game IDs. Internal emulators must exit before either operation. The archive excludes ROMs, BIOS, scraper credentials and temporary cheat-restart snapshots.
+
+Offline legal documents in `app/src/main/assets/legal/` mirror the root `LICENSE`, `THIRD_PARTY_NOTICES.md` and `DISCLAIMER.md`; keep these copies synchronized when changing the originals.
 
 ## Internationalization
 
@@ -142,3 +155,11 @@ Avoid changing persisted keys, platform IDs, internal emulator markers or `appli
 - controller shortcuts;
 - language selection;
 - save-state paths.
+
+## Release updates and recovery
+
+- `system/ReleaseInfo.kt` parses official GitHub releases and selects a verified native-ABI APK; `system/GitHubUpdater.kt` bounds downloads and checks SHA-256, package, signing certificate and version before invoking Android's installer.
+- `ui/UpdateSettings.kt` owns the on-demand update dialog and unknown-source permission handoff. No background update checks run.
+- `data/GameLibraryCodec.kt` isolates per-record decoding and previous-valid-library recovery. `LauncherStore.saveGames` retains the prior valid document before replacing it.
+- `system/LaunchPreflight.kt` checks supported formats, core/emulator availability and readable game URIs on IO before recording a launch.
+- `system/CoverSources.kt` holds Libretro mappings and ScreenScraper response parsing. ScreenScraper developer and optional user credentials are supplied locally and excluded from portable backups.

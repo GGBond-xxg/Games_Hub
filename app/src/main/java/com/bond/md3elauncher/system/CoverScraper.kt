@@ -61,6 +61,24 @@ class CoverScraper(private val context: Context) {
             report.add(I18n.t(context, "cover.report.tgdb_no_key", "TheGamesDB: API key not set"))
         }
 
+        if (settings.screenScraperDevId.isNotBlank() && settings.screenScraperDevPassword.isNotBlank()) {
+            try {
+                val parameters = linkedMapOf("devid" to settings.screenScraperDevId, "devpassword" to settings.screenScraperDevPassword,
+                    "softname" to "GameHub", "output" to "json", "recherche" to cleanTitle)
+                if (settings.screenScraperUser.isNotBlank()) {
+                    parameters["ssid"] = settings.screenScraperUser
+                    parameters["sspassword"] = settings.screenScraperPassword
+                }
+                val url = "https://api.screenscraper.fr/api2/jeuRecherche.php?" + parameters.entries.joinToString("&") { "${it.key}=${formEncode(it.value)}" }
+                val covers = CoverSources.screenScraper(getJson(url), cleanTitle)
+                covers.forEach { result[it.imageUrl] = it }
+                report.add(I18n.t(context, "cover.report.screenscraper_count", "ScreenScraper: {count}", "count" to covers.size))
+            } catch (_: Exception) {
+                report.add(I18n.t(context, "cover.report.screenscraper_failed", "ScreenScraper request failed. Check credentials, quota and network."))
+            }
+        } else {
+            report.add(I18n.t(context, "cover.report.screenscraper_no_key", "ScreenScraper: developer credentials not set"))
+        }
         lastReport = report.joinToString("\n")
         return result.values.take(36)
     }
@@ -83,17 +101,16 @@ class CoverScraper(private val context: Context) {
     }
 
     private fun searchLibretro(queries: List<String>, platformLabel: String): List<CoverCandidate> {
-        val repo = when (platformLabel.lowercase(Locale.ROOT)) {
-            "psp" -> "Sony_-_PlayStation_Portable"
-            "ns", "switch" -> "Nintendo_-_Nintendo_Switch"
-            "gba" -> "Nintendo_-_Game_Boy_Advance"
-            else -> return emptyList()
-        }
+        val repos = CoverSources.libretroRepos(platformLabel)
         val out = linkedMapOf<String, CoverCandidate>()
-        queries.flatMap { buildTitleVariants(it) }.forEach { variant ->
-            val encoded = pathEncode("$variant.png")
-            val url = "https://raw.githubusercontent.com/libretro-thumbnails/$repo/master/Named_Boxarts/$encoded"
-            if (urlExists(url)) out[url] = CoverCandidate(variant, url, "Libretro")
+        val deadline = System.nanoTime() + 25_000_000_000L
+        for (variant in queries.flatMap { buildTitleVariants(it) }.distinct().take(24)) {
+            for (repo in repos) {
+                if (System.nanoTime() >= deadline) return out.values.toList()
+                val encoded = pathEncode("$variant.png")
+                val url = "https://raw.githubusercontent.com/libretro-thumbnails/$repo/master/Named_Boxarts/$encoded"
+                if (urlExists(url)) out[url] = CoverCandidate(variant, url, "Libretro")
+            }
         }
         return out.values.toList()
     }
@@ -234,26 +251,28 @@ class CoverScraper(private val context: Context) {
 
     private fun getJson(url: String, headers: Map<String, String> = emptyMap()): JSONObject {
         val conn = openConnection(url, method = "GET", headers = headers)
-        val code = conn.responseCode
-        val stream = if (code in 200..299) conn.inputStream else conn.errorStream
-        val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        if (code !in 200..299) throw IllegalStateException("HTTP $code: ${body.take(180)}")
-        return JSONObject(body)
+        try {
+            val code = conn.responseCode
+            if (code !in 200..299) throw IllegalStateException("HTTP $code")
+            val body = conn.inputStream.bufferedReader().use { reader ->
+                val text = StringBuilder()
+                val buffer = CharArray(8192)
+                while (true) {
+                    val count = reader.read(buffer)
+                    if (count < 0) break
+                    require(text.length + count <= 4 * 1024 * 1024)
+                    text.append(buffer, 0, count)
+                }
+                text.toString()
+            }
+            return JSONObject(body)
+        } finally { conn.disconnect() }
     }
 
-    private fun urlExists(url: String): Boolean {
-        return runCatching {
-            val conn = openConnection(url, method = "HEAD")
-            val code = conn.responseCode
-            if (code == HttpURLConnection.HTTP_BAD_METHOD || code == HttpURLConnection.HTTP_FORBIDDEN) {
-                val get = openConnection(url, method = "GET")
-                get.setRequestProperty("Range", "bytes=0-0")
-                get.responseCode in 200..299
-            } else {
-                code in 200..299
-            }
-        }.getOrDefault(false)
-    }
+    private fun urlExists(url: String): Boolean = runCatching {
+        val conn = openConnection(url, method = "HEAD")
+        try { conn.responseCode in 200..299 } finally { conn.disconnect() }
+    }.getOrDefault(false)
 
     private fun openConnection(url: String, method: String, headers: Map<String, String> = emptyMap()): HttpURLConnection {
         val conn = URL(url).openConnection() as HttpURLConnection

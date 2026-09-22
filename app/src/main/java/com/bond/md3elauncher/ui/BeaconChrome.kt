@@ -91,7 +91,11 @@ internal fun BeaconTopBar(
                 TopTabPill(
                     label = tab.localizedLabel(context),
                     selected = selected == tab,
-                    width = if (tab == BeaconTab.NOW) 34.dp else 68.dp,
+                    width = when (tab) {
+                        BeaconTab.NOW -> 34.dp
+                        BeaconTab.RECENT -> 96.dp
+                        else -> 68.dp
+                    },
                     onClick = { onSelect(tab) }
                 )
             }

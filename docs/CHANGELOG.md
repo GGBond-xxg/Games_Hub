@@ -2,6 +2,17 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.1.0
+
+- Add recent games/apps, background artwork decoding and shared image caching.
+- Preserve the library on failed or incomplete scans; recover individual malformed records and retain a previous valid library.
+- Add versioned ZIP backup/restore for settings, artwork and internal emulator saves, with staging, rollback and credential exclusion.
+- Add compact backup/about/version entries, offline legal notices, project credits and optional sponsorship addresses.
+- Add on-demand GitHub update checks, ABI selection, bounded downloads, SHA-256/package/signature/version verification and Android installer handoff.
+- Extend Libretro platform coverage and connect ScreenScraper with user-provided developer credentials.
+- Add game launch preflight checks with a direct platform settings action.
+- Synchronize English, Simplified Chinese and Traditional Chinese UI text; improve the README.
+
 ## 1.0.2
 
 - Refresh the installed Android app list every time Android app management is opened from Settings.
