@@ -76,11 +76,11 @@ internal fun AboutAndBackupSettings(isScanning: Boolean) {
         if (uri != null) runBackup(uri, false)
     }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreUri = uri?.toString() }
-    OutlinedCard(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = { showBackup = true }) { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            TextButton(onClick = { showAbout = true }) { Text(translated("settings.about.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            UpdateSettingsEntry()
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            TextButton(onClick = { showBackup = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            TextButton(onClick = { showAbout = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.about.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            UpdateSettingsEntry(Modifier.weight(1f).heightIn(min = 48.dp))
         }
     }
     if (showBackup) AlertDialog(

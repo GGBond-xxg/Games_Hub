@@ -23,10 +23,10 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
-internal fun UpdateSettingsEntry() {
+internal fun UpdateSettingsEntry(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var open by rememberSaveable { mutableStateOf(false) }
-    TextButton(onClick = { open = true }) {
+    TextButton(onClick = { open = true }, modifier = modifier) {
         Text(I18n.t(context, "update.version", "Current version") + "  ${BuildConfig.VERSION_NAME}", maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     if (open) UpdateDialog { open = false }

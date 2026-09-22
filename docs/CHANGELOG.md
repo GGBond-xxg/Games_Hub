@@ -2,6 +2,14 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.1.1
+
+- Move backup, about and version actions to the bottom of Settings with equal-width entries.
+- Unify section headings, cards, spacing and text hierarchy; separate appearance from display/margins.
+- Place margin controls side by side on wide layouts and wrap language/orientation choices when needed.
+- Make toggle rows clickable and disable rescan actions while scanning.
+- Fit long scraper field labels and add 16dp of space before the explanatory text.
+
 ## 1.1.0
 
 - Add recent games/apps, background artwork decoding and shared image caching.

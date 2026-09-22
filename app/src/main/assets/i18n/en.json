@@ -570,5 +570,6 @@
   "settings.cover.screenscraper.requirements": "ScreenScraper requires your own developer credentials; a user account alone is insufficient. Credentials are stored locally and excluded from backups.",
   "cover.report.screenscraper_count": "ScreenScraper: {count}",
   "cover.report.screenscraper_failed": "ScreenScraper request failed. Check credentials, quota and network.",
-  "cover.report.screenscraper_no_key": "ScreenScraper: developer credentials not set"
+  "cover.report.screenscraper_no_key": "ScreenScraper: developer credentials not set",
+  "settings.section.display": "Display and margins"
 }

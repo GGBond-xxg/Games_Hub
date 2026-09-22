@@ -26,6 +26,12 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
@@ -141,22 +147,11 @@ internal fun SettingsBeaconScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item(key = "platformManager") {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
-            ) {
-                Text(
-                    I18n.t(context, "settings.title.platform_manager", "平台管理"),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(Modifier.height(4.dp))
+            SettingSection(title = I18n.t(context, "settings.title.platform_manager", "平台管理")) {
                 if (showEmulatorManager) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -223,17 +218,20 @@ internal fun SettingsBeaconScreen(
                         onSetThemeColor = onSetThemeColor
                     )
                 }
-                Spacer(Modifier.height(10.dp))
+            }
+        }
+        item(key = "display") {
+            SettingSection(title = I18n.t(context, "settings.section.display", "Display and margins")) {
                 Text(I18n.t(context, "settings.appearance.orientation.title", "横屏方向"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
-                Text(localizedLandscapeSubtitle(context, landscapeMode), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(localizedLandscapeSubtitle(context, landscapeMode), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = landscapeMode == LandscapeMode.AUTO, onClick = { onSetLandscapeMode(LandscapeMode.AUTO) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.AUTO), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                     FilterChip(selected = landscapeMode == LandscapeMode.LEFT, onClick = { onSetLandscapeMode(LandscapeMode.LEFT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.LEFT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                     FilterChip(selected = landscapeMode == LandscapeMode.RIGHT, onClick = { onSetLandscapeMode(LandscapeMode.RIGHT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.RIGHT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 }
-                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 SafeMarginSetting(
                     safeMargins = safeMargins,
                     onSetSafeMargins = onSetSafeMargins
@@ -241,15 +239,7 @@ internal fun SettingsBeaconScreen(
             }
         }
 
-        item(key = "aboutAndBackup") { AboutAndBackupSettings(isScanning) }
         if (showDeferredSections) {
-            item(key = "scraper") {
-                ScraperSettingSection(
-                    scraperSettings = scraperSettings,
-                    onSaveScraperSettings = onSaveScraperSettings
-                )
-            }
-
             item(key = "system") {
                 SettingSection(title = I18n.t(context, "settings.section.system", "系统")) {
                     LanguageSettingRow(
@@ -261,10 +251,18 @@ internal fun SettingsBeaconScreen(
                     Spacer(Modifier.height(8.dp))
                     ActionSettingRow(title = I18n.t(context, "settings.system.controller_shortcut.title", "手柄操作"), subtitle = I18n.t(context, "settings.system.controller_shortcut.subtitle", "设置内置模拟器通用快捷键，支持1~3键组合。"), buttonText = I18n.t(context, "settings.system.controller_shortcut.enter", "进入"), onClick = { showControllerShortcuts = true })
                     Spacer(Modifier.height(8.dp))
-                    ActionSettingRow(title = I18n.t(context, "settings.system.rescan.title", "重新扫描"), subtitle = if (isScanning) I18n.t(context, "settings.system.rescan.subtitle_scanning", "正在扫描，请稍等。") else I18n.t(context, "settings.system.rescan.subtitle_idle", "重新读取已配置平台的 ROM 文件夹。"), buttonText = I18n.t(context, "settings.system.rescan.button", "扫描全部"), onClick = onRescanAll)
+                    ActionSettingRow(title = I18n.t(context, "settings.system.rescan.title", "重新扫描"), subtitle = if (isScanning) I18n.t(context, "settings.system.rescan.subtitle_scanning", "正在扫描，请稍等。") else I18n.t(context, "settings.system.rescan.subtitle_idle", "重新读取已配置平台的 ROM 文件夹。"), buttonText = I18n.t(context, "settings.system.rescan.button", "扫描全部"), enabled = !isScanning, onClick = onRescanAll)
                 }
             }
+            item(key = "scraper") {
+                ScraperSettingSection(
+                    scraperSettings = scraperSettings,
+                    onSaveScraperSettings = onSaveScraperSettings
+                )
+            }
+
         }
+        item(key = "aboutAndBackup") { AboutAndBackupSettings(isScanning) }
     }
 }
 
@@ -1007,24 +1005,13 @@ private fun OrderedPlatformRows(
 
 @Composable
 private fun SettingSection(title: String, content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-    ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Black,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Spacer(Modifier.height(4.dp))
-        ElevatedCard(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-                content()
-            }
+    Column(Modifier.fillMaxWidth()) {
+        Text(title, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow,
+            modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) { content() }
         }
     }
 }
@@ -1037,13 +1024,14 @@ private fun ThemeColorSetting(
     val context = LocalContext.current
     Text(
         I18n.t(context, "settings.appearance.theme_color.title", "主题色"),
-        fontWeight = FontWeight.Black,
+        fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
     )
     Spacer(Modifier.height(4.dp))
     Text(
         I18n.t(context, "settings.appearance.theme_color.subtitle", "选择关闭莫奈主题时使用的颜色"),
+        style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis
@@ -1097,25 +1085,24 @@ private fun LanguageSettingRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
-            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .padding(vertical = 4.dp)
     ) {
         Text(
             I18n.t(context, "settings.language.title", "语言"),
-            fontWeight = FontWeight.Black,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             I18n.t(context, "settings.language.subtitle", "选择界面语言，系统外语言默认显示英文。"),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
         Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             I18n.SUPPORTED_LANGUAGE_MODES.forEach { mode ->
                 FilterChip(
                     selected = currentMode == mode,
@@ -1188,20 +1175,31 @@ private fun SafeMarginSetting(
     }
 
     val context = LocalContext.current
-    Text(I18n.t(context, "settings.safe_margin.title", "左右安全边距"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Text(I18n.t(context, "settings.safe_margin.title", "左右安全边距"), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     Spacer(Modifier.height(4.dp))
     Text(
         I18n.t(context, "settings.safe_margin.subtitle", "用于避开挖孔屏、圆角或刘海遮挡。默认左右各预留 {dp}dp，可按设备单独微调。", "dp" to SafeMarginSettings.DEFAULT_DP),
+        style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 3,
         overflow = TextOverflow.Ellipsis
     )
     Spacer(Modifier.height(8.dp))
-    SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.left", "左边距"), value = safeMargins.leftDp, onChange = ::setLeft)
-    Spacer(Modifier.height(6.dp))
-    SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.right", "右边距"), value = safeMargins.rightDp, onChange = ::setRight)
+    BoxWithConstraints {
+        if (maxWidth >= 640.dp) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.left", "左边距"), value = safeMargins.leftDp, onChange = ::setLeft, modifier = Modifier.weight(1f))
+                SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.right", "右边距"), value = safeMargins.rightDp, onChange = ::setRight, modifier = Modifier.weight(1f))
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.left", "左边距"), value = safeMargins.leftDp, onChange = ::setLeft)
+                SafeMarginAdjustRow(label = I18n.t(context, "settings.safe_margin.right", "右边距"), value = safeMargins.rightDp, onChange = ::setRight)
+            }
+        }
+    }
     Spacer(Modifier.height(8.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         FilterChip(
             selected = safeMargins.leftDp == SafeMarginSettings.DEFAULT_DP && safeMargins.rightDp == SafeMarginSettings.DEFAULT_DP,
             onClick = { onSetSafeMargins(SafeMarginSettings()) },
@@ -1224,14 +1222,15 @@ private fun SafeMarginSetting(
 private fun SafeMarginAdjustRow(
     label: String,
     value: Int,
-    onChange: (Int) -> Unit
+    onChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -1244,18 +1243,18 @@ private fun SafeMarginAdjustRow(
 @Composable
 private fun ToggleSettingRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
-            .padding(horizontal = 12.dp, vertical = 9.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .heightIn(min = 56.dp).padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.weight(1f).padding(end = 16.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
@@ -1265,26 +1264,24 @@ private fun ActionSettingRow(
     subtitle: String,
     buttonText: String,
     selected: Boolean = false,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val bgColor = if (selected) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f)
-    }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(bgColor)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
+            .heightIn(min = 64.dp).padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.weight(1f).padding(end = 16.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        FilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(buttonText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        FilledTonalButton(onClick = onClick, enabled = enabled, modifier = Modifier.heightIn(min = 48.dp)) {
+            Text(buttonText, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
     }
 }
 
@@ -1348,11 +1345,15 @@ private fun ScraperSettingSection(
             ScraperTextField(label = I18n.t(context, "settings.cover.screenscraper.dev_id", "Developer ID"), value = screenDevId, onValueChange = { screenDevId = it }, placeholder = "", modifier = Modifier.weight(1f))
             ScraperTextField(label = I18n.t(context, "settings.cover.screenscraper.dev_password", "Developer password"), value = screenDevPass, onValueChange = { screenDevPass = it }, placeholder = "", isSecret = true, modifier = Modifier.weight(1f))
         }
-        Text(I18n.t(context, "settings.cover.screenscraper.requirements", "ScreenScraper requires your own developer credentials; a user account alone is insufficient."), maxLines = 4, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(16.dp))
+        Text(I18n.t(context, "settings.cover.screenscraper.requirements", "ScreenScraper requires your own developer credentials; a user account alone is insufficient."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.height(8.dp))
         Text(
             I18n.t(context, "settings.cover.empty_source_tip", "未填写 Key / 账号的来源会自动跳过；长按游戏进入编辑后，可点“联网搜索封面”。"),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
         )
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -1411,7 +1412,7 @@ private fun ScraperTextField(
             singleLine = true,
             readOnly = !editing,
             visualTransformation = if (isSecret) PasswordVisualTransformation() else VisualTransformation.None,
-            label = { Text(label) },
+            label = { Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) },
             placeholder = { Text(if (editing) placeholder else I18n.t(LocalContext.current, "settings.input.edit_first", "点右侧“编辑”后输入"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             shape = RoundedCornerShape(18.dp)
         )

@@ -570,5 +570,6 @@
   "settings.cover.screenscraper.requirements": "ScreenScraper 需要你自己的开发者凭据，仅有普通账号无法调用。凭据保存在本机，不包含在备份中。",
   "cover.report.screenscraper_count": "ScreenScraper：{count}",
   "cover.report.screenscraper_failed": "ScreenScraper 请求失败，请检查凭据、额度和网络。",
-  "cover.report.screenscraper_no_key": "ScreenScraper：未配置开发者凭据"
+  "cover.report.screenscraper_no_key": "ScreenScraper：未配置开发者凭据",
+  "settings.section.display": "显示与边距"
 }

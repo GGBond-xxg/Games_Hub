@@ -570,5 +570,6 @@
   "settings.cover.screenscraper.requirements": "ScreenScraper 需要你自己的開發者憑據，僅有一般帳號無法呼叫。憑據儲存在本機，不包含在備份中。",
   "cover.report.screenscraper_count": "ScreenScraper：{count}",
   "cover.report.screenscraper_failed": "ScreenScraper 請求失敗，請檢查憑據、額度和網路。",
-  "cover.report.screenscraper_no_key": "ScreenScraper：未設定開發者憑據"
+  "cover.report.screenscraper_no_key": "ScreenScraper：未設定開發者憑據",
+  "settings.section.display": "顯示與邊距"
 }
