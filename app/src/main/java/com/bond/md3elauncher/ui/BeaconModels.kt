@@ -88,7 +88,8 @@ internal data class EditTarget(
     val currentGridImagePath: String?,
     val defaultPreviewImagePath: String?,
     val defaultGridImagePath: String?,
-    val typeLabel: String
+    val typeLabel: String,
+    val metadata: com.bond.md3elauncher.data.GameMetadata? = null
 )
 
 internal fun nextTab(tab: BeaconTab, visibleTabs: List<BeaconTab>): BeaconTab {

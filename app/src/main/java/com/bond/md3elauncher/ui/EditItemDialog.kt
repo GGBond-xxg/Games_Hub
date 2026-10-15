@@ -91,6 +91,7 @@ private enum class EditImageSlot {
 @Composable
 internal fun EditItemPage(
     target: EditTarget,
+    onSaveMetadata: (com.bond.md3elauncher.data.GameMetadata) -> Unit,
     scraperSettings: ScraperSettings,
     onBack: () -> Unit,
     onFooterTextChange: (String) -> Unit = {},
@@ -101,6 +102,11 @@ internal fun EditItemPage(
     ) -> Unit
 ) {
     val context = LocalContext.current
+    var metadata by remember(target.key) { mutableStateOf(target.metadata) }
+    var showMetadata by rememberSaveable(target.key) { mutableStateOf(false) }
+    if (showMetadata && metadata != null) {
+        GameInfoEditor(metadata!!, onDismiss = { showMetadata = false }, onSave = { metadata = it; onSaveMetadata(it) })
+    }
     var title by rememberSaveable(target.key) { mutableStateOf(target.currentTitle) }
     var selectedPreviewImageUri by rememberSaveable(target.key) { mutableStateOf<String?>(null) }
     var selectedGridImageUri by rememberSaveable(target.key) { mutableStateOf<String?>(null) }
@@ -135,6 +141,7 @@ internal fun EditItemPage(
 
     EditInfoPage(
         target = target,
+        onEditMetadata = if (metadata != null) ({ showMetadata = true }) else null,
         title = title,
         selectedPreviewImageUri = selectedPreviewImageUri,
         selectedGridImageUri = selectedGridImageUri,
@@ -152,6 +159,7 @@ internal fun EditItemPage(
 @Composable
 private fun EditInfoPage(
     target: EditTarget,
+    onEditMetadata: (() -> Unit)?,
     title: String,
     selectedPreviewImageUri: String?,
     selectedGridImageUri: String?,
@@ -226,7 +234,7 @@ private fun EditInfoPage(
                     .height(42.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+                HubIconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
                     Icon(
                         Icons.Rounded.ArrowBack,
                         contentDescription = I18n.t(context, "common.back", "返回")
@@ -241,7 +249,7 @@ private fun EditInfoPage(
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.width(12.dp))
-                OutlinedButton(
+                HubOutlinedButton(
                     onClick = {
                         draftTitle = title.ifBlank { target.defaultTitle }
                         showNameDialog = true
@@ -266,7 +274,7 @@ private fun EditInfoPage(
                     )
                 }
                 Spacer(Modifier.width(8.dp))
-                TextButton(
+                HubTextButton(
                     onClick = onBack,
                     modifier = Modifier.height(38.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
@@ -279,7 +287,7 @@ private fun EditInfoPage(
                     )
                 }
                 Spacer(Modifier.width(4.dp))
-                Button(
+                HubButton(
                     onClick = onSave,
                     enabled = title.isNotBlank(),
                     modifier = Modifier.height(38.dp),
@@ -295,6 +303,11 @@ private fun EditInfoPage(
                 }
             }
 
+            if (onEditMetadata != null) {
+                HubTextButton(onClick = onEditMetadata) {
+                    Text(I18n.t(context, "metadata.edit", "Game information"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
             if (useTwoColumns) {
                 Row(
                     modifier = Modifier
@@ -419,7 +432,7 @@ private fun EditInfoPage(
             runCatching { focusRequester.requestFocus() }
         }
 
-        AlertDialog(
+        HubAlertDialog(
             onDismissRequest = { showNameDialog = false },
             title = {
                 Text(
@@ -431,7 +444,7 @@ private fun EditInfoPage(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
+                    HubOutlinedTextField(
                         value = draftTitle,
                         onValueChange = { draftTitle = it },
                         modifier = Modifier
@@ -459,7 +472,7 @@ private fun EditInfoPage(
                 }
             },
             confirmButton = {
-                TextButton(
+                HubTextButton(
                     onClick = {
                         val cleanTitle = draftTitle.trim()
                         if (cleanTitle.isNotBlank()) {
@@ -478,7 +491,7 @@ private fun EditInfoPage(
             },
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(
+                    HubTextButton(
                         onClick = {
                             draftTitle = target.defaultTitle
                             onRestoreName()
@@ -491,7 +504,7 @@ private fun EditInfoPage(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
-                    TextButton(onClick = { showNameDialog = false }) {
+                    HubTextButton(onClick = { showNameDialog = false }) {
                         Text(
                             I18n.t(context, "common.cancel", "取消"),
                             maxLines = 1,
@@ -521,7 +534,7 @@ private fun EditArtworkCard(
     portraitPreview: Boolean
 ) {
     val context = LocalContext.current
-    Surface(
+    HubSurface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.16f),
         shape = RoundedCornerShape(18.dp),
@@ -563,7 +576,7 @@ private fun EditArtworkCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 if (canRestore) {
-                    IconButton(onClick = onRestore, modifier = Modifier.size(28.dp)) {
+                    HubIconButton(onClick = onRestore, modifier = Modifier.size(28.dp)) {
                         Icon(
                             Icons.Rounded.Restore,
                             contentDescription = I18n.t(
@@ -643,7 +656,7 @@ private fun EditArtworkActionButton(
     modifier: Modifier = Modifier
 ) {
     val shape = RoundedCornerShape(13.dp)
-    Surface(
+    HubSurface(
         modifier = modifier
             .height(40.dp)
             .clip(shape)
@@ -773,7 +786,7 @@ private fun CoverScrapePage(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
+            HubIconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
             Column(Modifier.weight(1f)) {
                 Text(
                     if (imageSlot == EditImageSlot.PREVIEW) {
@@ -789,10 +802,10 @@ private fun CoverScrapePage(
                 )
                 Text(target.typeLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            IconButton(onClick = { showSearchField = !showSearchField }) {
+            HubIconButton(onClick = { showSearchField = !showSearchField }) {
                 Icon(Icons.Rounded.Search, contentDescription = I18n.t(context, "common.search", "搜索"))
             }
-            FilledTonalButton(onClick = { search() }, enabled = !isLoading) { Text(if (isLoading) I18n.t(context, "common.searching", "搜索中") else I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            HubFilledTonalButton(onClick = { search() }, enabled = !isLoading) { Text(if (isLoading) I18n.t(context, "common.searching", "搜索中") else I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         if (imageSlot == EditImageSlot.PREVIEW) {
@@ -864,7 +877,7 @@ private fun CompactSearchField(
     onSearch: () -> Unit
 ) {
     val context = LocalContext.current
-    Surface(
+    HubSurface(
         modifier = Modifier
             .fillMaxWidth()
             .height(46.dp),
@@ -901,7 +914,7 @@ private fun CompactSearchField(
                 }
             )
             Spacer(Modifier.width(10.dp))
-            FilledTonalButton(onClick = onSearch, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
+            HubFilledTonalButton(onClick = onSearch, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
                 Text(I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -921,7 +934,7 @@ private fun compactSourceText(context: android.content.Context, settings: Scrape
 
 @Composable
 private fun CoverCandidateCard(candidate: CoverCandidate, onClick: () -> Unit) {
-    ElevatedCard(
+    HubElevatedCard(
         modifier = Modifier
             .width(106.dp)
             .height(164.dp)

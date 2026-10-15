@@ -129,7 +129,7 @@ private fun TopTabPill(label: String, selected: Boolean, width: Dp, onClick: () 
             .width(width)
             .height(34.dp)
             .clip(shape)
-            .background(containerColor)
+            .styleSurface(shape, containerColor)
             .border(1.dp, borderColor, shape)
             .clickable(onClick = onClick)
             .padding(horizontal = if (width <= 40.dp) 0.dp else 2.dp),
@@ -168,7 +168,7 @@ private fun StatusCluster(onNext: () -> Unit) {
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary)
+                .styleSurface(RoundedCornerShape(12.dp), MaterialTheme.colorScheme.primary)
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(9.dp)
@@ -239,7 +239,7 @@ private fun ShoulderKey(text: String, onClick: () -> Unit) {
         modifier = Modifier
             .width(56.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.primary)
+            .styleSurface(RoundedCornerShape(12.dp), MaterialTheme.colorScheme.primary)
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp),
         textAlign = TextAlign.Center
@@ -334,7 +334,7 @@ internal fun BeaconBottomBar(
         }
         if (onLaunchSelected != null) {
             if (showBottomTexts) {
-                TextButton(
+                HubTextButton(
                     onClick = onLaunchSelected,
                     modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 0.dp),
                     contentPadding = PaddingValues(horizontal = 2.dp)
@@ -395,7 +395,7 @@ private fun LayoutModeIconButton(
         modifier = Modifier
             .size(36.dp)
             .clip(shape)
-            .background(containerColor)
+            .styleSurface(shape, containerColor)
             .border(
                 width = 1.dp,
                 color = borderColor,
@@ -432,7 +432,7 @@ private fun CompactBottomHint(key: String, onClick: (() -> Unit)?) {
 @Composable
 private fun BottomHint(key: String, text: String, onClick: (() -> Unit)?) {
     val enabled = onClick != null
-    TextButton(
+    HubTextButton(
         onClick = { onClick?.invoke() },
         enabled = enabled,
         modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 0.dp),

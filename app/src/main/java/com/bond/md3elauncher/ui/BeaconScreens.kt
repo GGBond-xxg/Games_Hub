@@ -755,7 +755,7 @@ private fun FavoriteRow(entry: FavoriteEntry, favorite: Boolean, selected: Boole
         animationSpec = tween(durationMillis = 180),
         label = "favorite-row-selection"
     )
-    ElevatedCard(
+    HubElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 3.dp)
@@ -771,12 +771,12 @@ private fun FavoriteRow(entry: FavoriteEntry, favorite: Boolean, selected: Boole
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(14.dp))
-                .background(containerColor)
+                .styleSurface(RoundedCornerShape(14.dp), containerColor)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(entry.title, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
-            IconButton(onClick = onToggle, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = I18n.t(LocalContext.current, if (favorite) "launcher.bottom.unfavorite" else "launcher.bottom.favorite", "Favorite")) }
+            HubIconButton(onClick = onToggle, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = I18n.t(LocalContext.current, if (favorite) "launcher.bottom.unfavorite" else "launcher.bottom.favorite", "Favorite")) }
         }
     }
 }
@@ -802,7 +802,7 @@ private fun GameRow(
         animationSpec = tween(durationMillis = 180),
         label = "game-row-selection"
     )
-    ElevatedCard(
+    HubElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 3.dp)
@@ -818,12 +818,12 @@ private fun GameRow(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(14.dp))
-                .background(containerColor)
+                .styleSurface(RoundedCornerShape(14.dp), containerColor)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(itemTitle(itemOverrides, game.id, game.title), modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
-            IconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = I18n.t(LocalContext.current, "launcher.bottom.favorite", "收藏")) }
+            HubIconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) { Icon(if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = I18n.t(LocalContext.current, "launcher.bottom.favorite", "收藏")) }
         }
     }
 }
@@ -853,7 +853,7 @@ private fun AndroidAppRow(
         animationSpec = tween(durationMillis = 180),
         label = "android-row-selection"
     )
-    ElevatedCard(
+    HubElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 3.dp)
@@ -869,7 +869,7 @@ private fun AndroidAppRow(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(14.dp))
-                .background(containerColor)
+                .styleSurface(RoundedCornerShape(14.dp), containerColor)
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -877,14 +877,14 @@ private fun AndroidAppRow(
             Spacer(Modifier.width(10.dp))
             Text(itemTitle(itemOverrides, key, app.label), modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = if (selected) FontWeight.Black else FontWeight.Medium)
             if (showFavoriteButton) {
-                IconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) {
+                HubIconButton(onClick = onToggleFavorite, modifier = Modifier.focusProperties { canFocus = false }) {
                     Icon(
                         if (favorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
                         contentDescription = I18n.t(LocalContext.current, "launcher.bottom.favorite", "收藏")
                     )
                 }
             } else {
-                IconButton(onClick = onToggleTag, modifier = Modifier.focusProperties { canFocus = false }) {
+                HubIconButton(onClick = onToggleTag, modifier = Modifier.focusProperties { canFocus = false }) {
                     Icon(
                         if (tagged) Icons.Rounded.SportsEsports else Icons.Outlined.SportsEsports,
                         contentDescription = I18n.t(LocalContext.current, "launcher.action.mark_as_game", "标记为游戏")
@@ -925,7 +925,7 @@ private fun LauncherGridCard(
         animationSpec = tween(durationMillis = 180),
         label = "grid-card-label"
     )
-    ElevatedCard(
+    HubElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .border(if (selected) 2.dp else 1.dp, borderColor, shape)
@@ -950,7 +950,7 @@ private fun LauncherGridCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(34.dp)
-                    .background(labelContainerColor)
+                    .styleSurface(androidx.compose.ui.graphics.RectangleShape, labelContainerColor)
                     .padding(start = 10.dp, end = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1006,7 +1006,7 @@ private fun FavoriteGridCard(
             }
         },
         action = {
-            IconButton(
+            HubIconButton(
                 onClick = onToggle,
                 modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
             ) {
@@ -1046,7 +1046,7 @@ private fun GameGridCard(
             )
         },
         action = {
-            IconButton(
+            HubIconButton(
                 onClick = onToggleFavorite,
                 modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
             ) {
@@ -1094,7 +1094,7 @@ private fun AndroidAppGridCard(
             )
         },
         action = {
-            IconButton(
+            HubIconButton(
                 onClick = if (showFavoriteButton) onToggleFavorite else onToggleTag,
                 modifier = Modifier.size(34.dp).focusProperties { canFocus = false }
             ) {
@@ -1171,15 +1171,14 @@ private fun GamePreview(game: GameItem?, itemOverrides: Map<String, ItemOverride
         return
     }
     PreviewFrame {
-        GameCover(
-            game = game,
-            overridePath = itemPreviewImagePath(
-                itemOverrides,
-                game.id,
-                game.backgroundPath ?: game.coverPath
-            ),
-            modifier = Modifier.fillMaxSize()
-        )
+        androidx.compose.foundation.layout.Column(Modifier.fillMaxSize()) {
+            GameCover(
+                game = game,
+                overridePath = itemPreviewImagePath(itemOverrides, game.id, game.backgroundPath ?: game.coverPath),
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            )
+            GameInformation(itemOverrides[game.id]?.metadata ?: com.bond.md3elauncher.data.GameMetadata())
+        }
     }
 }
 
@@ -1232,7 +1231,7 @@ private fun PreviewPlaceholder(text: String) {
 internal fun EmptyBeaconState(title: String, subtitle: String, onLaunchSelectedChange: ((() -> Unit)?) -> Unit) {
     LaunchedEffect(title, subtitle) { onLaunchSelectedChange(null) }
     Box(modifier = Modifier.fillMaxSize().padding(18.dp), contentAlignment = Alignment.Center) {
-        OutlinedCard(shape = RoundedCornerShape(24.dp)) {
+        HubOutlinedCard(shape = RoundedCornerShape(24.dp)) {
             androidx.compose.foundation.layout.Column(Modifier.padding(22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
@@ -1251,7 +1250,8 @@ private fun GameItem.toEditTarget(overrides: Map<String, ItemOverride>): EditTar
         currentGridImagePath = overrides[id]?.gridImagePath,
         defaultPreviewImagePath = backgroundPath ?: coverPath,
         defaultGridImagePath = coverPath,
-        typeLabel = platformDisplayName(platformTitle)
+        typeLabel = platformDisplayName(platformTitle),
+        metadata = overrides[id]?.metadata ?: com.bond.md3elauncher.data.GameMetadata()
     )
 
 private fun InstalledApp.toEditTarget(overrides: Map<String, ItemOverride>, context: android.content.Context): EditTarget {

@@ -1,0 +1,124 @@
+package com.bond.md3elauncher.ui
+
+import android.os.Build
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.bond.md3elauncher.data.GlassSettings
+import com.bond.md3elauncher.data.ThemeStyle
+import com.bond.md3elauncher.i18n.I18n
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+
+internal data class ThemePreferences(
+    val style: ThemeStyle = ThemeStyle.M3, val glass: GlassSettings = GlassSettings(),
+    val setStyle: (ThemeStyle) -> Unit = {}, val setGlass: (GlassSettings) -> Unit = {}
+)
+internal val LocalThemePreferences = staticCompositionLocalOf { ThemePreferences() }
+internal val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop?> { null }
+
+/** Record only the backdrop, never a subtree that draws itself. Dialog windows get their own source. */
+@Composable
+internal fun StyleBackdrop(content: @Composable () -> Unit) {
+    val glass = LocalThemePreferences.current.style == ThemeStyle.GLASS
+    val backdrop = rememberLayerBackdrop()
+    val colors = MaterialTheme.colorScheme
+    Box(Modifier.fillMaxSize()) {
+        if (glass) Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
+            drawRect(colors.background)
+            drawRect(Brush.linearGradient(listOf(colors.primaryContainer.copy(alpha = 0.55f), colors.background, colors.tertiaryContainer.copy(alpha = 0.45f))))
+            drawCircle(Brush.radialGradient(listOf(colors.primary.copy(alpha = 0.24f), Color.Transparent), center = Offset(size.width * 0.18f, size.height * 0.2f), radius = size.maxDimension * 0.5f), radius = size.maxDimension * 0.5f, center = Offset(size.width * 0.18f, size.height * 0.2f))
+        }
+        CompositionLocalProvider(LocalGlassBackdrop provides if (glass) backdrop else null) { content() }
+    }
+}
+
+@Composable
+internal fun Modifier.styleSurface(shape: Shape = RoundedCornerShape(20.dp), color: Color = MaterialTheme.colorScheme.surface, backdrop: Backdrop? = LocalGlassBackdrop.current): Modifier {
+    val prefs = LocalThemePreferences.current
+    if (prefs.style != ThemeStyle.GLASS) return background(color, shape)
+    val settings = prefs.glass.clamped()
+    val tint = color.copy(alpha = if (Build.VERSION.SDK_INT < 31) 0.94f else settings.opacity)
+    if (backdrop == null || Build.VERSION.SDK_INT < 31) return background(tint, shape).border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+    return drawBackdrop(backdrop, shape = { shape }, effects = {
+        blur(settings.blur.dp.toPx())
+        // Backdrop 1.0.6 requires a rounded-rectangle SDF for lens effects.
+        if (Build.VERSION.SDK_INT >= 33 && shape is androidx.compose.foundation.shape.CornerBasedShape) {
+            lens(10.dp.toPx(), settings.refraction.dp.toPx())
+        }
+    }, shadow = null, onDrawSurface = { drawRect(tint) })
+}
+
+@Composable
+internal fun ThemeStyleSetting() {
+    val prefs = LocalThemePreferences.current
+    val context = LocalContext.current
+    var showGlass by rememberSaveable { mutableStateOf(false) }
+    Text(I18n.t(context, "theme.style", "Interface style"), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Spacer(Modifier.height(8.dp))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ThemeStyle.entries.forEach { style ->
+            HubFilterChip(selected = prefs.style == style, onClick = { prefs.setStyle(style) },
+                label = { Text(I18n.t(context, "theme.${style.name.lowercase()}", style.name), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+        }
+    }
+    if (prefs.style == ThemeStyle.GLASS) {
+        Spacer(Modifier.height(8.dp))
+        HubTextButton(onClick = { showGlass = true }) { Text(I18n.t(context, "theme.glass.settings", "Glass settings"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+    }
+    Spacer(Modifier.height(8.dp))
+    if (showGlass && prefs.style == ThemeStyle.GLASS) GlassSettingsDialog(onDismiss = { showGlass = false })
+}
+
+@Composable
+private fun GlassSettingsDialog(onDismiss: () -> Unit) {
+    val prefs = LocalThemePreferences.current
+    val context = LocalContext.current
+    fun t(key: String) = I18n.t(context, key, key)
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(Modifier.widthIn(max = 720.dp).fillMaxWidth(0.94f).heightIn(max = 480.dp).fillMaxHeight(0.92f).clip(RoundedCornerShape(28.dp))) {
+            StyleBackdrop {
+                HubSurface(Modifier.fillMaxSize(), shape = RoundedCornerShape(28.dp)) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(t("theme.glass.settings"), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                            Text(t("theme.glass.blur"), maxLines = 1)
+                            HubSlider(prefs.glass.blur, { prefs.setGlass(prefs.glass.copy(blur = it)) }, valueRange = 0f..30f)
+                            Text(t("theme.glass.refraction"), maxLines = 1)
+                            HubSlider(prefs.glass.refraction, { prefs.setGlass(prefs.glass.copy(refraction = it)) }, valueRange = 0f..28f)
+                            Text(t("theme.glass.opacity"), maxLines = 1)
+                            HubSlider(prefs.glass.opacity, { prefs.setGlass(prefs.glass.copy(opacity = it)) }, valueRange = 0.4f..0.95f)
+                            Text(t("theme.glass.compatibility"), style = MaterialTheme.typography.bodySmall, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+                            HubTextButton(onClick = { prefs.setGlass(GlassSettings()) }) { Text(t("theme.reset"), maxLines = 1) }
+                            HubButton(onClick = onDismiss) { Text(t("theme.done"), maxLines = 1) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -76,39 +76,39 @@ internal fun AboutAndBackupSettings(isScanning: Boolean) {
         if (uri != null) runBackup(uri, false)
     }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreUri = uri?.toString() }
-    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    HubSurface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            TextButton(onClick = { showBackup = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-            TextButton(onClick = { showAbout = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.about.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            HubTextButton(onClick = { showBackup = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            HubTextButton(onClick = { showAbout = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.about.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             UpdateSettingsEntry(Modifier.weight(1f).heightIn(min = 48.dp))
         }
     }
-    if (showBackup) AlertDialog(
+    if (showBackup) HubAlertDialog(
         onDismissRequest = { showBackup = false },
         title = { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         text = { Text(translated("settings.backup.description"), modifier = Modifier.verticalScroll(rememberScrollState())) },
         confirmButton = {
-            TextButton(onClick = { showBackup = false; export.launch("GameHub-backup.zip") }, enabled = !busy && !isScanning) {
+            HubTextButton(onClick = { showBackup = false; export.launch("GameHub-backup.zip") }, enabled = !busy && !isScanning) {
                 Text(translated("settings.backup.export"), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            TextButton(onClick = { showBackup = false; restore.launch(arrayOf("application/zip", "application/octet-stream")) }, enabled = !busy && !isScanning) {
+            HubTextButton(onClick = { showBackup = false; restore.launch(arrayOf("application/zip", "application/octet-stream")) }, enabled = !busy && !isScanning) {
                 Text(translated("settings.backup.restore"), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         },
-        dismissButton = { TextButton(onClick = { showBackup = false }) { Text(translated("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+        dismissButton = { HubTextButton(onClick = { showBackup = false }) { Text(translated("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
     )
-    if (restoreUri != null) AlertDialog(
+    if (restoreUri != null) HubAlertDialog(
         onDismissRequest = { restoreUri = null },
         title = { Text(translated("settings.backup.restore"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         text = { Text(translated("settings.backup.confirm"), modifier = Modifier.verticalScroll(rememberScrollState())) },
-        confirmButton = { TextButton(onClick = {
+        confirmButton = { HubTextButton(onClick = {
             val uri = restoreUri
             restoreUri = null
             uri?.let { runBackup(Uri.parse(it), true) }
         }) { Text(translated("settings.backup.restore"), maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-        dismissButton = { TextButton(onClick = { restoreUri = null }) { Text(translated("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+        dismissButton = { HubTextButton(onClick = { restoreUri = null }) { Text(translated("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
     )
-    if (busy) AlertDialog(
+    if (busy) HubAlertDialog(
         onDismissRequest = {},
         properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
         title = { Text(translated("settings.backup.working"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -128,11 +128,11 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         document?.let { name -> documentText = withContext(Dispatchers.IO) { context.assets.open("legal/$name").bufferedReader().use { it.readText() } } }
     }
     Dialog(onDismissRequest = { if (document != null) document = null else onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.widthIn(max = 840.dp).fillMaxWidth(0.94f).fillMaxHeight(0.92f), shape = MaterialTheme.shapes.large) {
+        HubSurface(Modifier.widthIn(max = 840.dp).fillMaxWidth(0.94f).fillMaxHeight(0.92f), shape = MaterialTheme.shapes.large) {
             Column(Modifier.padding(16.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(translated("settings.about.title"), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    TextButton(onClick = { if (document != null) document = null else onDismiss() }) {
+                    HubTextButton(onClick = { if (document != null) document = null else onDismiss() }) {
                         Text(translated("common.back"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -144,20 +144,20 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                             Text("GameHub ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(translated("settings.about.story"))
                             Text(translated("settings.about.license"))
-                            TextButton(onClick = { document = "LICENSE" }) { Text(translated("settings.about.license_button"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                            TextButton(onClick = { document = "THIRD_PARTY_NOTICES.md" }) { Text(translated("settings.about.notices"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                            TextButton(onClick = { document = "DISCLAIMER.md" }) { Text(translated("settings.about.disclaimer"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                            TextButton(onClick = {
+                            HubTextButton(onClick = { document = "LICENSE" }) { Text(translated("settings.about.license_button"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                            HubTextButton(onClick = { document = "THIRD_PARTY_NOTICES.md" }) { Text(translated("settings.about.notices"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                            HubTextButton(onClick = { document = "DISCLAIMER.md" }) { Text(translated("settings.about.disclaimer"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                            HubTextButton(onClick = {
                                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/GGBond-xxg/Games_Hub"))) }
                             }) { Text(translated("settings.about.project"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             Text(translated("settings.about.sponsor"), style = MaterialTheme.typography.titleMedium)
                             Text(translated("settings.about.sponsor_description"))
                             sponsorshipAddresses.forEach { (network, address) ->
-                                OutlinedCard(Modifier.fillMaxWidth()) {
+                                HubOutlinedCard(Modifier.fillMaxWidth()) {
                                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                         Text(network, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         SelectionContainer { Text(address) }
-                                        TextButton(onClick = {
+                                        HubTextButton(onClick = {
                                             (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText(network, address))
                                             Toast.makeText(context, I18n.t(context, "settings.about.copied", "Address copied"), Toast.LENGTH_SHORT).show()
                                         }) { Text(translated("settings.about.copy"), maxLines = 1, overflow = TextOverflow.Ellipsis) }

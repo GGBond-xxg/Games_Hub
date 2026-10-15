@@ -26,7 +26,7 @@ import java.io.File
 internal fun UpdateSettingsEntry(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var open by rememberSaveable { mutableStateOf(false) }
-    TextButton(onClick = { open = true }, modifier = modifier) {
+    HubTextButton(onClick = { open = true }, modifier = modifier) {
         Text(I18n.t(context, "update.version", "Current version") + "  ${BuildConfig.VERSION_NAME}", maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     if (open) UpdateDialog { open = false }
@@ -72,7 +72,7 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
         } finally { checking = false }
     }
     val newer = release?.let { ReleaseParser.newer(it.version, BuildConfig.VERSION_NAME) } == true
-    AlertDialog(
+    HubAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(label("update.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         text = {
@@ -93,8 +93,8 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
         confirmButton = {
             if (!checking && !downloading) {
                 when {
-                    pendingPath != null -> TextButton(onClick = { requestInstall() }) { Text(label("update.install"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    newer && release?.asset != null -> TextButton(onClick = {
+                    pendingPath != null -> HubTextButton(onClick = { requestInstall() }) { Text(label("update.install"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    newer && release?.asset != null -> HubTextButton(onClick = {
                         downloading = true
                         error = null
                         scope.launch {
@@ -108,14 +108,14 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
                             } finally { downloading = false }
                         }
                     }) { Text(label("update.download"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    error != null -> TextButton(onClick = { checkAttempt++ }) { Text(label("update.retry"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    error != null -> HubTextButton(onClick = { checkAttempt++ }) { Text(label("update.retry"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
-                TextButton(onClick = {
+                HubTextButton(onClick = {
                     try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release?.page ?: ReleaseParser.PAGE))) }
                     catch (_: Exception) { error = "update.network_error" }
                 }) { Text(label("update.github"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(label("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+        dismissButton = { HubTextButton(onClick = onDismiss) { Text(label("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
     )
 }

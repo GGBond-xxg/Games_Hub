@@ -131,7 +131,8 @@ class LauncherStore(context: Context) {
                                 obj.optStringOrNull("gridImagePath")
                             } else {
                                 legacyImagePath
-                            }
+                            },
+                            metadata = GameMetadata.fromJson(obj.optJSONObject("metadata"))
                         )
                     )
                 }
@@ -144,7 +145,7 @@ class LauncherStore(context: Context) {
         val title = override.title?.trim()?.takeIf { it.isNotBlank() }
         val previewImagePath = override.previewImagePath?.takeIf { it.isNotBlank() }
         val gridImagePath = override.gridImagePath?.takeIf { it.isNotBlank() }
-        if (title == null && previewImagePath == null && gridImagePath == null) {
+        if (title == null && previewImagePath == null && gridImagePath == null && override.metadata.isEmpty) {
             next.remove(override.key)
         } else {
             next[override.key] = override.copy(
@@ -165,6 +166,7 @@ class LauncherStore(context: Context) {
                     .putNullable("title", item.title)
                     .putNullable("previewImagePath", item.previewImagePath)
                     .putNullable("gridImagePath", item.gridImagePath)
+                    .put("metadata", item.metadata.cleaned().toJson())
                     // Keep a legacy value so older builds can still display at least one custom image.
                     .putNullable("imagePath", item.gridImagePath ?: item.previewImagePath)
             )
@@ -200,6 +202,13 @@ class LauncherStore(context: Context) {
         val raw = prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
         return runCatching { ThemeMode.valueOf(raw) }.getOrDefault(ThemeMode.SYSTEM)
     }
+
+    fun loadThemeStyle(): ThemeStyle = runCatching {
+        ThemeStyle.valueOf(prefs.getString("theme_style", "M3") ?: "M3")
+    }.getOrDefault(ThemeStyle.M3)
+    fun saveThemeStyle(style: ThemeStyle) { prefs.edit().putString("theme_style", style.name).apply() }
+    fun loadGlassSettings() = GlassSettings.decode(prefs.getString("glass_settings", null))
+    fun saveGlassSettings(settings: GlassSettings) { prefs.edit().putString("glass_settings", settings.clamped().toJson()).apply() }
 
     fun saveThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME_MODE, mode.name).apply()

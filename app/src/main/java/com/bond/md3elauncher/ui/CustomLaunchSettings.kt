@@ -45,19 +45,19 @@ internal fun CustomLaunchSettings(
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.widthIn(max = 840.dp).fillMaxWidth(0.94f).fillMaxHeight(0.92f), shape = MaterialTheme.shapes.extraLarge) {
+        HubSurface(modifier = Modifier.widthIn(max = 840.dp).fillMaxWidth(0.94f).fillMaxHeight(0.92f), shape = MaterialTheme.shapes.extraLarge) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(t("launch.custom.title"), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(platform.emulatorPackage.orEmpty(), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(t("launch.custom.enable"), Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Switch(checked = enabled, onCheckedChange = { enabled = it })
+                        HubSwitch(checked = enabled, onCheckedChange = { enabled = it })
                     }
                     Text(t("launch.custom.help"), style = MaterialTheme.typography.bodySmall, maxLines = 5, overflow = TextOverflow.Ellipsis)
                     LaunchConfigField(t("launch.custom.activity"), activity, { activity = it }, enabled)
                     if (activities.isNotEmpty()) {
-                        TextButton(onClick = { chooseActivity = true }, enabled = enabled) {
+                        HubTextButton(onClick = { chooseActivity = true }, enabled = enabled) {
                             Text(t("launch.custom.choose_activity"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
@@ -69,11 +69,11 @@ internal fun CustomLaunchSettings(
                     if (error != null) Text(t(error), color = MaterialTheme.colorScheme.error, maxLines = 3, overflow = TextOverflow.Ellipsis)
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                    TextButton(onClick = {
+                    HubTextButton(onClick = {
                         enabled = false; activity = ""; action = "android.intent.action.VIEW"; mime = ""; data = "{romUri}"; extras = "{}"
                     }, modifier = Modifier.weight(1f)) { Text(t("launch.custom.reset"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    TextButton(onClick = onDismiss) { Text(t("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    Button(onClick = { onSave(draft); onDismiss() }, enabled = error == null) {
+                    HubTextButton(onClick = onDismiss) { Text(t("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    HubButton(onClick = { onSave(draft); onDismiss() }, enabled = error == null) {
                         Text(t("common.save"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -81,26 +81,26 @@ internal fun CustomLaunchSettings(
         }
     }
     if (chooseActivity) {
-        AlertDialog(
+        HubAlertDialog(
             onDismissRequest = { chooseActivity = false },
             title = { Text(t("launch.custom.choose_activity"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState())) {
                     activities.forEach { name ->
-                        TextButton(onClick = { activity = name; chooseActivity = false }) {
+                        HubTextButton(onClick = { activity = name; chooseActivity = false }) {
                             Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { chooseActivity = false }) { Text(t("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
+            confirmButton = { HubTextButton(onClick = { chooseActivity = false }) { Text(t("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
         )
     }
 }
 
 @Composable
 private fun LaunchConfigField(label: String, value: String, onChange: (String) -> Unit, enabled: Boolean, multiline: Boolean = false) {
-    OutlinedTextField(
+    HubOutlinedTextField(
         value = value, onValueChange = onChange, enabled = enabled, modifier = Modifier.fillMaxWidth(),
         label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         singleLine = !multiline, minLines = if (multiline) 3 else 1, maxLines = if (multiline) 6 else 1

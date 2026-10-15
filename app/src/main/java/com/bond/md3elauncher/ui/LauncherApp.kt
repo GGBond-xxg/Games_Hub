@@ -84,6 +84,10 @@ fun LauncherApp(
     onToggleFavorite: (GameItem) -> Unit,
     onToggleAndroidFavorite: (InstalledApp) -> Unit,
     onToggleAndroidGame: (InstalledApp) -> Unit,
+    onSaveMetadata: (String, com.bond.md3elauncher.data.GameMetadata) -> Unit,
+    batchState: com.bond.md3elauncher.system.BatchScrapeState,
+    onStartBatch: (PlatformConfig) -> Unit,
+    onCancelBatch: () -> Unit,
     onSaveItemOverride: (
         key: String,
         title: String,
@@ -413,7 +417,7 @@ fun LauncherApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.surface)
+            .background(if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.GLASS) androidx.compose.ui.graphics.Color.Transparent else colors.surface)
             .onPreviewKeyEvent { event ->
                 controllerShortcutCaptureHandler?.let { handler ->
                     return@onPreviewKeyEvent handler(event.nativeKeyEvent)
@@ -451,11 +455,11 @@ fun LauncherApp(
                 }
             }
     ) {
-        Surface(
+        androidx.compose.material3.Surface(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = safeMargins.leftDp.dp, end = safeMargins.rightDp.dp),
-            color = colors.surface,
+            color = if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.GLASS) androidx.compose.ui.graphics.Color.Transparent else colors.surface,
             shape = RoundedCornerShape(0.dp),
             tonalElevation = 0.dp
         ) {
@@ -484,6 +488,7 @@ fun LauncherApp(
                     } else if (editTarget != null) {
                         EditItemPage(
                             target = editTarget!!,
+                            onSaveMetadata = { onSaveMetadata(editTarget!!.key, it) },
                             scraperSettings = scraperSettings,
                             onBack = {
                                 editCenterText = ""
@@ -512,7 +517,10 @@ fun LauncherApp(
                             onClearEmulator = { onClearEmulator(setupPlatform) },
                             onUseInternalEmulator = { onUseInternalEmulator(setupPlatform) },
                             onScan = { onScanPlatform(setupPlatform) },
-                            onSaveLaunchConfig = { onSaveLaunchConfig(setupPlatform, it) }
+                            onSaveLaunchConfig = { onSaveLaunchConfig(setupPlatform, it) },
+                            batchState = batchState,
+                            onStartBatch = { onStartBatch(setupPlatform) },
+                            onCancelBatch = onCancelBatch
                         )
                     } else if (showAllApps) {
                         AndroidBeaconScreen(
@@ -963,18 +971,18 @@ fun LauncherApp(
     }
 
     if (showHomePrompt) {
-        AlertDialog(
+        HubAlertDialog(
             onDismissRequest = onDismissHomePrompt,
             title = { Text(I18n.t(context, "launcher.home.title", "设为默认桌面？"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
             text = { Text(I18n.t(context, "launcher.home.text", "如果这台设备主要用来玩游戏，可以把这个 App 设为默认桌面。以后按 Home 键会回到这里。"), maxLines = 4, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
             confirmButton = {
-                Button(onClick = {
+                HubButton(onClick = {
                     onDismissHomePrompt()
                     onOpenHomeSettings()
                 }) { Text(I18n.t(context, "launcher.home.confirm", "去选择"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
             },
             dismissButton = {
-                TextButton(onClick = onDismissHomePrompt) { Text(I18n.t(context, "launcher.home.dismiss", "暂时不要"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
+                HubTextButton(onClick = onDismissHomePrompt) { Text(I18n.t(context, "launcher.home.dismiss", "暂时不要"), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
             }
         )
     }

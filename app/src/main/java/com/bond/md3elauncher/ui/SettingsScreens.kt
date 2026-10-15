@@ -159,7 +159,7 @@ internal fun SettingsBeaconScreen(
                     ) {
                         Text(I18n.t(context, "settings.title.emulator", "模拟器"), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Spacer(Modifier.weight(1f))
-                        FilledTonalButton(onClick = { showEmulatorManager = false }, modifier = Modifier.height(34.dp)) {
+                        HubFilledTonalButton(onClick = { showEmulatorManager = false }, modifier = Modifier.height(34.dp)) {
                             Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
@@ -187,6 +187,8 @@ internal fun SettingsBeaconScreen(
 
         item(key = "appearance") {
             SettingSection(title = I18n.t(context, "settings.section.appearance", "外观")) {
+                ThemeStyleSetting()
+                if (LocalThemePreferences.current.style != com.bond.md3elauncher.data.ThemeStyle.MIUIX) {
                 ToggleSettingRow(
                     title = I18n.t(context, "settings.appearance.follow_system.title", "跟随系统"),
                     subtitle = if (themeMode == ThemeMode.SYSTEM) I18n.t(context, "settings.appearance.follow_system.subtitle_on", "会跟随系统深色 / 浅色模式自动切换") else I18n.t(context, "settings.appearance.follow_system.subtitle_off", "当前使用手动外观设置"),
@@ -205,6 +207,7 @@ internal fun SettingsBeaconScreen(
                     onCheckedChange = { enabled -> onSetThemeMode(if (enabled) ThemeMode.DARK else ThemeMode.LIGHT) }
                 )
                 Spacer(Modifier.height(8.dp))
+                if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.M3) {
                 ToggleSettingRow(
                     title = I18n.t(context, "settings.appearance.dynamic_color.title", "莫奈主题"),
                     subtitle = I18n.t(context, "settings.appearance.dynamic_color.subtitle", "跟随系统壁纸动态取色，需要 Android 12 或以上。"),
@@ -218,6 +221,8 @@ internal fun SettingsBeaconScreen(
                         onSetThemeColor = onSetThemeColor
                     )
                 }
+                }
+                }
             }
         }
         item(key = "display") {
@@ -226,10 +231,10 @@ internal fun SettingsBeaconScreen(
                 Spacer(Modifier.height(4.dp))
                 Text(localizedLandscapeSubtitle(context, landscapeMode), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(8.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = landscapeMode == LandscapeMode.AUTO, onClick = { onSetLandscapeMode(LandscapeMode.AUTO) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.AUTO), maxLines = 1, overflow = TextOverflow.Ellipsis) })
-                    FilterChip(selected = landscapeMode == LandscapeMode.LEFT, onClick = { onSetLandscapeMode(LandscapeMode.LEFT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.LEFT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
-                    FilterChip(selected = landscapeMode == LandscapeMode.RIGHT, onClick = { onSetLandscapeMode(LandscapeMode.RIGHT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.RIGHT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HubFilterChip(selected = landscapeMode == LandscapeMode.AUTO, onClick = { onSetLandscapeMode(LandscapeMode.AUTO) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.AUTO), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                    HubFilterChip(selected = landscapeMode == LandscapeMode.LEFT, onClick = { onSetLandscapeMode(LandscapeMode.LEFT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.LEFT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+                    HubFilterChip(selected = landscapeMode == LandscapeMode.RIGHT, onClick = { onSetLandscapeMode(LandscapeMode.RIGHT) }, label = { Text(localizedLandscapeTitle(context, LandscapeMode.RIGHT), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                 }
                 HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 SafeMarginSetting(
@@ -408,7 +413,7 @@ private fun ControllerShortcutSettingsScreen(
             item(key = "controllerHeader") {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(I18n.t(context, "settings.controller.title", "手柄操作"), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    HubTextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
                 Text(
                     I18n.t(context, "settings.controller.description", "设置内置模拟器通用快捷键，支持1~3键组合。"),
@@ -444,8 +449,8 @@ private fun ControllerShortcutSettingsScreen(
             }
 
             item(key = "controllerRestore") {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+                    HubTextButton(
                         onClick = {
                             settings = ControllerShortcutSettings.resetToDefault(context)
                             Toast.makeText(context, I18n.t(context, "settings.controller.restore_toast", "已恢复默认手柄快捷键"), Toast.LENGTH_SHORT).show()
@@ -455,7 +460,7 @@ private fun ControllerShortcutSettingsScreen(
             }
 
             item(key = "controllerTips") {
-                OutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+                HubOutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp)) {
                         Text(I18n.t(context, "common.tip", "说明"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
@@ -471,7 +476,7 @@ private fun ControllerShortcutSettingsScreen(
 
         val action = captureAction
         if (action != null) {
-            Surface(
+            HubSurface(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .fillMaxWidth(0.62f),
@@ -490,7 +495,7 @@ private fun ControllerShortcutSettingsScreen(
                     Spacer(Modifier.height(6.dp))
                     Text(I18n.t(context, "settings.controller.capture_hint", "支持同时按 2 个或 3 个按键；停止输入约 360ms 后保存。"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(10.dp))
-                    TextButton(onClick = { cancelCapture() }) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    HubTextButton(onClick = { cancelCapture() }) { Text(I18n.t(context, "common.cancel", "取消"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -498,12 +503,12 @@ private fun ControllerShortcutSettingsScreen(
 
     val conflict = conflictText
     if (conflict != null) {
-        AlertDialog(
+        HubAlertDialog(
             onDismissRequest = { conflictText = null },
             title = { Text(I18n.t(context, "settings.controller.conflict_title", "按键冲突"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = { Text(conflict, maxLines = 3, overflow = TextOverflow.Ellipsis) },
             confirmButton = {
-                FilledTonalButton(onClick = { conflictText = null }) { Text(I18n.t(context, "settings.controller.conflict_confirm", "知道了"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                HubFilledTonalButton(onClick = { conflictText = null }) { Text(I18n.t(context, "settings.controller.conflict_confirm", "知道了"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         )
     }
@@ -568,11 +573,10 @@ private fun PlatformManagerRows(
                     onClick = { if (!sorting) openAction() },
                     onLongClick = { sorting = true }
                 )
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+                .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${index + 1}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(10.dp))
             Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
                 Icon(icon, contentDescription = null)
@@ -583,7 +587,7 @@ private fun PlatformManagerRows(
                 Text(subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (sorting) {
-                TextButton(
+                HubTextButton(
                     onClick = {
                         if (index > 0) {
                             val next = groups.toMutableList()
@@ -594,7 +598,8 @@ private fun PlatformManagerRows(
                     },
                     enabled = index > 0
                 ) { Text(I18n.t(context, "common.move_up", "上移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                TextButton(
+                Spacer(Modifier.width(8.dp))
+                HubTextButton(
                     onClick = {
                         if (index < groups.lastIndex) {
                             val next = groups.toMutableList()
@@ -606,14 +611,14 @@ private fun PlatformManagerRows(
                     enabled = index < groups.lastIndex
                 ) { Text(I18n.t(context, "common.move_down", "下移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             } else {
-                FilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text(actionText) }
+                HubFilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         }
         Spacer(Modifier.height(8.dp))
     }
     if (sorting) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+            HubFilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
@@ -748,11 +753,10 @@ private fun EmulatorManagerRows(
                     onClick = { if (!sorting) openAction() },
                     onLongClick = { sorting = true }
                 )
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+                .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${index + 1}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(10.dp))
             Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
                 Icon(icon, contentDescription = null)
@@ -763,7 +767,7 @@ private fun EmulatorManagerRows(
                 Text(subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (sorting) {
-                TextButton(
+                HubTextButton(
                     onClick = {
                         if (index > 0) {
                             val next = order.toMutableList()
@@ -774,7 +778,8 @@ private fun EmulatorManagerRows(
                     },
                     enabled = index > 0
                 ) { Text(I18n.t(context, "common.move_up", "上移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                TextButton(
+                Spacer(Modifier.width(8.dp))
+                HubTextButton(
                     onClick = {
                         if (index < order.lastIndex) {
                             val next = order.toMutableList()
@@ -786,7 +791,7 @@ private fun EmulatorManagerRows(
                     enabled = index < order.lastIndex
                 ) { Text(I18n.t(context, "common.move_down", "下移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             } else {
-                FilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text(I18n.t(context, "common.config", "配置"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                HubFilledTonalButton(onClick = openAction, modifier = Modifier.height(36.dp)) { Text(I18n.t(context, "common.config", "配置"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -801,14 +806,14 @@ private fun EmulatorManagerRows(
     )
 
     if (showAdditionalPlatforms) {
-        AlertDialog(
+        HubAlertDialog(
             onDismissRequest = { showAdditionalPlatforms = false },
             title = { Text(I18n.t(context, "settings.emulator.add_other.title", "添加其他"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
                     additionalEmulatorTabs.forEach { tab ->
                         platforms.firstOrNull { it.id == tab.name }?.let { platform ->
-                            TextButton(
+                            HubTextButton(
                                 onClick = {
                                     showAdditionalPlatforms = false
                                     onOpenPlatform(platform)
@@ -823,7 +828,7 @@ private fun EmulatorManagerRows(
             },
             confirmButton = {},
             dismissButton = {
-                TextButton(onClick = { showAdditionalPlatforms = false }) {
+                HubTextButton(onClick = { showAdditionalPlatforms = false }) {
                     Text(I18n.t(context, "common.cancel", "Cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -832,8 +837,8 @@ private fun EmulatorManagerRows(
 
     if (sorting) {
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+            HubFilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
@@ -849,7 +854,7 @@ private fun PlatformPlaceholderRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.20f))
+            .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.20f))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -861,7 +866,7 @@ private fun PlatformPlaceholderRow(
             Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
             Text(subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        FilledTonalButton(onClick = {}, enabled = false, modifier = Modifier.height(36.dp)) { Text(actionText) }
+        HubFilledTonalButton(onClick = {}, enabled = false, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 }
 
@@ -891,11 +896,10 @@ private fun TabOrderEditor(
                     onClick = {},
                     onLongClick = { sorting = true }
                 )
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+                .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${index + 1}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(tab.localizedLabel(context), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -905,7 +909,7 @@ private fun TabOrderEditor(
                 )
             }
             if (sorting) {
-                TextButton(
+                HubTextButton(
                     onClick = {
                         if (index > 0) {
                             val next = order.toMutableList()
@@ -916,7 +920,8 @@ private fun TabOrderEditor(
                     },
                     enabled = index > 0
                 ) { Text(I18n.t(context, "common.move_up", "上移"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                TextButton(
+                Spacer(Modifier.width(8.dp))
+                HubTextButton(
                     onClick = {
                         if (index < order.lastIndex) {
                             val next = order.toMutableList()
@@ -932,8 +937,8 @@ private fun TabOrderEditor(
         Spacer(Modifier.height(6.dp))
     }
     if (sorting) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+            HubFilledTonalButton(onClick = { sorting = false }, modifier = Modifier.height(34.dp)) { Text(I18n.t(context, "common.done_sorting", "完成排序"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
@@ -1056,7 +1061,7 @@ private fun SettingSection(title: String, content: @Composable () -> Unit) {
         Text(title, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
             style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow,
+        HubSurface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow,
             modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) { content() }
         }
@@ -1091,7 +1096,7 @@ private fun ThemeColorSetting(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         ThemeColor.entries.forEach { color ->
-            FilterChip(
+            HubFilterChip(
                 selected = themeColor == color,
                 onClick = { onSetThemeColor(color) },
                 leadingIcon = {
@@ -1149,9 +1154,9 @@ private fun LanguageSettingRow(
             overflow = TextOverflow.Ellipsis
         )
         Spacer(Modifier.height(8.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             I18n.SUPPORTED_LANGUAGE_MODES.forEach { mode ->
-                FilterChip(
+                HubFilterChip(
                     selected = currentMode == mode,
                     onClick = { onSetLanguageMode(mode) },
                     label = {
@@ -1192,7 +1197,7 @@ private fun PlatformSettingRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .clickable { onClick() }
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+            .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1204,7 +1209,7 @@ private fun PlatformSettingRow(
             Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(subtitle, maxLines = 2, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        FilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        HubFilledTonalButton(onClick = onClick, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 }
 
@@ -1246,18 +1251,18 @@ private fun SafeMarginSetting(
         }
     }
     Spacer(Modifier.height(8.dp))
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        HubFilterChip(
             selected = safeMargins.leftDp == SafeMarginSettings.DEFAULT_DP && safeMargins.rightDp == SafeMarginSettings.DEFAULT_DP,
             onClick = { onSetSafeMargins(SafeMarginSettings()) },
             label = { Text(I18n.t(context, "settings.safe_margin.default", "默认预留"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         )
-        FilterChip(
+        HubFilterChip(
             selected = safeMargins.leftDp == 0 && safeMargins.rightDp == 0,
             onClick = { onSetSafeMargins(SafeMarginSettings(leftDp = 0, rightDp = 0)) },
             label = { Text(I18n.t(context, "settings.safe_margin.none", "无边距"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         )
-        FilterChip(
+        HubFilterChip(
             selected = safeMargins.leftDp == 40 && safeMargins.rightDp == 40,
             onClick = { onSetSafeMargins(SafeMarginSettings(leftDp = 40, rightDp = 40)) },
             label = { Text(I18n.t(context, "settings.safe_margin.large_cutout", "大挖孔"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
@@ -1276,14 +1281,14 @@ private fun SafeMarginAdjustRow(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f))
+            .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.26f))
             .padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        TextButton(onClick = { onChange(value - 4) }, enabled = value > SafeMarginSettings.MIN_DP) { Text("−") }
+        HubTextButton(onClick = { onChange(value - 4) }, enabled = value > SafeMarginSettings.MIN_DP) { Text("−") }
         Text("${value}dp", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-        TextButton(onClick = { onChange(value + 4) }, enabled = value < SafeMarginSettings.MAX_DP) { Text("+") }
+        HubTextButton(onClick = { onChange(value + 4) }, enabled = value < SafeMarginSettings.MAX_DP) { Text("+") }
     }
 }
 
@@ -1301,7 +1306,7 @@ private fun ToggleSettingRow(title: String, subtitle: String, checked: Boolean, 
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Switch(checked = checked, onCheckedChange = null)
+        HubSwitch(checked = checked, onCheckedChange = null)
     }
 }
 
@@ -1326,7 +1331,7 @@ private fun ActionSettingRow(
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        FilledTonalButton(onClick = onClick, enabled = enabled, modifier = Modifier.heightIn(min = 48.dp)) {
+        HubFilledTonalButton(onClick = onClick, enabled = enabled, modifier = Modifier.heightIn(min = 48.dp)) {
             Text(buttonText, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -1403,8 +1408,8 @@ private fun ScraperSettingSection(
             overflow = TextOverflow.Ellipsis
         )
         Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            FilledTonalButton(
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+            HubFilledTonalButton(
                 onClick = {
                     onSaveScraperSettings(
                         ScraperSettings(
@@ -1449,7 +1454,7 @@ private fun ScraperTextField(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        OutlinedTextField(
+        HubOutlinedTextField(
             value = value,
             onValueChange = { if (editing) onValueChange(it) },
             modifier = Modifier
@@ -1463,7 +1468,7 @@ private fun ScraperTextField(
             placeholder = { Text(if (editing) placeholder else I18n.t(LocalContext.current, "settings.input.edit_first", "点右侧“编辑”后输入"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             shape = RoundedCornerShape(18.dp)
         )
-        FilledTonalButton(
+        HubFilledTonalButton(
             onClick = {
                 if (editing) {
                     editing = false
@@ -1490,7 +1495,10 @@ internal fun PlatformSetupScreen(
     onClearEmulator: () -> Unit,
     onUseInternalEmulator: () -> Unit,
     onScan: () -> Unit,
-    onSaveLaunchConfig: (com.bond.md3elauncher.data.EmulatorLaunchConfig) -> Unit
+    onSaveLaunchConfig: (com.bond.md3elauncher.data.EmulatorLaunchConfig) -> Unit,
+    batchState: com.bond.md3elauncher.system.BatchScrapeState,
+    onStartBatch: () -> Unit,
+    onCancelBatch: () -> Unit
 ) {
     val context = LocalContext.current
     var showLaunchConfig by rememberSaveable(platform.id) { mutableStateOf(false) }
@@ -1522,10 +1530,10 @@ internal fun PlatformSetupScreen(
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(I18n.t(context, "settings.platform.setup_title", "{platform} 平台设置", "platform" to platformDisplayName(platform.kind.title)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            HubTextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
-        ElevatedCard(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
+        HubElevatedCard(shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PlatformConfigRow(
                     title = I18n.t(context, "settings.platform.rom_folder.title", "ROM 文件夹"),
@@ -1583,6 +1591,7 @@ internal fun PlatformSetupScreen(
                         onClick = onClearEmulator
                     )
                 }
+                BatchScrapePanel(platform, batchState, onStartBatch, onCancelBatch, isScanning)
                 PlatformConfigRow(
                     title = I18n.t(context, "settings.platform.scan.title", "扫描游戏"),
                     subtitle = I18n.t(context, "settings.platform.scan.subtitle", "{count} 个游戏 · {status}", "count" to platform.gameCount, "status" to if (hasFolder) I18n.t(context, "settings.platform.scan.ready", "读取当前 ROM 文件夹") else I18n.t(context, "settings.platform.scan.need_folder", "请先选择 ROM 文件夹")),
@@ -1593,7 +1602,7 @@ internal fun PlatformSetupScreen(
             }
         }
 
-        OutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+        HubOutlinedCard(shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(14.dp)) {
                 Text(I18n.t(context, "common.tip", "提示"), fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
@@ -1618,7 +1627,7 @@ private fun PlatformConfigRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
+            .styleSurface(RoundedCornerShape(16.dp), MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f))
             .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1630,7 +1639,7 @@ private fun PlatformConfigRow(
             Text(title, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
             Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        FilledTonalButton(onClick = onClick, enabled = enabled, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1) }
+        HubFilledTonalButton(onClick = onClick, enabled = enabled, modifier = Modifier.height(36.dp)) { Text(actionText, maxLines = 1) }
     }
 }
 
@@ -1644,7 +1653,7 @@ internal fun SearchDialog(
 ) {
     val context = LocalContext.current
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(
+        HubSurface(
             modifier = Modifier.fillMaxWidth(0.56f),
             color = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(28.dp),
@@ -1653,7 +1662,7 @@ internal fun SearchDialog(
             Column(Modifier.padding(18.dp)) {
                 Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
+                HubOutlinedTextField(
                     value = query,
                     onValueChange = onQueryChange,
                     modifier = Modifier.fillMaxWidth(),
@@ -1662,10 +1671,10 @@ internal fun SearchDialog(
                     shape = RoundedCornerShape(20.dp)
                 )
                 Spacer(Modifier.height(12.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = onClear) { Text(I18n.t(context, "common.clear", "清空"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
+                    HubTextButton(onClick = onClear) { Text(I18n.t(context, "common.clear", "清空"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     Spacer(Modifier.width(8.dp))
-                    FilledTonalButton(onClick = onDismiss) { Text(I18n.t(context, "common.done", "完成"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    HubFilledTonalButton(onClick = onDismiss) { Text(I18n.t(context, "common.done", "完成"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -1716,20 +1725,20 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            HubTextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
-        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            IconButton(onClick = { showSearch = !showSearch }) {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            HubIconButton(onClick = { showSearch = !showSearch }) {
                 Icon(if (showSearch) Icons.Rounded.Close else Icons.Rounded.Search, contentDescription = I18n.t(context, "settings.picker.search_action", "搜索模拟器"))
             }
-            FilterChip(selected = !showAll, onClick = { showAll = false }, label = { Text(I18n.t(context, "common.recommended", "推荐"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
-            FilterChip(selected = showAll, onClick = { showAll = true }, label = { Text(I18n.t(context, "common.all", "全部"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
-            TextButton(onClick = onRefresh) { Text(I18n.t(context, "settings.picker.refresh", "Refresh apps"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            HubFilterChip(selected = !showAll, onClick = { showAll = false }, label = { Text(I18n.t(context, "common.recommended", "推荐"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+            HubFilterChip(selected = showAll, onClick = { showAll = true }, label = { Text(I18n.t(context, "common.all", "全部"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+            HubTextButton(onClick = onRefresh) { Text(I18n.t(context, "settings.picker.refresh", "Refresh apps"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         if (showSearch) {
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
+            HubOutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
@@ -1738,7 +1747,7 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
                 shape = RoundedCornerShape(20.dp),
                 trailingIcon = {
                     if (query.isNotBlank()) {
-                        IconButton(onClick = { query = "" }) {
+                        HubIconButton(onClick = { query = "" }) {
                             Icon(Icons.Rounded.Close, contentDescription = I18n.t(context, "common.clear", "清空"))
                         }
                     }
@@ -1772,7 +1781,7 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
 
 @Composable
 private fun PickerAppCard(app: InstalledApp, recommended: Boolean, onClick: () -> Unit) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth().height(84.dp), shape = RoundedCornerShape(18.dp), onClick = onClick) {
+    HubOutlinedCard(modifier = Modifier.fillMaxWidth().height(84.dp), shape = RoundedCornerShape(18.dp), onClick = onClick) {
         Row(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             AppIcon(app = app, size = 40)
             Spacer(Modifier.width(12.dp))

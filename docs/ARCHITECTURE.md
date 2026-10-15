@@ -172,3 +172,12 @@ Avoid changing persisted keys, platform IDs, internal emulator markers or `appli
 The additional external platforms are appended to default platform and tab sets without changing existing IDs. Their settings rows appear after configuration; game tabs use the existing nonempty-library visibility rule. No additional internal cores are included.
 
 `CoverArtworkType` distinguishes preview screenshot queries (`Named_Snaps`) from grid box-art queries (`Named_Boxarts`) for Libretro. Other sources keep their existing cover behavior.
+
+## Metadata, batch jobs and theme styles (1.3.0)
+
+- `data/GameMetadata.kt`: optional metadata stored in `ItemOverride`, independent of scanned games and both artwork paths. Existing non-empty values win during batch merge. Backups already include overrides and custom images.
+- `system/GameScrapeSources.kt`: platform mapping, exact unambiguous matching, metadata/media parsing and missing-field policy.
+- `system/GameScraper.kt`: bounded HTTPS requests, sequential source fallback, image decoding and cancellation cleanup. `MainActivity` owns the lifecycle job and persists each completed game after checking the latest override.
+- `ui/GameInformation.kt`: preview metadata, manual editor and platform batch progress/actions.
+- `ui/ThemeStyle.kt`, `ui/StyleComponents.kt`: persisted M3/Glass/MIUIX selection and control adapters. Stable root composition preserves navigation when switching styles. Glass records a separate gradient backdrop, avoiding recursive recording; images and gameplay are content, not glass surfaces.
+- Backdrop 1.0.6 and MIUIX 0.9.4 are pinned. MIUIX requires compile SDK 37.0 and minimum API 24; target SDK remains 36. MIUIX follows system brightness, while M3/Glass keep their saved appearance settings.

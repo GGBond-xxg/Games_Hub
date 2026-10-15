@@ -159,7 +159,8 @@ data class ItemOverride(
     val key: String,
     val title: String? = null,
     val previewImagePath: String? = null,
-    val gridImagePath: String? = null
+    val gridImagePath: String? = null,
+    val metadata: GameMetadata = GameMetadata()
 )
 
 data class ScraperSettings(

@@ -2,6 +2,16 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.3.0
+
+- **游戏资料**：长按游戏 → 编辑游戏资料，支持发行日期、类型、开发商和发行商；资料显示在右侧预览下方，随备份保存，重扫不会清除。
+- **平台批量补全**：设置 → 模拟器 → 平台配置 → 批量补全资料与图片，只补缺失封面、截图和资料，显示进度并可取消。已完成项目立即保存，重试时继续补缺。
+- **三种界面风格**：设置 → 外观选择 M3、Glass 或 MIUIX。M3 保留莫奈主题；Glass 提供模糊、折射、表面不透明度设置；MIUIX 跟随系统深浅色，不显示额外外观选项。
+- 平台管理与模拟器列表移除序号，长按排序和手柄操作保留。
+- 新版 UI 依赖要求最低 Android 7.0。Glass 在 Android 12 起支持模糊，Android 13 起支持折射，旧系统使用有边界的半透明表面；游戏画面、封面和截图保持清晰。
+
+- 补齐按钮横向/纵向间距、Glass 胶囊滑块、MIUIX 输入提示；验证记录见 `docs/UI_REVIEW_1_3_0.md`。
+
 ## 1.2.0
 
 - 新增 PS2、Nintendo DS、Nintendo 3DS、GameCube、Wii、Dreamcast 外部模拟器平台；“添加其他”现在可以进入实际配置。

@@ -50,6 +50,7 @@ import com.bond.md3elauncher.emulator.ps1.InternalPs1Activity
 import com.bond.md3elauncher.ui.LauncherApp
 import com.bond.md3elauncher.ui.GameHubTheme
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -68,9 +69,13 @@ class MainActivity : ComponentActivity() {
     private var recent by mutableStateOf<List<String>>(emptyList())
     private var installedApps by mutableStateOf<List<InstalledApp>>(emptyList())
     private var androidGames by mutableStateOf<Set<String>>(emptySet())
+    private var batchState by mutableStateOf(com.bond.md3elauncher.system.BatchScrapeState())
+    private var batchJob: kotlinx.coroutines.Job? = null
     private var itemOverrides by mutableStateOf<Map<String, ItemOverride>>(emptyMap())
     private var landscapeMode by mutableStateOf(LandscapeMode.AUTO)
     private var launcherLayoutMode by mutableStateOf(LauncherLayoutMode.LIST)
+    private var themeStyle by mutableStateOf(com.bond.md3elauncher.data.ThemeStyle.M3)
+    private var glassSettings by mutableStateOf(com.bond.md3elauncher.data.GlassSettings())
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var useDynamicColor by mutableStateOf(true)
     private var themeColor by mutableStateOf(ThemeColor.PINK)
@@ -105,7 +110,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         store = LauncherStore(this)
         val savedThemeMode = store.loadThemeMode()
-        applyApplicationNightMode(savedThemeMode)
+        applyApplicationNightMode(if (store.loadThemeStyle() == com.bond.md3elauncher.data.ThemeStyle.MIUIX) ThemeMode.SYSTEM else savedThemeMode)
 
         super.onCreate(savedInstanceState)
         configureStableWindow()
@@ -119,6 +124,8 @@ class MainActivity : ComponentActivity() {
         themeMode = savedThemeMode
         useDynamicColor = store.loadUseDynamicColor()
         themeColor = store.loadThemeColor()
+        themeStyle = store.loadThemeStyle()
+        glassSettings = store.loadGlassSettings()
         safeMargins = store.loadSafeMargins()
         scraperSettings = store.loadScraperSettings()
         tabOrder = store.loadTabOrder()
@@ -138,7 +145,14 @@ class MainActivity : ComponentActivity() {
         isDefaultHome = isDefaultHomeLauncher()
 
         setContent {
-            GameHubTheme(themeMode = themeMode, useDynamicColor = useDynamicColor, themeColor = themeColor) {
+            GameHubTheme(themeMode = themeMode, useDynamicColor = useDynamicColor, themeColor = themeColor,
+                themeStyle = themeStyle, glassSettings = glassSettings,
+                onSetStyle = {
+                    themeStyle = it
+                    store.saveThemeStyle(it)
+                    applyApplicationNightMode(if (it == com.bond.md3elauncher.data.ThemeStyle.MIUIX) ThemeMode.SYSTEM else themeMode)
+                },
+                onSetGlass = { glassSettings = it.clamped(); store.saveGlassSettings(it) }) {
                 LauncherApp(
                     platforms = platforms,
                     requestedPlatformId = requestedPlatformId,
@@ -248,6 +262,17 @@ class MainActivity : ComponentActivity() {
                         val key = "app:${app.packageName}"
                         store.setAndroidGame(key, key !in androidGames)
                         androidGames = store.loadAndroidGames()
+                    },
+                    batchState = batchState,
+                    onStartBatch = ::startBatchScrape,
+                    onCancelBatch = {
+                        batchState = batchState.copy(cancelling = true, messageKey = "batch.cancelling")
+                        batchJob?.cancel()
+                    },
+                    onSaveMetadata = { key, metadata ->
+                        val old = store.loadItemOverrides()[key] ?: ItemOverride(key)
+                        store.saveItemOverride(old.copy(metadata = metadata.cleaned()))
+                        itemOverrides = store.loadItemOverrides()
                     },
                     onSaveItemOverride = { key, title, previewImageUriString, gridImageUriString ->
                         saveItemOverride(
@@ -639,6 +664,57 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun startBatchScrape(platform: PlatformConfig) {
+        if (batchJob?.isActive == true || isScanning) return
+        val settings = scraperSettings
+        val language = if (I18n.languageFor(this).startsWith("zh")) "zh" else "en"
+        val queue = games.filter { it.platformId == platform.id && com.bond.md3elauncher.system.ScrapeNeeds.forGame(it, itemOverrides[it.id]).any }
+        batchState = com.bond.md3elauncher.system.BatchScrapeState(platform.id, running = true, total = queue.size, messageKey = "batch.running")
+        batchJob = lifecycleScope.launch {
+            val scraper = com.bond.md3elauncher.system.GameScraper(this@MainActivity)
+            try {
+                for (game in queue) {
+                    kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                    batchState = batchState.copy(currentTitle = game.title)
+                    try {
+                        val needs = com.bond.md3elauncher.system.ScrapeNeeds.forGame(game, itemOverrides[game.id])
+                        val result = scraper.scrape(game, needs, settings, language)
+                        val old = store.loadItemOverrides()[game.id] ?: ItemOverride(game.id)
+                        // Re-read after network work: manual edits made while scraping always win.
+                        val currentGame = games.firstOrNull { it.id == game.id }
+                        val nowNeeds = currentGame?.let { com.bond.md3elauncher.system.ScrapeNeeds.forGame(it, old) }
+                        val next = old.copy(
+                            gridImagePath = if (nowNeeds?.cover == true) result.cover ?: old.gridImagePath else old.gridImagePath,
+                            previewImagePath = if (nowNeeds?.screenshot == true) result.screenshot ?: old.previewImagePath else old.previewImagePath,
+                            metadata = if (currentGame != null) old.metadata.fillMissing(result.metadata) else old.metadata
+                        )
+                        if (result.cover != next.gridImagePath) result.cover?.let { File(it).delete() }
+                        if (result.screenshot != next.previewImagePath) result.screenshot?.let { File(it).delete() }
+                        if (next != old) {
+                            store.saveItemOverride(next)
+                            itemOverrides = store.loadItemOverrides()
+                            batchState = batchState.copy(updated = batchState.updated + 1)
+                        } else batchState = batchState.copy(unmatched = batchState.unmatched + 1)
+                    } catch (cancel: kotlinx.coroutines.CancellationException) { throw cancel }
+                    catch (failure: com.bond.md3elauncher.system.ScrapeHttpFailure) {
+                        batchState = batchState.copy(failed = batchState.failed + 1)
+                        if (failure.status in setOf(401, 403, 429, 430, 431)) {
+                            batchState = batchState.copy(messageKey = "batch.service_stop")
+                            return@launch
+                        }
+                    } catch (_: Exception) { batchState = batchState.copy(failed = batchState.failed + 1) }
+                    batchState = batchState.copy(completed = batchState.completed + 1)
+                    kotlinx.coroutines.delay(500)
+                }
+                batchState = batchState.copy(messageKey = "batch.done")
+            } catch (_: kotlinx.coroutines.CancellationException) {
+                batchState = batchState.copy(messageKey = "batch.cancelled")
+            } finally {
+                batchState = batchState.copy(running = false, cancelling = false, currentTitle = "")
+            }
+        }
+    }
+
     private fun saveItemOverride(
         key: String,
         title: String,
@@ -667,7 +743,8 @@ class MainActivity : ComponentActivity() {
                     key = key,
                     title = title.trim().takeIf { it.isNotBlank() },
                     previewImagePath = nextPaths.first,
-                    gridImagePath = nextPaths.second
+                    gridImagePath = nextPaths.second,
+                    metadata = store.loadItemOverrides()[key]?.metadata ?: com.bond.md3elauncher.data.GameMetadata()
                 )
             )
             itemOverrides = store.loadItemOverrides()

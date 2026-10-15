@@ -8,6 +8,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.bond.md3elauncher.data.ThemeColor
@@ -123,6 +125,10 @@ fun GameHubTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     useDynamicColor: Boolean = true,
     themeColor: ThemeColor = ThemeColor.PINK,
+    themeStyle: com.bond.md3elauncher.data.ThemeStyle = com.bond.md3elauncher.data.ThemeStyle.M3,
+    glassSettings: com.bond.md3elauncher.data.GlassSettings = com.bond.md3elauncher.data.GlassSettings(),
+    onSetStyle: (com.bond.md3elauncher.data.ThemeStyle) -> Unit = {},
+    onSetGlass: (com.bond.md3elauncher.data.GlassSettings) -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -133,15 +139,30 @@ fun GameHubTheme(
         ThemeMode.LIGHT -> false
     }
     val colorScheme = when {
-        useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(context)
-        useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicLightColorScheme(context)
+        themeStyle == com.bond.md3elauncher.data.ThemeStyle.M3 && useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && darkTheme -> dynamicDarkColorScheme(context)
+        themeStyle == com.bond.md3elauncher.data.ThemeStyle.M3 && useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> dynamicLightColorScheme(context)
         darkTheme -> manualDarkColorScheme(themeColor)
         else -> manualLightColorScheme(themeColor)
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = MaterialTheme.typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalThemePreferences provides ThemePreferences(themeStyle, glassSettings, onSetStyle, onSetGlass)) {
+        val miuixDark = if (themeStyle == com.bond.md3elauncher.data.ThemeStyle.MIUIX) systemDark else darkTheme
+        val controller = remember(miuixDark) { top.yukonga.miuix.kmp.theme.ThemeController(
+                if (miuixDark) top.yukonga.miuix.kmp.theme.ColorSchemeMode.Dark else top.yukonga.miuix.kmp.theme.ColorSchemeMode.Light) }
+        top.yukonga.miuix.kmp.theme.MiuixTheme(controller = controller) {
+            val c = top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+            val bridge = colorScheme.copy(primary = c.primary, onPrimary = c.onPrimary, primaryContainer = c.primaryContainer,
+                onPrimaryContainer = c.onPrimaryContainer, secondary = c.secondary, onSecondary = c.onSecondary,
+                secondaryContainer = c.secondaryContainer, onSecondaryContainer = c.onSecondaryContainer,
+                background = c.background, onBackground = c.onBackground, surface = c.surface,
+                onSurface = c.onSurface, surfaceVariant = c.surfaceContainer, onSurfaceVariant = c.onSurfaceVariantSummary,
+                surfaceContainerLowest = c.background, surfaceContainerLow = c.surfaceContainer,
+                surfaceDim = c.surface, surfaceBright = c.surface, surfaceTint = c.primary,
+                tertiary = c.primary, onTertiary = c.onPrimary, tertiaryContainer = c.primaryContainer, onTertiaryContainer = c.onPrimaryContainer,
+                surfaceContainer = c.surfaceContainer, surfaceContainerHigh = c.surfaceContainerHigh,
+                surfaceContainerHighest = c.surfaceContainerHighest, outline = c.outline, outlineVariant = c.dividerLine,
+                error = c.error, onError = c.onError)
+            MaterialTheme(colorScheme = if (themeStyle == com.bond.md3elauncher.data.ThemeStyle.MIUIX) bridge else colorScheme) { StyleBackdrop(content) }
+        }
+    }
 }

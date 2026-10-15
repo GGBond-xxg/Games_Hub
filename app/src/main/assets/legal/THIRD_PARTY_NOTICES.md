@@ -55,3 +55,9 @@ third_party/lemuroid/COPYING
 ```
 
 This file is not a substitute for a full release license audit. Before publishing source or APK files, preserve required copyright notices, provide source/offer information where required, and confirm that the exact binary versions and origins are documented.
+
+## UI libraries
+
+- **AndroidLiquidGlass / Backdrop 1.0.6**, Copyright Kyant0, Apache License 2.0. Source: https://github.com/Kyant0/AndroidLiquidGlass/tree/1.0.6 . Used for Android glass backdrop blur and lens effects.
+- **MIUIX 0.9.4**, Copyright compose-miuix-ui contributors, Apache License 2.0. Source: https://github.com/compose-miuix-ui/miuix/tree/v0.9.4 . Used for HyperOS-style Compose controls and theme tokens.
+- These libraries retain their upstream copyright and Apache-2.0 license; the license is included in `app/src/main/assets/legal/APACHE-2.0.txt`. No upstream demo artwork is bundled.

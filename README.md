@@ -1,14 +1,14 @@
 # GameHub
 
 [![Release](https://img.shields.io/github/v/release/GGBond-xxg/Games_Hub?display_name=tag)](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
-[![Android](https://img.shields.io/badge/Android-6.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
+[![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以统一整理本地游戏、安卓 App、收藏与封面，并让支持的平台在内置模拟器和第三方模拟器之间自由切换。
 
 为手机、平板和安卓掌机打造一个用手柄也能轻松操作的游戏入口：选好平台、整理游戏、按下 `A` 开玩。
 
-当前正式版本：`v1.2.0`
+当前正式版本：`v1.3.0`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -17,9 +17,9 @@ Android 包名：`com.bond.md3elauncher`
 ## 下载与安装
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
-- 系统要求：Android 6.0（API 23）或更高版本
-- `GameHub-v1.2.0-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.2.0-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- 系统要求：Android 7.0（API 24）或更高版本
+- `GameHub-v1.3.0-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.3.0-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
@@ -34,6 +34,14 @@ Android 包名：`com.bond.md3elauncher`
 - 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
 - 5 个普通即时存档槽及 1 个快捷存档。
 - English、简体中文、繁體中文三语界面。
+
+### v1.3.0 更新
+
+- **游戏资料**：长按游戏 → 编辑游戏资料，支持发行日期、类型、开发商和发行商；资料显示在右侧预览下方，随备份保存，重扫不会清除。
+- **平台批量补全**：设置 → 模拟器 → 平台配置 → 批量补全资料与图片，只补缺失封面、截图和资料，显示进度并可取消。已完成项目立即保存，重试时继续补缺。
+- **三种界面风格**：设置 → 外观选择 M3、Glass 或 MIUIX。M3 保留莫奈主题；Glass 提供玻璃滑块及模糊、折射、表面不透明度设置；MIUIX 跟随系统深浅色，不显示额外外观选项。
+- 平台管理与模拟器列表移除序号，长按排序和手柄操作保留。
+- 新版 UI 依赖要求最低 Android 7.0。Glass 在 Android 12 起支持模糊，Android 13 起支持折射，旧系统使用有边界的半透明表面；游戏画面、封面和截图保持清晰。
 
 ### v1.2.0 更新
 
@@ -74,6 +82,12 @@ Android 包名：`com.bond.md3elauncher`
 在 **设置 → 封面刮削** 配置来源，保存后长按游戏进入编辑，选择联网搜索封面。Libretro 无需账号，按游戏文件名称匹配，找不到时可尝试英文标准名称。
 
 ScreenScraper 需要你自己的开发者 ID 和开发者密码，普通用户账号可选；仅填写普通账号无法调用接口。接口要求见 [ScreenScraper 官方 API 文档](https://www.screenscraper.fr/webapi2.php?alpha=0&numpage=0)。不内置或共享第三方凭据，所有来源凭据只保存在本机且排除在导出备份之外。未配置或请求失败会在搜索报告中说明。
+
+### 批量匹配说明
+
+批量任务使用 ScreenScraper 获取资料及独立封面/截图，缺图时使用已启用的 Libretro 补充。Libretro 无需账号，但不提供发行日期、类型、开发商等资料。ScreenScraper 需配置自己的开发者凭据；没有凭据仍可批量补图、手动填写资料。
+
+自动匹配要求平台正确且标准化标题唯一匹配；不确定的候选会跳过，避免错误图片。当前不提供模糊自动认领或来源优先级设置。服务限流或凭据错误会停止队列，修正后重新点击补全；取消或退出应用会结束本次任务，已保存结果保留。
 
 ## 快速开始
 
@@ -135,7 +149,7 @@ ScreenScraper 需要你自己的开发者 ID 和开发者密码，普通用户�
 环境要求：
 
 - JDK 17+
-- Android SDK 36
+- Android SDK 37.0（compileSdk），targetSdk 保持 36
 - Windows、Linux 或 macOS
 
 Debug 构建：

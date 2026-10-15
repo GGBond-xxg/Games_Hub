@@ -14,14 +14,15 @@ val releaseSigningProperties = Properties().apply {
 
 android {
     namespace = "com.bond.md3elauncher"
-    compileSdk = 36
+    compileSdk { version = release(37) { minorApiLevel = 0 } }
 
     defaultConfig {
         applicationId = "com.bond.md3elauncher"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 36
-        versionCode = 120
-        versionName = "1.2.0"
+        versionCode = 130
+        versionName = "1.3.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -67,6 +68,8 @@ android {
 }
 
 dependencies {
+    implementation("io.github.kyant0:backdrop:1.0.6")
+    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.4")
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -81,4 +84,8 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation("org.json:json:20240303")
     debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }
