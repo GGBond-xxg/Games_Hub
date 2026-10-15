@@ -75,6 +75,7 @@ class MainActivity : ComponentActivity() {
     private var landscapeMode by mutableStateOf(LandscapeMode.AUTO)
     private var launcherLayoutMode by mutableStateOf(LauncherLayoutMode.LIST)
     private var themeStyle by mutableStateOf(com.bond.md3elauncher.data.ThemeStyle.M3)
+    private var backgroundMotion by mutableStateOf(false)
     private var glassSettings by mutableStateOf(com.bond.md3elauncher.data.GlassSettings())
     private var themeMode by mutableStateOf(ThemeMode.SYSTEM)
     private var useDynamicColor by mutableStateOf(true)
@@ -126,6 +127,7 @@ class MainActivity : ComponentActivity() {
         themeColor = store.loadThemeColor()
         themeStyle = store.loadThemeStyle()
         glassSettings = store.loadGlassSettings()
+        backgroundMotion = store.loadBackgroundMotion()
         safeMargins = store.loadSafeMargins()
         scraperSettings = store.loadScraperSettings()
         tabOrder = store.loadTabOrder()
@@ -152,7 +154,9 @@ class MainActivity : ComponentActivity() {
                     store.saveThemeStyle(it)
                     applyApplicationNightMode(if (it == com.bond.md3elauncher.data.ThemeStyle.MIUIX) ThemeMode.SYSTEM else themeMode)
                 },
-                onSetGlass = { glassSettings = it.clamped(); store.saveGlassSettings(it) }) {
+                onSetGlass = { glassSettings = it.clamped(); store.saveGlassSettings(it) },
+                backgroundMotion = backgroundMotion,
+                onSetBackgroundMotion = { backgroundMotion = it; store.saveBackgroundMotion(it) }) {
                 LauncherApp(
                     platforms = platforms,
                     requestedPlatformId = requestedPlatformId,

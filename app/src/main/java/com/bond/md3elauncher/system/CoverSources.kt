@@ -34,7 +34,7 @@ internal object CoverSources {
         else -> emptyList()
     }
 
-    fun screenScraper(json: JSONObject, fallback: String): List<CoverCandidate> {
+    fun screenScraper(json: JSONObject, fallback: String, artworkType: CoverArtworkType = CoverArtworkType.BOX_ART): List<CoverCandidate> {
         val games = json.optJSONObject("response")?.optJSONArray("jeux") ?: return emptyList()
         val out = linkedMapOf<String, CoverCandidate>()
         for (i in 0 until minOf(games.length(), 8)) {
@@ -43,7 +43,7 @@ internal object CoverSources {
             val medias = game.optJSONArray("medias") ?: continue
             for (j in 0 until medias.length()) {
                 val media = medias.optJSONObject(j) ?: continue
-                if (media.optString("type") !in setOf("box-2D", "box-3D", "steamgrid")) continue
+                if (media.optString("type") !in (if (artworkType == CoverArtworkType.SCREENSHOT) setOf("ss") else setOf("box-2D", "box-3D", "steamgrid"))) continue
                 val url = media.optString("url")
                 if (url.startsWith("https://")) out[url] = CoverCandidate(title, url, "ScreenScraper")
             }

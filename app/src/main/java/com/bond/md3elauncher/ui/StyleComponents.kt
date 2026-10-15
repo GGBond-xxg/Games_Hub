@@ -2,6 +2,7 @@ package com.bond.md3elauncher.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +32,7 @@ internal fun HubSurface(modifier: Modifier = Modifier, shape: Shape = MaterialTh
     tonalElevation: Dp = 0.dp, shadowElevation: Dp = 0.dp, border: BorderStroke? = null, content: @Composable () -> Unit) {
     val glass = LocalThemePreferences.current.style == ThemeStyle.GLASS
     Surface(if (glass) modifier.styleSurface(shape, color) else modifier, shape, if (glass) Color.Transparent else color,
-        contentColor, if (glass) 0.dp else tonalElevation, shadowElevation, border, content)
+        contentColor, if (glass) 0.dp else tonalElevation, if (glass) 0.dp else shadowElevation, if (glass) null else border, content)
 }
 
 @Composable
@@ -82,17 +83,29 @@ private fun StyledButton(onClick: () -> Unit, modifier: Modifier, enabled: Boole
     colors: ButtonColors, contentPadding: PaddingValues, kind: Int, border: BorderStroke?, content: @Composable RowScope.() -> Unit) {
     when (LocalThemePreferences.current.style) {
         ThemeStyle.MIUIX -> top.yukonga.miuix.kmp.basic.Button(onClick, modifier, enabled,
-            colors = if (kind == 0) top.yukonga.miuix.kmp.basic.ButtonDefaults.buttonColorsPrimary() else top.yukonga.miuix.kmp.basic.ButtonDefaults.buttonColors(),
-            insideMargin = contentPadding, minHeight = 36.dp) {
+            colors = when (kind) {
+                0 -> top.yukonga.miuix.kmp.basic.ButtonDefaults.buttonColorsPrimary()
+                3 -> top.yukonga.miuix.kmp.basic.ButtonDefaults.buttonColors(color = Color.Transparent, disabledColor = Color.Transparent,
+                    contentColor = MiuixTheme.colorScheme.primary)
+                else -> top.yukonga.miuix.kmp.basic.ButtonDefaults.buttonColors()
+            },
+            insideMargin = contentPadding, minHeight = 48.dp) {
             CompositionLocalProvider(LocalContentColor provides top.yukonga.miuix.kmp.theme.LocalContentColor.current) { content() }
         }
         ThemeStyle.GLASS -> {
             val foreground = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             val tint = if (kind == 0) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-            Button(onClick, modifier.styleSurface(shape, tint), enabled, shape,
-                ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = foreground,
-                    disabledContainerColor = Color.Transparent, disabledContentColor = foreground),
-                elevation = null, border = border, contentPadding = contentPadding, content = content)
+            // Draw the material inside the measured control, once. A Material Button's
+            // extra touch-target layer used to produce a second, displaced capsule.
+            val surface = if (kind == 3) Modifier else Modifier.styleSurface(shape, tint)
+            Row(modifier.heightIn(min = 48.dp).clip(shape).then(surface)
+                .clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+                .padding(contentPadding), horizontalArrangement = Arrangement.Center,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                CompositionLocalProvider(LocalContentColor provides foreground) {
+                    ProvideTextStyle(MaterialTheme.typography.labelLarge) { content() }
+                }
+            }
         }
         ThemeStyle.M3 -> when (kind) {
             1 -> FilledTonalButton(onClick, modifier, enabled, shape, colors, contentPadding = contentPadding, content = content)
@@ -125,12 +138,15 @@ internal fun HubTextButton(onClick: () -> Unit, modifier: Modifier = Modifier, e
 
 @Composable
 internal fun HubIconButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable () -> Unit) {
-    if (LocalThemePreferences.current.style == ThemeStyle.MIUIX) top.yukonga.miuix.kmp.basic.IconButton(onClick, modifier, enabled, content = content)
-    else IconButton(onClick, if (LocalThemePreferences.current.style == ThemeStyle.GLASS) modifier.styleSurface(RoundedCornerShape(50)) else modifier, enabled, content = content)
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.38f)) {
+        if (LocalThemePreferences.current.style == ThemeStyle.MIUIX) top.yukonga.miuix.kmp.basic.IconButton(onClick, modifier, enabled, content = content)
+        else IconButton(onClick, modifier, enabled, content = content)
+    }
 }
 @Composable
 internal fun HubSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Modifier = Modifier, enabled: Boolean = true) {
     if (LocalThemePreferences.current.style == ThemeStyle.MIUIX) top.yukonga.miuix.kmp.basic.Switch(checked, onCheckedChange, modifier, enabled = enabled)
+    else if (LocalThemePreferences.current.style == ThemeStyle.GLASS) GlassSwitch(checked, onCheckedChange, modifier, enabled)
     else Switch(checked, onCheckedChange, modifier, enabled = enabled)
 }
 @Composable
@@ -170,9 +186,16 @@ internal fun HubOutlinedTextField(value: String, onValueChange: (String) -> Unit
               }
             }
         }
-    } else OutlinedTextField(value, onValueChange, modifier, enabled, readOnly, textStyle,
+    } else OutlinedTextField(value, onValueChange,
+        if (LocalThemePreferences.current.style == ThemeStyle.GLASS) modifier.styleSurface(shape) else modifier,
+        enabled, readOnly, textStyle,
         label = label, placeholder = placeholder, trailingIcon = trailingIcon, singleLine = singleLine, minLines = minLines,
-        maxLines = maxLines, visualTransformation = visualTransformation, keyboardOptions = keyboardOptions, keyboardActions = keyboardActions, shape = shape)
+        maxLines = maxLines, visualTransformation = visualTransformation, keyboardOptions = keyboardOptions, keyboardActions = keyboardActions, shape = shape,
+        colors = if (LocalThemePreferences.current.style == ThemeStyle.GLASS) OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = Color.Transparent, disabledBorderColor = Color.Transparent,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent
+        ) else OutlinedTextFieldDefaults.colors())
 }
 
 @Composable

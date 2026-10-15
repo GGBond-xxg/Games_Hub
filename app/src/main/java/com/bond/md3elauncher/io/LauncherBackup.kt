@@ -68,7 +68,7 @@ class LauncherBackup(private val context: Context) {
             launcher.forEach { (key, value) ->
                 require(when (key) {
                     "favorites", "android_games" -> value is Set<*>
-                    "home_prompt_done", "dynamic_color", "scraper_libretro" -> value is Boolean
+                    "home_prompt_done", "dynamic_color", "scraper_libretro", "background_motion" -> value is Boolean
                     "safe_margin_left", "safe_margin_right" -> value is Int
                     else -> value is String
                 }) { "Invalid launcher preference type" }

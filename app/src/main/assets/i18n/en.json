@@ -587,7 +587,7 @@
   "launch.custom.reset": "Use automatic settings",
   "launch.custom.invalid": "Check the action, Activity, MIME type, template and JSON parameters. Use only {romUri} and {gameTitle} placeholders; nested JSON is not supported.",
   "launch.custom.failed": "Custom launch failed. Check the emulator Activity and parameters in platform settings.",
-  "edit.preview_scraper_hint": "Preview searches use Libretro screenshots first; other sources may return covers.",
+  "edit.preview_scraper_hint": "Preview searches use screenshots from Libretro, TheGamesDB and ScreenScraper; SteamGridDB may return artwork.",
   "launcher.center.platform": "{platform} games",
   "settings.tab_order.external": "External emulator platform",
   "settings.picker.search.external": "Search emulator name or package",
@@ -620,5 +620,9 @@
   "theme.glass.opacity": "Surface opacity",
   "theme.glass.compatibility": "Changes are saved immediately. Blur requires Android 12; refraction requires Android 13. Older devices use a readable translucent surface.",
   "theme.reset": "Restore defaults",
-  "theme.done": "Done"
+  "theme.done": "Done",
+  "theme.background_motion": "Flowing background",
+  "cover.report.network_failed": "Request failed. Check your network and try again.",
+  "cover.report.tgdb_auth": "TheGamesDB: API key rejected (401/403). Check and save a valid key.",
+  "cover.report.tgdb_quota": "TheGamesDB: request limit reached. Try again later."
 }

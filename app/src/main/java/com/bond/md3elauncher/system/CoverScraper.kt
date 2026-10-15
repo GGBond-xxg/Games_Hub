@@ -9,7 +9,6 @@ import com.bond.md3elauncher.i18n.I18n
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -60,9 +59,20 @@ class CoverScraper(private val context: Context) {
         }
 
         if (settings.theGamesDbApiKey.isNotBlank()) {
-            val tgdb = searchTheGamesDb(queries, platformLabel, settings.theGamesDbApiKey)
-            report.add(I18n.t(context, "cover.report.tgdb_count", "TheGamesDB: {count}", "count" to tgdb.size))
-            tgdb.forEach { result[it.imageUrl] = it }
+            try {
+                val tgdb = searchTheGamesDb(queries, platformLabel, settings.theGamesDbApiKey, artworkType)
+                report.add(I18n.t(context, "cover.report.tgdb_count", "TheGamesDB: {count}", "count" to tgdb.size))
+                tgdb.forEach { result[it.imageUrl] = it }
+            } catch (failure: ScrapeHttpFailure) {
+                val key = when (failure.status) {
+                    401, 403 -> "cover.report.tgdb_auth"
+                    429 -> "cover.report.tgdb_quota"
+                    else -> "cover.report.network_failed"
+                }
+                report.add(I18n.t(context, key, "TheGamesDB request failed"))
+            } catch (_: Exception) {
+                report.add(I18n.t(context, "cover.report.network_failed", "Request failed. Check your network and try again."))
+            }
         } else {
             report.add(I18n.t(context, "cover.report.tgdb_no_key", "TheGamesDB: API key not set"))
         }
@@ -76,7 +86,7 @@ class CoverScraper(private val context: Context) {
                     parameters["sspassword"] = settings.screenScraperPassword
                 }
                 val url = "https://api.screenscraper.fr/api2/jeuRecherche.php?" + parameters.entries.joinToString("&") { "${it.key}=${formEncode(it.value)}" }
-                val covers = CoverSources.screenScraper(getJson(url), cleanTitle)
+                val covers = CoverSources.screenScraper(getJson(url), cleanTitle, artworkType)
                 covers.forEach { result[it.imageUrl] = it }
                 report.add(I18n.t(context, "cover.report.screenscraper_count", "ScreenScraper: {count}", "count" to covers.size))
             } catch (_: Exception) {
@@ -89,22 +99,32 @@ class CoverScraper(private val context: Context) {
         return result.values.take(36)
     }
 
-    fun downloadCandidate(candidate: CoverCandidate, key: String): String? {
-        return runCatching {
+    fun downloadCandidate(candidate: CoverCandidate, key: String): String? = runCatching {
+        val bytes = ScrapeNetwork.request {
             val conn = openConnection(candidate.imageUrl, method = "GET")
-            if (conn.responseCode !in 200..299) return@runCatching null
-            val dir = File(context.cacheDir, "scraped_covers")
-            if (!dir.exists()) dir.mkdirs()
-            val safeName = key.map { ch ->
-                if (ch.isLetterOrDigit() || ch == '_' || ch == '-' || ch == '.') ch else '_'
-            }.joinToString("").take(120)
-            val outFile = File(dir, "${safeName}_${System.currentTimeMillis()}.img")
-            conn.inputStream.use { input ->
-                FileOutputStream(outFile).use { output -> input.copyTo(output) }
-            }
-            outFile.absolutePath
-        }.getOrNull()
-    }
+            try {
+                check(conn.responseCode in 200..299)
+                require(conn.contentLengthLong <= 8 * 1024 * 1024)
+                conn.inputStream.use { input ->
+                    val output = java.io.ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        require(output.size() + count <= 8 * 1024 * 1024)
+                        output.write(buffer, 0, count)
+                    }
+                    output.toByteArray()
+                }
+            } finally { conn.disconnect() }
+        }
+        val dir = File(context.cacheDir, "scraped_covers").apply { mkdirs() }
+        val safeName = key.map { if (it.isLetterOrDigit() || it in "_-.") it else '_' }.joinToString("").take(120)
+        val outFile = File(dir, "${safeName}_${System.currentTimeMillis()}.img")
+        try { outFile.writeBytes(bytes); outFile.absolutePath }
+        catch (error: Exception) { outFile.delete(); throw error }
+    }.getOrNull()
 
     private fun searchLibretro(queries: List<String>, platformLabel: String, artworkType: CoverArtworkType): List<CoverCandidate> {
         val repos = CoverSources.libretroRepos(platformLabel)
@@ -146,115 +166,17 @@ class CoverScraper(private val context: Context) {
         return candidates.values.toList()
     }
 
-    private fun searchTheGamesDb(queries: List<String>, platformLabel: String, apiKey: String): List<CoverCandidate> {
-        val out = linkedMapOf<String, CoverCandidate>()
-        val platformFilter = theGamesDbPlatformFilter(platformLabel)
-        val gameNames = mutableMapOf<String, String>()
-        val gameIds = linkedSetOf<String>()
-
-        queries.take(8).forEach { query ->
-            val idsFromV11 = runCatching {
-                searchTgdbIdsByName(query, apiKey, platformFilter, gameNames, useV11 = true)
-            }.getOrDefault(emptyList())
-            gameIds.addAll(idsFromV11)
-
-            if (idsFromV11.isEmpty()) {
-                val idsFromV1 = runCatching {
-                    searchTgdbIdsByName(query, apiKey, platformFilter, gameNames, useV11 = false)
-                }.getOrDefault(emptyList())
-                gameIds.addAll(idsFromV1)
-            }
-
-            if (gameIds.size >= 8) return@forEach
+    private fun searchTheGamesDb(queries: List<String>, platformLabel: String, apiKey: String, type: CoverArtworkType): List<CoverCandidate> {
+        val api = TheGamesDb()
+        val games = linkedMapOf<String, JSONObject>()
+        for (query in queries.take(5)) {
+            api.search(query, apiKey, TheGamesDb.platform(platformLabel)).take(12).forEach { games[it.optString("id")] = it }
+            if (games.size >= 12) break
         }
-
-        if (gameIds.isEmpty()) return emptyList()
-
-        gameIds.chunked(8).forEach { chunk ->
-            runCatching {
-                val ids = chunk.joinToString(",")
-                val url = "https://api.thegamesdb.net/v1/Games/Images?apikey=${formEncode(apiKey)}&games_id=${formEncode(ids)}&filter%5Btype%5D=boxart"
-                val json = getJson(url)
-                parseTgdbImages(json, gameNames).forEach { candidate -> out[candidate.imageUrl] = candidate }
-            }
-        }
-
-        return out.values.toList()
+        return api.images(games.values.take(12), apiKey, type)
     }
 
-    private fun searchTgdbIdsByName(
-        query: String,
-        apiKey: String,
-        platformFilter: String?,
-        gameNames: MutableMap<String, String>,
-        useV11: Boolean
-    ): List<String> {
-        val endpoint = if (useV11) "v1.1" else "v1"
-        val platformPart = platformFilter?.let { "&filter%5Bplatform%5D=${formEncode(it)}" }.orEmpty()
-        val url = "https://api.thegamesdb.net/$endpoint/Games/ByGameName?apikey=${formEncode(apiKey)}&name=${formEncode(query)}&fields=platform,alternates&include=platform$platformPart"
-        val json = getJson(url)
-        val data = json.optJSONObject("data") ?: return emptyList()
-        val games = data.optJSONArray("games") ?: return emptyList()
-        val ids = mutableListOf<String>()
-        for (i in 0 until minOf(games.length(), 12)) {
-            val game = games.optJSONObject(i) ?: continue
-            val id = game.optString("id").takeIf { it.isNotBlank() } ?: continue
-            ids.add(id)
-            gameNames[id] = game.optString("game_title").ifBlank { query }
-        }
-        return ids
-    }
-
-    private fun parseTgdbImages(json: JSONObject, gameNames: Map<String, String>): List<CoverCandidate> {
-        val data = json.optJSONObject("data") ?: return emptyList()
-        val baseUrls = data.optJSONObject("base_url")
-        val baseOriginal = baseUrls?.optString("original").orEmpty().trimEnd('/')
-        val images = data.optJSONObject("images") ?: data.optJSONObject("boxart") ?: return emptyList()
-        val out = mutableListOf<CoverCandidate>()
-        val ids = images.keys()
-        while (ids.hasNext()) {
-            val id = ids.next()
-            val arr = images.optJSONArray(id) ?: continue
-            for (i in 0 until minOf(arr.length(), 8)) {
-                val item = arr.optJSONObject(i) ?: continue
-                val side = item.optString("side")
-                val type = item.optString("type")
-                if (side.isNotBlank() && side.lowercase(Locale.ROOT) != "front") continue
-                if (type.isNotBlank() && type.lowercase(Locale.ROOT) != "boxart") continue
-                val fileName = item.optString("filename").takeIf { it.isNotBlank() } ?: continue
-                val title = gameNames[id] ?: item.optString("name").ifBlank { "TheGamesDB" }
-                buildTgdbImageUrls(baseOriginal, fileName).forEach { url ->
-                    out.add(CoverCandidate(title, url, "TheGamesDB"))
-                }
-            }
-        }
-        return out
-    }
-
-    private fun buildTgdbImageUrls(baseOriginal: String, fileName: String): List<String> {
-        if (fileName.startsWith("http")) return listOf(fileName)
-        val clean = fileName.trimStart('/')
-        val candidates = linkedSetOf<String>()
-        if (baseOriginal.isNotBlank()) candidates.add("$baseOriginal/$clean")
-        candidates.add("https://cdn.thegamesdb.net/images/original/$clean")
-        candidates.add("https://cdn.thegamesdb.net/images/$clean")
-        // Some responses already include paths such as boxart/original/front/xxx.jpg.
-        if (clean.contains("/original/")) candidates.add("https://cdn.thegamesdb.net/images/$clean")
-        return candidates.toList()
-    }
-
-    private fun theGamesDbPlatformFilter(platformLabel: String): String? {
-        // These values can change if TGDB changes their platform table. We keep the filter optional:
-        // if a platform-filtered search fails, aliases still run through unfiltered query variants.
-        return when (platformLabel.lowercase(Locale.ROOT)) {
-            "psp" -> "38" // Sony Playstation Portable on TGDB in most public lists.
-            // Switch ID is less consistently documented in public mirrors, so avoid a hard filter here.
-            "ns", "switch" -> null
-            else -> null
-        }
-    }
-
-    private fun getJson(url: String, headers: Map<String, String> = emptyMap()): JSONObject {
+    private fun getJson(url: String, headers: Map<String, String> = emptyMap()): JSONObject = ScrapeNetwork.request {
         val conn = openConnection(url, method = "GET", headers = headers)
         try {
             val code = conn.responseCode
@@ -270,14 +192,14 @@ class CoverScraper(private val context: Context) {
                 }
                 text.toString()
             }
-            return JSONObject(body)
+            JSONObject(body)
         } finally { conn.disconnect() }
     }
 
-    private fun urlExists(url: String): Boolean = runCatching {
+    private fun urlExists(url: String): Boolean = runCatching { ScrapeNetwork.request(7000) {
         val conn = openConnection(url, method = "HEAD")
         try { conn.responseCode in 200..299 } finally { conn.disconnect() }
-    }.getOrDefault(false)
+    } }.getOrDefault(false)
 
     private fun openConnection(url: String, method: String, headers: Map<String, String> = emptyMap()): HttpURLConnection {
         val conn = URL(url).openConnection() as HttpURLConnection
@@ -313,19 +235,7 @@ class CoverScraper(private val context: Context) {
         add(base.substringBefore(":").substringBefore("："))
         add(base.substringBefore(" - "))
 
-        val lower = base.lowercase(Locale.ROOT)
-        if (base.contains("星之卡比") || lower.contains("hoshi no kirby") || lower.contains("kirby")) {
-            add("Kirby and the Forgotten Land")
-            add("Hoshi no Kirby Discovery")
-            add("Kirby Discovery")
-            add("Kirby")
-            add("星之卡比")
-        }
-        if (base.contains("但丁") || lower.contains("dante")) {
-            add("Dante's Inferno")
-            add("Dantes Inferno")
-        }
-        if (base.contains("死亡细胞") || lower.contains("dead cells")) add("Dead Cells")
+        GameTitleQueries.manual(base).forEach(::add)
 
         return out.filter { it.isNotBlank() }.take(10)
     }

@@ -129,6 +129,8 @@ fun GameHubTheme(
     glassSettings: com.bond.md3elauncher.data.GlassSettings = com.bond.md3elauncher.data.GlassSettings(),
     onSetStyle: (com.bond.md3elauncher.data.ThemeStyle) -> Unit = {},
     onSetGlass: (com.bond.md3elauncher.data.GlassSettings) -> Unit = {},
+    backgroundMotion: Boolean = false,
+    onSetBackgroundMotion: (Boolean) -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -145,7 +147,7 @@ fun GameHubTheme(
         else -> manualLightColorScheme(themeColor)
     }
 
-    CompositionLocalProvider(LocalThemePreferences provides ThemePreferences(themeStyle, glassSettings, onSetStyle, onSetGlass)) {
+    CompositionLocalProvider(LocalThemePreferences provides ThemePreferences(themeStyle, glassSettings, onSetStyle, onSetGlass, backgroundMotion, onSetBackgroundMotion)) {
         val miuixDark = if (themeStyle == com.bond.md3elauncher.data.ThemeStyle.MIUIX) systemDark else darkTheme
         val controller = remember(miuixDark) { top.yukonga.miuix.kmp.theme.ThemeController(
                 if (miuixDark) top.yukonga.miuix.kmp.theme.ColorSchemeMode.Dark else top.yukonga.miuix.kmp.theme.ColorSchemeMode.Light) }
@@ -162,7 +164,9 @@ fun GameHubTheme(
                 surfaceContainer = c.surfaceContainer, surfaceContainerHigh = c.surfaceContainerHigh,
                 surfaceContainerHighest = c.surfaceContainerHighest, outline = c.outline, outlineVariant = c.dividerLine,
                 error = c.error, onError = c.onError)
-            MaterialTheme(colorScheme = if (themeStyle == com.bond.md3elauncher.data.ThemeStyle.MIUIX) bridge else colorScheme) { StyleBackdrop(content) }
+            MaterialTheme(colorScheme = if (themeStyle == com.bond.md3elauncher.data.ThemeStyle.MIUIX) bridge else colorScheme) {
+                CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.onSurface) { StyleBackdrop(content) }
+            }
         }
     }
 }

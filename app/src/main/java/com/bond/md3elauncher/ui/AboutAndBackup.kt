@@ -77,7 +77,7 @@ internal fun AboutAndBackupSettings(isScanning: Boolean) {
     }
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> restoreUri = uri?.toString() }
     HubSurface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             HubTextButton(onClick = { showBackup = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             HubTextButton(onClick = { showAbout = true }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(translated("settings.about.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             UpdateSettingsEntry(Modifier.weight(1f).heightIn(min = 48.dp))

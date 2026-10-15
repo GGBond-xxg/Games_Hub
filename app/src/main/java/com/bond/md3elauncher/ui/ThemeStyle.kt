@@ -1,6 +1,13 @@
 package com.bond.md3elauncher.ui
 
 import android.os.Build
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.currentStateAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,7 +41,8 @@ import com.kyant.backdrop.effects.lens
 
 internal data class ThemePreferences(
     val style: ThemeStyle = ThemeStyle.M3, val glass: GlassSettings = GlassSettings(),
-    val setStyle: (ThemeStyle) -> Unit = {}, val setGlass: (GlassSettings) -> Unit = {}
+    val setStyle: (ThemeStyle) -> Unit = {}, val setGlass: (GlassSettings) -> Unit = {},
+    val backgroundMotion: Boolean = false, val setBackgroundMotion: (Boolean) -> Unit = {}
 )
 internal val LocalThemePreferences = staticCompositionLocalOf { ThemePreferences() }
 internal val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop?> { null }
@@ -42,14 +50,27 @@ internal val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 /** Record only the backdrop, never a subtree that draws itself. Dialog windows get their own source. */
 @Composable
 internal fun StyleBackdrop(content: @Composable () -> Unit) {
-    val glass = LocalThemePreferences.current.style == ThemeStyle.GLASS
+    val prefs = LocalThemePreferences.current
+    val glass = prefs.style == ThemeStyle.GLASS
+    val styled = prefs.style != ThemeStyle.M3
+    val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    val animate = styled && prefs.backgroundMotion && lifecycle.isAtLeast(Lifecycle.State.RESUMED)
+    val phase = if (animate) rememberInfiniteTransition(label = "backgroundFlow").animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(18000, easing = LinearEasing), RepeatMode.Reverse), label = "backgroundPhase"
+    ) else remember { mutableFloatStateOf(0f) }
     val backdrop = rememberLayerBackdrop()
     val colors = MaterialTheme.colorScheme
     Box(Modifier.fillMaxSize()) {
-        if (glass) Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
+        if (styled) Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
             drawRect(colors.background)
-            drawRect(Brush.linearGradient(listOf(colors.primaryContainer.copy(alpha = 0.55f), colors.background, colors.tertiaryContainer.copy(alpha = 0.45f))))
-            drawCircle(Brush.radialGradient(listOf(colors.primary.copy(alpha = 0.24f), Color.Transparent), center = Offset(size.width * 0.18f, size.height * 0.2f), radius = size.maxDimension * 0.5f), radius = size.maxDimension * 0.5f, center = Offset(size.width * 0.18f, size.height * 0.2f))
+            val p = phase.value
+            drawRect(Brush.linearGradient(listOf(colors.primaryContainer.copy(alpha = 0.4f), colors.background, colors.tertiaryContainer.copy(alpha = 0.3f))))
+            val radius = size.maxDimension * 0.6f
+            val first = Offset(size.width * (0.12f + 0.55f * p), size.height * (0.2f + 0.35f * p))
+            val second = Offset(size.width * (0.9f - 0.4f * p), size.height * (0.85f - 0.65f * p))
+            drawCircle(Brush.radialGradient(listOf(colors.primary.copy(alpha = 0.18f), Color.Transparent), first, radius), radius, first)
+            drawCircle(Brush.radialGradient(listOf(colors.tertiary.copy(alpha = 0.12f), Color.Transparent), second, radius), radius, second)
         }
         CompositionLocalProvider(LocalGlassBackdrop provides if (glass) backdrop else null) { content() }
     }
@@ -60,7 +81,8 @@ internal fun Modifier.styleSurface(shape: Shape = RoundedCornerShape(20.dp), col
     val prefs = LocalThemePreferences.current
     if (prefs.style != ThemeStyle.GLASS) return background(color, shape)
     val settings = prefs.glass.clamped()
-    val tint = color.copy(alpha = if (Build.VERSION.SDK_INT < 31) 0.94f else settings.opacity)
+    // Respect deliberately translucent nested panels instead of turning every layer opaque.
+    val tint = color.copy(alpha = if (Build.VERSION.SDK_INT < 31) 0.94f else settings.opacity * color.alpha)
     if (backdrop == null || Build.VERSION.SDK_INT < 31) return background(tint, shape).border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
     return drawBackdrop(backdrop, shape = { shape }, effects = {
         blur(settings.blur.dp.toPx())
@@ -76,7 +98,12 @@ internal fun ThemeStyleSetting() {
     val prefs = LocalThemePreferences.current
     val context = LocalContext.current
     var showGlass by rememberSaveable { mutableStateOf(false) }
-    Text(I18n.t(context, "theme.style", "Interface style"), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(I18n.t(context, "theme.style", "Interface style"), modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (prefs.style == ThemeStyle.GLASS) HubTextButton(onClick = { showGlass = true }) {
+            Text(I18n.t(context, "theme.glass.settings", "Glass settings"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
     Spacer(Modifier.height(8.dp))
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ThemeStyle.entries.forEach { style ->
@@ -84,9 +111,15 @@ internal fun ThemeStyleSetting() {
                 label = { Text(I18n.t(context, "theme.${style.name.lowercase()}", style.name), maxLines = 1, overflow = TextOverflow.Ellipsis) })
         }
     }
-    if (prefs.style == ThemeStyle.GLASS) {
+    if (prefs.style != ThemeStyle.M3) {
         Spacer(Modifier.height(8.dp))
-        HubTextButton(onClick = { showGlass = true }) { Text(I18n.t(context, "theme.glass.settings", "Glass settings"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).toggleable(
+            value = prefs.backgroundMotion, role = Role.Switch, onValueChange = prefs.setBackgroundMotion
+        ).padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(I18n.t(context, "theme.background_motion", "Flowing background"), modifier = Modifier.weight(1f).padding(end = 16.dp),
+                style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            HubSwitch(prefs.backgroundMotion, null)
+        }
     }
     Spacer(Modifier.height(8.dp))
     if (showGlass && prefs.style == ThemeStyle.GLASS) GlassSettingsDialog(onDismiss = { showGlass = false })

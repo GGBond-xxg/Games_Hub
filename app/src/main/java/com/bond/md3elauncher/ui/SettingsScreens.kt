@@ -147,7 +147,7 @@ internal fun SettingsBeaconScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         item(key = "platformManager") {
@@ -1286,9 +1286,9 @@ private fun SafeMarginAdjustRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        HubTextButton(onClick = { onChange(value - 4) }, enabled = value > SafeMarginSettings.MIN_DP) { Text("−") }
-        Text("${value}dp", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-        HubTextButton(onClick = { onChange(value + 4) }, enabled = value < SafeMarginSettings.MAX_DP) { Text("+") }
+        HubIconButton(onClick = { onChange(value - 4) }, modifier = Modifier.size(48.dp), enabled = value > SafeMarginSettings.MIN_DP) { Text("−", maxLines = 1) }
+        Text("${value}dp", modifier = Modifier.width(52.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
+        HubIconButton(onClick = { onChange(value + 4) }, modifier = Modifier.size(48.dp), enabled = value < SafeMarginSettings.MAX_DP) { Text("+", maxLines = 1) }
     }
 }
 
@@ -1351,15 +1351,20 @@ private fun ScraperSettingSection(
 
     var screenDevId by rememberSaveable(scraperSettings.screenScraperDevId) { mutableStateOf(scraperSettings.screenScraperDevId) }
     var screenDevPass by rememberSaveable(scraperSettings.screenScraperDevPassword) { mutableStateOf(scraperSettings.screenScraperDevPassword) }
+    fun saveDraft() = onSaveScraperSettings(ScraperSettings(
+        useLibretro = useLibretro, theGamesDbApiKey = theGamesDbKey.trim(), steamGridDbApiKey = steamGridKey.trim(),
+        screenScraperUser = screenUser.trim(), screenScraperPassword = screenPass,
+        screenScraperDevId = screenDevId.trim(), screenScraperDevPassword = screenDevPass
+    ))
     SettingSection(title = I18n.t(context, "settings.section.cover_scraper", "封面刮削")) {
         ToggleSettingRow(
             title = I18n.t(context, "settings.cover.libretro.title", "Libretro 缩略图"),
             subtitle = I18n.t(context, "settings.cover.libretro.subtitle", "免费免 Key，适合 PSP 等复古平台；命名匹配时可直接下载封面。"),
             checked = useLibretro,
-            onCheckedChange = { useLibretro = it }
+            onCheckedChange = { useLibretro = it; saveDraft() }
         )
         Spacer(Modifier.height(8.dp))
-        ScraperTextField(
+        ScraperTextField(onSave = ::saveDraft,
             label = "SteamGridDB API Key",
             value = steamGridKey,
             onValueChange = { steamGridKey = it },
@@ -1367,7 +1372,7 @@ private fun ScraperSettingSection(
             isSecret = true
         )
         Spacer(Modifier.height(8.dp))
-        ScraperTextField(
+        ScraperTextField(onSave = ::saveDraft,
             label = "TheGamesDB API Key",
             value = theGamesDbKey,
             onValueChange = { theGamesDbKey = it },
@@ -1376,14 +1381,14 @@ private fun ScraperSettingSection(
         )
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ScraperTextField(
+            ScraperTextField(onSave = ::saveDraft,
                 label = I18n.t(context, "settings.cover.screenscraper.user", "ScreenScraper 账号"),
                 value = screenUser,
                 onValueChange = { screenUser = it },
                 placeholder = I18n.t(context, "settings.cover.optional", "Optional"),
                 modifier = Modifier.weight(1f)
             )
-            ScraperTextField(
+            ScraperTextField(onSave = ::saveDraft,
                 label = I18n.t(context, "settings.cover.screenscraper.password", "ScreenScraper 密码"),
                 value = screenPass,
                 onValueChange = { screenPass = it },
@@ -1394,8 +1399,8 @@ private fun ScraperSettingSection(
         }
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ScraperTextField(label = I18n.t(context, "settings.cover.screenscraper.dev_id", "Developer ID"), value = screenDevId, onValueChange = { screenDevId = it }, placeholder = "", modifier = Modifier.weight(1f))
-            ScraperTextField(label = I18n.t(context, "settings.cover.screenscraper.dev_password", "Developer password"), value = screenDevPass, onValueChange = { screenDevPass = it }, placeholder = "", isSecret = true, modifier = Modifier.weight(1f))
+            ScraperTextField(onSave = ::saveDraft, label = I18n.t(context, "settings.cover.screenscraper.dev_id", "Developer ID"), value = screenDevId, onValueChange = { screenDevId = it }, placeholder = "", modifier = Modifier.weight(1f))
+            ScraperTextField(onSave = ::saveDraft, label = I18n.t(context, "settings.cover.screenscraper.dev_password", "Developer password"), value = screenDevPass, onValueChange = { screenDevPass = it }, placeholder = "", isSecret = true, modifier = Modifier.weight(1f))
         }
         Spacer(Modifier.height(16.dp))
         Text(I18n.t(context, "settings.cover.screenscraper.requirements", "ScreenScraper requires your own developer credentials; a user account alone is insufficient."), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
@@ -1410,26 +1415,15 @@ private fun ScraperSettingSection(
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.End)) {
             HubFilledTonalButton(
-                onClick = {
-                    onSaveScraperSettings(
-                        ScraperSettings(
-                            useLibretro = useLibretro,
-                            theGamesDbApiKey = theGamesDbKey,
-                            steamGridDbApiKey = steamGridKey,
-                            screenScraperUser = screenUser,
-                            screenScraperPassword = screenPass,
-                            screenScraperDevId = screenDevId,
-                            screenScraperDevPassword = screenDevPass
-                        )
-                    )
-                }
+                onClick = ::saveDraft
             ) { Text(I18n.t(context, "settings.cover.save", "保存刮削设置"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 }
 
 @Composable
-private fun ScraperTextField(
+internal fun ScraperTextField(
+    onSave: () -> Unit,
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
@@ -1449,37 +1443,40 @@ private fun ScraperTextField(
         }
     }
 
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        HubOutlinedTextField(
-            value = value,
-            onValueChange = { if (editing) onValueChange(it) },
-            modifier = Modifier
-                .weight(1f)
-                .focusRequester(focusRequester)
-                .focusProperties { canFocus = editing },
-            singleLine = true,
-            readOnly = !editing,
-            visualTransformation = if (isSecret) PasswordVisualTransformation() else VisualTransformation.None,
-            label = { Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            placeholder = { Text(if (editing) placeholder else I18n.t(LocalContext.current, "settings.input.edit_first", "点右侧“编辑”后输入"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            shape = RoundedCornerShape(18.dp)
-        )
-        HubFilledTonalButton(
-            onClick = {
-                if (editing) {
-                    editing = false
-                    focusManager.clearFocus(force = true)
-                } else {
-                    editing = true
-                }
-            },
-            modifier = Modifier.height(40.dp)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(if (editing) I18n.t(LocalContext.current, "settings.input.save", "保存") else I18n.t(LocalContext.current, "settings.input.edit", "编辑"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            HubOutlinedTextField(
+                value = value,
+                onValueChange = { if (editing) onValueChange(it) },
+                modifier = Modifier
+                    .weight(1f).height(56.dp)
+                    .focusRequester(focusRequester)
+                    .focusProperties { canFocus = editing },
+                singleLine = true,
+                readOnly = !editing,
+                visualTransformation = if (isSecret) PasswordVisualTransformation() else VisualTransformation.None,
+                placeholder = { Text(if (editing) placeholder else I18n.t(LocalContext.current, "settings.input.edit_first", "点右侧“编辑”后输入"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                shape = RoundedCornerShape(18.dp)
+            )
+            HubFilledTonalButton(
+                onClick = {
+                    if (editing) {
+                        onSave()
+                        editing = false
+                        focusManager.clearFocus(force = true)
+                    } else {
+                        editing = true
+                    }
+                },
+                modifier = Modifier.height(56.dp)
+            ) {
+                Text(if (editing) I18n.t(LocalContext.current, "settings.input.save", "保存") else I18n.t(LocalContext.current, "settings.input.edit", "编辑"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

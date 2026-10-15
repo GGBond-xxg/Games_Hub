@@ -231,15 +231,16 @@ private fun EditInfoPage(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(42.dp),
+                    .height(48.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                HubIconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+                HubIconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
                     Icon(
                         Icons.Rounded.ArrowBack,
                         contentDescription = I18n.t(context, "common.back", "返回")
                     )
                 }
+                Spacer(Modifier.width(8.dp))
                 Text(
                     I18n.t(context, "edit.title", "编辑显示信息"),
                     style = MaterialTheme.typography.titleLarge,
@@ -256,7 +257,7 @@ private fun EditInfoPage(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp),
+                        .height(48.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                     shape = RoundedCornerShape(13.dp)
                 ) {
@@ -276,7 +277,7 @@ private fun EditInfoPage(
                 Spacer(Modifier.width(8.dp))
                 HubTextButton(
                     onClick = onBack,
-                    modifier = Modifier.height(38.dp),
+                    modifier = Modifier.height(48.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
                 ) {
                     Text(
@@ -290,7 +291,7 @@ private fun EditInfoPage(
                 HubButton(
                     onClick = onSave,
                     enabled = title.isNotBlank(),
-                    modifier = Modifier.height(38.dp),
+                    modifier = Modifier.height(48.dp),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp),
                     shape = RoundedCornerShape(13.dp)
                 ) {
@@ -647,63 +648,15 @@ private fun EditArtworkCard(
 }
 
 @Composable
-private fun EditArtworkActionButton(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    accessibilityLabel: String,
-    onClick: () -> Unit,
-    filled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val shape = RoundedCornerShape(13.dp)
-    HubSurface(
-        modifier = modifier
-            .height(40.dp)
-            .clip(shape)
-            .clickable(onClick = onClick),
-        shape = shape,
-        color = if (filled) {
-            MaterialTheme.colorScheme.secondaryContainer
-        } else {
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.72f)
-        },
-        border = BorderStroke(
-            1.dp,
-            if (filled) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
-            }
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                icon,
-                contentDescription = accessibilityLabel,
-                modifier = Modifier.size(18.dp),
-                tint = if (filled) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                } else {
-                    MaterialTheme.colorScheme.primary
-                }
-            )
-            Spacer(Modifier.width(7.dp))
-            Text(
-                text,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
+private fun EditArtworkActionButton(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accessibilityLabel: String, onClick: () -> Unit, filled: Boolean, modifier: Modifier = Modifier) {
+    val body: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+        Icon(icon, contentDescription = accessibilityLabel, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
     }
+    if (filled) HubFilledTonalButton(onClick, modifier.height(48.dp), shape = RoundedCornerShape(14.dp), contentPadding = PaddingValues(horizontal = 10.dp), content = body)
+    else HubOutlinedButton(onClick, modifier.height(48.dp), shape = RoundedCornerShape(14.dp), contentPadding = PaddingValues(horizontal = 10.dp), content = body)
 }
 
 private fun loadEditImageBitmap(
@@ -743,7 +696,6 @@ private fun CoverScrapePage(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var manualQuery by rememberSaveable(target.key) { mutableStateOf(queryTitle) }
-    var showSearchField by rememberSaveable(target.key) { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var debugText by remember { mutableStateOf<String?>(null) }
@@ -751,6 +703,7 @@ private fun CoverScrapePage(
     val scraper = remember { CoverScraper(context) }
 
     fun search() {
+        if (isLoading) return
         scope.launch {
             isLoading = true
             errorText = null
@@ -769,7 +722,7 @@ private fun CoverScrapePage(
             }
             candidates = result.getOrDefault(emptyList())
             debugText = scraper.lastReport
-            errorText = result.exceptionOrNull()?.message
+            errorText = result.exceptionOrNull()?.let { I18n.t(context, "cover.report.network_failed", "Request failed. Check your network and try again.") }
             if (candidates.isEmpty() && errorText == null) {
                 errorText = I18n.t(context, "edit.no_cover_found", "没有找到封面。可以换关键词，例如“星之卡比”或“Kirby and the Forgotten Land”。")
             }
@@ -785,7 +738,7 @@ private fun CoverScrapePage(
             .padding(horizontal = 18.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HubIconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, contentDescription = I18n.t(context, "common.back", "返回")) }
             Column(Modifier.weight(1f)) {
                 Text(
@@ -802,10 +755,7 @@ private fun CoverScrapePage(
                 )
                 Text(target.typeLabel, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            HubIconButton(onClick = { showSearchField = !showSearchField }) {
-                Icon(Icons.Rounded.Search, contentDescription = I18n.t(context, "common.search", "搜索"))
-            }
-            HubFilledTonalButton(onClick = { search() }, enabled = !isLoading) { Text(if (isLoading) I18n.t(context, "common.searching", "搜索中") else I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+
         }
 
         if (imageSlot == EditImageSlot.PREVIEW) {
@@ -818,19 +768,21 @@ private fun CoverScrapePage(
             )
         }
 
-        if (showSearchField) {
+        run {
             CompactSearchField(
                 value = manualQuery,
                 onValueChange = { manualQuery = it },
+                enabled = !isLoading,
                 onSearch = { search() }
             )
         }
 
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            val columns = (maxWidth / 126.dp).toInt().coerceIn(1, 4)
             if (isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else if (candidates.isEmpty()) {
-                Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(errorText ?: I18n.t(context, "edit.no_cover_candidate", "没有封面候选"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     if (!debugText.isNullOrBlank()) {
                         Spacer(Modifier.height(10.dp))
@@ -838,14 +790,14 @@ private fun CoverScrapePage(
                             debugText.orEmpty(),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall,
-                            maxLines = 7,
+                            maxLines = 16,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(116.dp),
+                    columns = GridCells.Fixed(columns),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(2.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -871,61 +823,25 @@ private fun CoverScrapePage(
 }
 
 @Composable
-private fun CompactSearchField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSearch: () -> Unit
-) {
+private fun CompactSearchField(value: String, onValueChange: (String) -> Unit, enabled: Boolean, onSearch: () -> Unit) {
     val context = LocalContext.current
-    HubSurface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(46.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.62f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Rounded.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(10.dp))
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold),
-                modifier = Modifier.weight(1f),
-                decorationBox = { innerTextField ->
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                        if (value.isBlank()) {
-                            Text(
-                                I18n.t(context, "edit.search_placeholder", "输入中文名 / 英文名 / 日文罗马音"),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-            Spacer(Modifier.width(10.dp))
-            HubFilledTonalButton(onClick = onSearch, contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)) {
-                Text(I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        HubOutlinedTextField(value, onValueChange, modifier = Modifier.weight(1f).height(56.dp), singleLine = true,
+            placeholder = { Text(I18n.t(context, "edit.search_placeholder", "Search title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { if (enabled) onSearch() }), shape = RoundedCornerShape(16.dp))
+        HubFilledTonalButton(onClick = onSearch, enabled = enabled, modifier = Modifier.height(56.dp)) {
+            Text(I18n.t(context, if (enabled) "common.search" else "common.searching", "Search"), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
 private fun compactSourceText(context: android.content.Context, settings: ScraperSettings): String {
     val sources = buildList {
-        add("Libretro")
+        if (settings.useLibretro) add("Libretro")
         if (settings.steamGridDbApiKey.isNotBlank()) add("SteamGridDB")
         if (settings.theGamesDbApiKey.isNotBlank()) add("TheGamesDB")
+        if (settings.screenScraperDevId.isNotBlank() && settings.screenScraperDevPassword.isNotBlank()) add("ScreenScraper")
     }
     val visible = sources.take(3).joinToString(" / ")
     val suffix = if (sources.size > 3) " / ..." else ""
@@ -937,13 +853,14 @@ private fun CoverCandidateCard(candidate: CoverCandidate, onClick: () -> Unit) {
     HubElevatedCard(
         modifier = Modifier
             .width(106.dp)
-            .height(164.dp)
+            .height(194.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(Modifier.fillMaxSize().padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             RemoteCandidateImage(candidate.imageUrl, Modifier.width(88.dp).height(126.dp))
             Spacer(Modifier.height(4.dp))
+            Text(candidate.title, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
             Text(candidate.source, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
         }
     }
@@ -952,16 +869,46 @@ private fun CoverCandidateCard(candidate: CoverCandidate, onClick: () -> Unit) {
 @Composable
 private fun RemoteCandidateImage(url: String, modifier: Modifier) {
     var bitmap by remember(url) { mutableStateOf<ImageBitmap?>(null) }
+    var loading by remember(url) { mutableStateOf(true) }
     LaunchedEffect(url) {
         bitmap = withContext(Dispatchers.IO) {
-            runCatching { URL(url).openStream().use { input -> BitmapFactory.decodeStream(input)?.asImageBitmap() } }.getOrNull()
+            runCatching { com.bond.md3elauncher.system.ScrapeNetwork.request {
+                val connection = URL(url).openConnection() as java.net.HttpURLConnection
+                try {
+                    connection.connectTimeout = 7000; connection.readTimeout = 9000
+                    check(connection.responseCode in 200..299)
+                    require(connection.contentLengthLong <= 8 * 1024 * 1024)
+                    val bytes = connection.inputStream.use { input ->
+                        val output = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            require(output.size() + count <= 8 * 1024 * 1024)
+                            output.write(buffer, 0, count)
+                        }
+                        output.toByteArray()
+                    }
+                    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+                    require(options.outWidth > 0 && options.outHeight > 0 && options.outWidth.toLong() * options.outHeight <= 40_000_000)
+                    options.inJustDecodeBounds = false
+                    options.inSampleSize = 1
+                    while (maxOf(options.outWidth, options.outHeight) / options.inSampleSize > 512) options.inSampleSize *= 2
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)?.asImageBitmap()
+                } finally { connection.disconnect() }
+            } }.getOrNull()
         }
+        loading = false
     }
     Box(modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)), contentAlignment = Alignment.Center) {
         if (bitmap != null) {
             Image(bitmap = bitmap!!, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
-        } else {
+        } else if (loading) {
             CircularProgressIndicator(modifier = Modifier.size(26.dp), strokeWidth = 2.dp)
+        } else {
+            Icon(Icons.Rounded.PhotoLibrary, contentDescription = I18n.t(LocalContext.current, "edit.download_cover_failed", "Image download failed"), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

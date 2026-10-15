@@ -19,6 +19,7 @@ internal data class ScrapedGame(val metadata: GameMetadata, val cover: String?, 
 
 /** Bounded sequential requests. No credentials or response URLs are included in UI/logs. */
 internal class GameScraper(private val context: Context) {
+    private val theGamesDb = TheGamesDb()
     suspend fun scrape(game: GameItem, needs: ScrapeNeeds, settings: ScraperSettings, language: String): ScrapedGame {
         var result = GameScrapeResult()
         val systemId = GameScrapeSources.systemId(game)
@@ -31,6 +32,23 @@ internal class GameScraper(private val context: Context) {
             val url = "https://api.screenscraper.fr/api2/jeuRecherche.php?" + params.entries.joinToString("&") { "${it.key}=${URLEncoder.encode(it.value, "UTF-8")}" }
             val bytes = request(url, 4 * 1024 * 1024)
             if (bytes != null) result = GameScrapeSources.screenScraper(JSONObject(String(bytes, Charsets.UTF_8)), game.title, systemId, language) ?: result
+        }
+        val tgdbPlatform = TheGamesDb.platform(if (game.platformId == "GB") {
+            if (game.extension.equals("gbc", true)) "GBC" else "GB"
+        } else game.platformId)
+        if (settings.theGamesDbApiKey.isNotBlank() && tgdbPlatform != null &&
+            ((needs.metadata && !result.metadata.isComplete) || (needs.cover && result.coverUrl == null) || (needs.screenshot && result.screenshotUrl == null))) {
+            val found = runInterruptible(Dispatchers.IO) {
+                val titles = (listOf(game.title) + GameTitleQueries.exactAliases(game.title)).distinct()
+                val candidates = titles.flatMap { theGamesDb.search(it, settings.theGamesDbApiKey, tgdbPlatform) }
+                val match = TheGamesDb.exactGame(candidates, titles, tgdbPlatform) ?: return@runInterruptible GameScrapeResult()
+                GameScrapeResult(
+                    if (needs.metadata) theGamesDb.metadata(match, settings.theGamesDbApiKey) else GameMetadata(),
+                    if (needs.cover && result.coverUrl == null) theGamesDb.images(listOf(match), settings.theGamesDbApiKey, CoverArtworkType.BOX_ART).firstOrNull()?.imageUrl else null,
+                    if (needs.screenshot && result.screenshotUrl == null) theGamesDb.images(listOf(match), settings.theGamesDbApiKey, CoverArtworkType.SCREENSHOT).firstOrNull()?.imageUrl else null
+                )
+            }
+            result = GameScrapeResult(result.metadata.fillMissing(found.metadata), result.coverUrl ?: found.coverUrl, result.screenshotUrl ?: found.screenshotUrl)
         }
         var cover: String? = null
         var screenshot: String? = null
@@ -85,27 +103,29 @@ internal class GameScraper(private val context: Context) {
         }
     }
     private suspend fun request(url: String, limit: Int): ByteArray? = runInterruptible(Dispatchers.IO) {
-        require(url.startsWith("https://"))
-        val connection = URL(url).openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 7000; connection.readTimeout = 9000
-            connection.setRequestProperty("User-Agent", "GameHub/${BuildConfig.VERSION_NAME}")
-            val code = connection.responseCode
-            if (code == 404) return@runInterruptible null
-            if (code !in 200..299) throw ScrapeHttpFailure(code)
-            require(connection.contentLengthLong <= limit)
-            connection.inputStream.use { input ->
-                val output = ByteArrayOutputStream()
-                val buffer = ByteArray(8192)
-                while (true) {
-                    if (Thread.currentThread().isInterrupted) throw InterruptedException()
-                    val count = input.read(buffer)
-                    if (count < 0) break
-                    require(output.size() + count <= limit)
-                    output.write(buffer, 0, count)
+        ScrapeNetwork.request {
+            require(url.startsWith("https://"))
+            val connection = URL(url).openConnection() as HttpURLConnection
+            try {
+                connection.connectTimeout = 7000; connection.readTimeout = 9000
+                connection.setRequestProperty("User-Agent", "GameHub/${BuildConfig.VERSION_NAME}")
+                val code = connection.responseCode
+                if (code == 404) return@request null
+                if (code !in 200..299) throw ScrapeHttpFailure(code)
+                require(connection.contentLengthLong <= limit)
+                connection.inputStream.use { input ->
+                    val output = ByteArrayOutputStream()
+                    val buffer = ByteArray(8192)
+                    while (true) {
+                        if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        require(output.size() + count <= limit)
+                        output.write(buffer, 0, count)
+                    }
+                    output.toByteArray()
                 }
-                output.toByteArray()
-            }
-        } finally { connection.disconnect() }
+            } finally { connection.disconnect() }
+        }
     }
 }

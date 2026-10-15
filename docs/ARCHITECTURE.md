@@ -181,3 +181,9 @@ The additional external platforms are appended to default platform and tab sets 
 - `ui/GameInformation.kt`: preview metadata, manual editor and platform batch progress/actions.
 - `ui/ThemeStyle.kt`, `ui/StyleComponents.kt`: persisted M3/Glass/MIUIX selection and control adapters. Stable root composition preserves navigation when switching styles. Glass records a separate gradient backdrop, avoiding recursive recording; images and gameplay are content, not glass surfaces.
 - Backdrop 1.0.6 and MIUIX 0.9.4 are pinned. MIUIX requires compile SDK 37.0 and minimum API 24; target SDK remains 36. MIUIX follows system brightness, while M3/Glass keep their saved appearance settings.
+
+## Scraping and visual fixes (1.3.1)
+
+- `system/TheGamesDb.kt` shares manual/batch search, verified platform IDs, separate boxart/screenshot parsing and cached genre/developer/publisher dictionaries. Exact normalized title plus platform is required for batch updates; regional editions use a deterministic preference, ambiguous aliases are skipped. Credentials are supplied by the user and never included in errors or logs.
+- `ui/GlassSwitch.kt` renders one glass thumb over a recorded track and retains switch semantics. Glass buttons draw one material inside their hit target, and Glass surfaces suppress redundant Material borders/elevation.
+- `background_motion` is a persisted boolean, included in portable backup validation. Glass and MIUIX expose the switch; M3 stays static. The background is drawn separately from content, reads animation state only during drawing, and animates only while the lifecycle is resumed.

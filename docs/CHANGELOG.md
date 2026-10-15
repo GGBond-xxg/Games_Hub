@@ -2,6 +2,15 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.3.1
+
+- 修复刮削凭据输入框旁的“保存”只退出编辑、未保存配置的问题；TheGamesDB 认证和额度错误现在会明确显示。
+- 修正 PSP 的 TheGamesDB 平台编号；中英文搜索使用统一接口，封面与真实截图分开获取，候选显示游戏标题。
+- 平台批量补全接入 TheGamesDB 的发行日期、类型、开发商、发行商、封面和截图；只补缺失项，系列名和歧义匹配不会自动套用。
+- Glass 开关使用玻璃滑块；清理重复材质、边框和按钮叠层，修正深色图标、输入框/按钮高度、边距加减及底部留白。
+- Glass、MIUIX 新增“背景流动效果”开关，默认关闭，设置持久保存且兼容备份，退到后台暂停动画。
+- 验证范围与限制见 `docs/UI_REVIEW_1_3_1.md`。
+
 ## 1.3.0
 
 - **游戏资料**：长按游戏 → 编辑游戏资料，支持发行日期、类型、开发商和发行商；资料显示在右侧预览下方，随备份保存，重扫不会清除。

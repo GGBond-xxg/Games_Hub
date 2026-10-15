@@ -130,7 +130,7 @@ private fun TopTabPill(label: String, selected: Boolean, width: Dp, onClick: () 
             .height(34.dp)
             .clip(shape)
             .styleSurface(shape, containerColor)
-            .border(1.dp, borderColor, shape)
+            .then(if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.GLASS) Modifier else Modifier.border(1.dp, borderColor, shape))
             .clickable(onClick = onClick)
             .padding(horizontal = if (width <= 40.dp) 0.dp else 2.dp),
         contentAlignment = Alignment.Center
@@ -396,11 +396,11 @@ private fun LayoutModeIconButton(
             .size(36.dp)
             .clip(shape)
             .styleSurface(shape, containerColor)
-            .border(
+            .then(if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.GLASS) Modifier else Modifier.border(
                 width = 1.dp,
                 color = borderColor,
                 shape = shape
-            )
+            ))
             .semantics { this.contentDescription = accessibilityLabel }
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center

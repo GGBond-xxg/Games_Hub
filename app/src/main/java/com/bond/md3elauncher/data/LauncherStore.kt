@@ -207,6 +207,8 @@ class LauncherStore(context: Context) {
         ThemeStyle.valueOf(prefs.getString("theme_style", "M3") ?: "M3")
     }.getOrDefault(ThemeStyle.M3)
     fun saveThemeStyle(style: ThemeStyle) { prefs.edit().putString("theme_style", style.name).apply() }
+    fun loadBackgroundMotion() = prefs.getBoolean("background_motion", false)
+    fun saveBackgroundMotion(enabled: Boolean) { prefs.edit().putBoolean("background_motion", enabled).apply() }
     fun loadGlassSettings() = GlassSettings.decode(prefs.getString("glass_settings", null))
     fun saveGlassSettings(settings: GlassSettings) { prefs.edit().putString("glass_settings", settings.clamped().toJson()).apply() }
 

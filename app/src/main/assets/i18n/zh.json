@@ -587,7 +587,7 @@
   "launch.custom.reset": "恢复自动适配",
   "launch.custom.invalid": "请检查动作、Activity、MIME、模板和 JSON 参数。模板只支持 {romUri}、{gameTitle}；不支持嵌套 JSON。",
   "launch.custom.failed": "自定义启动失败，请在平台设置中检查模拟器 Activity 和参数。",
-  "edit.preview_scraper_hint": "预览图优先搜索 Libretro 游戏截图；其他来源可能返回封面。",
+  "edit.preview_scraper_hint": "预览图使用 Libretro、TheGamesDB 和 ScreenScraper 游戏截图；SteamGridDB 可能返回美术图。",
   "launcher.center.platform": "{platform} 游戏",
   "settings.tab_order.external": "外部模拟器平台入口",
   "settings.picker.search.external": "搜索模拟器名称或包名",
@@ -620,5 +620,9 @@
   "theme.glass.opacity": "表面不透明度",
   "theme.glass.compatibility": "调整即时保存。模糊需要 Android 12，折射需要 Android 13；旧设备使用清晰的半透明表面。",
   "theme.reset": "恢复默认",
-  "theme.done": "完成"
+  "theme.done": "完成",
+  "theme.background_motion": "背景流动效果",
+  "cover.report.network_failed": "请求失败，请检查网络后重试。",
+  "cover.report.tgdb_auth": "TheGamesDB：密钥无效或无权限（401/403），请检查并保存有效密钥。",
+  "cover.report.tgdb_quota": "TheGamesDB：请求额度已用尽，请稍后重试。"
 }

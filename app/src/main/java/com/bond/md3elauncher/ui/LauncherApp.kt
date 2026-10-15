@@ -417,7 +417,7 @@ fun LauncherApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.GLASS) androidx.compose.ui.graphics.Color.Transparent else colors.surface)
+            .background(if (LocalThemePreferences.current.style != com.bond.md3elauncher.data.ThemeStyle.M3) androidx.compose.ui.graphics.Color.Transparent else colors.surface)
             .onPreviewKeyEvent { event ->
                 controllerShortcutCaptureHandler?.let { handler ->
                     return@onPreviewKeyEvent handler(event.nativeKeyEvent)
@@ -459,7 +459,7 @@ fun LauncherApp(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = safeMargins.leftDp.dp, end = safeMargins.rightDp.dp),
-            color = if (LocalThemePreferences.current.style == com.bond.md3elauncher.data.ThemeStyle.GLASS) androidx.compose.ui.graphics.Color.Transparent else colors.surface,
+            color = if (LocalThemePreferences.current.style != com.bond.md3elauncher.data.ThemeStyle.M3) androidx.compose.ui.graphics.Color.Transparent else colors.surface,
             shape = RoundedCornerShape(0.dp),
             tonalElevation = 0.dp
         ) {
