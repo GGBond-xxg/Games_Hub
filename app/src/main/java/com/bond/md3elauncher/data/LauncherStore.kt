@@ -64,12 +64,13 @@ class LauncherStore(context: Context) {
 
     fun saveGames(games: List<GameItem>) {
         val next = GameLibraryCodec.encode(games)
-        val editor = prefs.edit()
-        val previous = prefs.getString(KEY_GAMES, null)
-        if (previous != null && GameLibraryCodec.decode(previous)?.rejected == 0 && previous != next) {
-            editor.putString(KEY_GAMES_BACKUP, previous)
+        prefs.edit {
+            val previous = prefs.getString(KEY_GAMES, null)
+            if (previous != null && GameLibraryCodec.decode(previous)?.rejected == 0 && previous != next) {
+                putString(KEY_GAMES_BACKUP, previous)
+            }
+            putString(KEY_GAMES, next)
         }
-        editor.putString(KEY_GAMES, next).apply()
     }
 
     fun loadFavorites(): Set<String> = prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()

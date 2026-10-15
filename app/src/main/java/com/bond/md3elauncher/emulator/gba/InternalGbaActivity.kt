@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.emulator.gba
 
+import androidx.core.content.edit
 import com.bond.md3elauncher.MainActivity
 import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
@@ -99,7 +100,7 @@ class InternalGbaActivity : ComponentActivity() {
         set(value) {
             val fixed = value.coerceIn(0f, 1f)
             field = fixed
-            settingsPrefs.edit().putFloat(PREF_TOUCH_CONTROLS_ALPHA, fixed).apply()
+            settingsPrefs.edit { putFloat(PREF_TOUCH_CONTROLS_ALPHA, fixed) }
             controlsView?.invalidate()
         }
 
@@ -107,7 +108,7 @@ class InternalGbaActivity : ComponentActivity() {
         set(value) {
             val fixed = value.coerceIn(0f, 1f)
             field = fixed
-            settingsPrefs.edit().putFloat(PREF_HARDWARE_CONTROLS_ALPHA, fixed).apply()
+            settingsPrefs.edit { putFloat(PREF_HARDWARE_CONTROLS_ALPHA, fixed) }
             controlsView?.invalidate()
         }
 
@@ -1254,7 +1255,7 @@ class InternalGbaActivity : ComponentActivity() {
             obj.put("enabled", item.enabled)
             array.put(obj)
         }
-        settingsPrefs.edit().putString(PREF_CUSTOM_CHEATS, array.toString()).apply()
+        settingsPrefs.edit { putString(PREF_CUSTOM_CHEATS, array.toString()) }
     }
 
     internal fun showAddCustomCheatDialog() {
@@ -1272,7 +1273,7 @@ class InternalGbaActivity : ComponentActivity() {
         val typeInput = EditText(this).apply {
             hint = tr("emulator.cheat.type_hint", "Cheat type, for example: CodeBreaker / GameShark")
             inputType = InputType.TYPE_CLASS_TEXT
-            setText("CodeBreaker/GameShark")
+            setText(com.bond.md3elauncher.R.string.cheat_type_default)
             setSingleLine(true)
         }
         val codeInput = EditText(this).apply {
@@ -1379,7 +1380,7 @@ class InternalGbaActivity : ComponentActivity() {
 
     private fun toggleCheat(key: String, label: String) {
         val enabled = !settingsPrefs.getBoolean(key, false)
-        settingsPrefs.edit().putBoolean(key, enabled).apply()
+        settingsPrefs.edit { putBoolean(key, enabled) }
         appliedCheatSignature = ""
         showToast(tr("emulator.cheat.toggled", "{name} {state}, trying to send instantly", "name" to label, "state" to if (enabled) tr("emulator.cheat.state_enabled", "enabled") else tr("emulator.cheat.state_disabled", "disabled")))
         applyConfiguredCheats(showMessage = false, force = true, softReset = false)

@@ -41,6 +41,7 @@ class BatchScrapeLiveTest {
             compose.waitUntil(30_000) { compose.onAllNodesWithText(t("edit.no_artwork_found")).fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithText(t("edit.artwork_cover")).performClick()
             compose.waitUntil(30_000) { compose.onAllNodesWithText("Incredibox").fetchSemanticsNodes().size >= 2 }
+            compose.onNodeWithTag("artwork-search-scroll").performScrollToNode(hasText("Incredibox") and hasClickAction())
             val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
             try {
                 File(compose.activity.externalCacheDir, "qa-incredibox-results.png").outputStream().use {

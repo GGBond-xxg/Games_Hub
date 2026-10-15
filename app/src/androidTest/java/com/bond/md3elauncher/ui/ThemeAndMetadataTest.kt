@@ -1,6 +1,9 @@
 package com.bond.md3elauncher.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -153,6 +156,36 @@ class ThemeAndMetadataTest(private val style: ThemeStyle) {
         val file = java.io.File(compose.activity.externalCacheDir, "qa-$page-$style-$width.png")
         try { file.outputStream().use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
         finally { bitmap.recycle() }
+    }
+
+    @Test fun artworkResultsCanUseWholeBodyAndReachLastRow() {
+        val candidates = (1..24).map { CoverCandidate("QA cover $it", "file:///qa/$it", "QA") }
+        var selected: CoverCandidate? = null
+        compose.setContent {
+            GameHubTheme(themeStyle = style) {
+                // Match the short body left by launcher chrome on a phone in landscape.
+                Column(Modifier.fillMaxWidth()) {
+                    Text("Fixed back bar", Modifier.height(48.dp))
+                    ArtworkSearchBody("QA", {}, com.bond.md3elauncher.system.CoverArtworkType.BOX_ART, {},
+                        preview = true, isLoading = false, candidates = candidates, errorText = null, debugText = null,
+                        onSearch = {}, onCandidate = { selected = it }, modifier = Modifier.height(248.dp))
+                }
+            }
+        }
+        val scroll = compose.onNodeWithTag("artwork-search-scroll")
+        scroll.assertHeightIsEqualTo(248.dp)
+        val queryTop = compose.onNode(hasSetTextAction()).fetchSemanticsNode().boundsInRoot.top
+        scroll.performTouchInput { swipeUp() }
+        val inputs = compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
+        assertTrue(inputs.isEmpty() || inputs.first().boundsInRoot.top < queryTop)
+        scroll.performScrollToKey("image:file:///qa/24")
+        compose.onNodeWithText("QA cover 24").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Fixed back bar").assertIsDisplayed()
+        compose.runOnIdle { assertEquals(candidates.last(), selected) }
+        screenshot("search-scrolled")
+        scroll.performScrollToIndex(0)
+        compose.onNode(hasSetTextAction()).assertIsDisplayed()
+        compose.onNodeWithText(t("edit.artwork_cover")).assertIsSelected()
     }
 
     @Test fun versionEntryScrollsLongNotesAndKeepsDismissVisible() {

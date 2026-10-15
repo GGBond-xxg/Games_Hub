@@ -1,6 +1,7 @@
 package com.bond.md3elauncher.emulator
 
 import android.content.Context
+import androidx.core.content.edit
 import android.view.KeyEvent
 import com.bond.md3elauncher.i18n.I18n
 import java.util.Locale
@@ -73,11 +74,11 @@ data class ControllerShortcutSettings(
         }
 
         fun save(context: Context, settings: ControllerShortcutSettings) {
-            val editor = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit()
-            EDITABLE_ACTIONS.forEach { action ->
-                editor.putString(KEY_PREFIX + action.name, encodeKeys(settings.keysFor(action)))
+            context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).edit {
+                EDITABLE_ACTIONS.forEach { action ->
+                    putString(KEY_PREFIX + action.name, encodeKeys(settings.keysFor(action)))
+                }
             }
-            editor.apply()
         }
 
         fun saveBinding(context: Context, action: ControllerShortcutAction, keys: Set<Int>): ControllerShortcutSettings {

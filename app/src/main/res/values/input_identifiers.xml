@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Input/parser identifiers, not translated UI labels. Preserve their exact saved values. -->
+    <string name="touch_style_circle" translatable="false">circle</string>
+    <string name="cheat_type_default" translatable="false">CodeBreaker/GameShark</string>
+</resources>

@@ -9,6 +9,62 @@ import java.util.UUID
 
 /** Dedicated preferences only: never reads/writes the user's launcher store or language file. */
 class LauncherStorePersistenceTest {
+    @Test fun languageFileRemainsTheSourceAcrossContextRecreation() {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val name = "qa-language-${UUID.randomUUID()}"
+        val preferences = target.getSharedPreferences(name, Context.MODE_PRIVATE)
+        val directory = java.io.File(target.cacheDir, name).apply { mkdirs() }
+        fun isolated() = object : ContextWrapper(target) {
+            override fun getSharedPreferences(requestedName: String, mode: Int) = preferences
+            override fun getFilesDir() = directory
+        }
+        try {
+            com.bond.md3elauncher.i18n.I18n.setLanguageOverride(isolated(), "zh-Hant")
+            preferences.edit().clear().commit()
+            assertEquals("zh-Hant", com.bond.md3elauncher.i18n.I18n.savedLanguageMode(isolated()))
+            com.bond.md3elauncher.i18n.I18n.setLanguageOverride(isolated(), "en")
+            assertEquals("en", com.bond.md3elauncher.i18n.I18n.savedLanguageMode(isolated()))
+        } finally {
+            target.deleteSharedPreferences(name)
+            directory.listFiles()?.forEach { it.delete() }
+            directory.delete()
+        }
+    }
+
+    @Test fun libraryRecoveryAndControllerBindingsSurvivePreferenceWrites() {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val name = "qa-store-${UUID.randomUUID()}"
+        val preferences = target.getSharedPreferences(name, Context.MODE_PRIVATE)
+        val isolated = object : ContextWrapper(target) {
+            override fun getSharedPreferences(requestedName: String, mode: Int) = preferences
+        }
+        try {
+            val store = LauncherStore(isolated)
+            val first = listOf(GameItem("qa-1", "GBA", "GBA", "QA", "qa.gba", "gba", "content://qa/1", addedAt = 1))
+            val second = first + first.first().copy(id = "qa-2")
+            store.saveGames(first)
+            store.saveGames(second)
+            store.saveGames(second) // Same-value writes must retain the previous valid snapshot.
+            assertEquals(second, LauncherStore(isolated).loadGames())
+            preferences.edit().putString("games", "broken").commit()
+            assertEquals(first, LauncherStore(isolated).loadGames())
+            store.saveGames(second) // An invalid prior document must not replace the recovery snapshot.
+            preferences.edit().putString("games", "broken again").commit()
+            assertEquals(first, LauncherStore(isolated).loadGames())
+
+            val action = com.bond.md3elauncher.emulator.ControllerShortcutAction.QUICK_SAVE
+            val keys = setOf(android.view.KeyEvent.KEYCODE_BUTTON_L1, android.view.KeyEvent.KEYCODE_BUTTON_A)
+            val saved = com.bond.md3elauncher.emulator.ControllerShortcutSettings.saveBinding(isolated, action, keys)
+            val loaded = com.bond.md3elauncher.emulator.ControllerShortcutSettings.load(isolated)
+            assertEquals(saved, loaded)
+            assertEquals(keys, loaded.keysFor(action))
+            assertEquals(action, com.bond.md3elauncher.emulator.ControllerShortcutSettings.findTriggeredAction(
+                loaded, keys, android.view.KeyEvent.KEYCODE_BUTTON_A, emptySet()))
+            assertEquals("circle", target.getString(com.bond.md3elauncher.R.string.touch_style_circle))
+            assertEquals("CodeBreaker/GameShark", target.getString(com.bond.md3elauncher.R.string.cheat_type_default))
+        } finally { target.deleteSharedPreferences(name) }
+    }
+
     @Test fun settingsArtworkAndOrderingSurviveStoreRecreation() {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "qa-store-${UUID.randomUUID()}"

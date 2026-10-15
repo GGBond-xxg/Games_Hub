@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.emulator.gba
 
+import androidx.core.content.edit
 import android.app.AlertDialog
 import android.graphics.Canvas
 import android.graphics.Color
@@ -895,7 +896,7 @@ internal class GbaTouchControlsView(
             val method = item.keyCodes.joinToString("+")
             listOf(item.id, item.label, style, method).joinToString("|")
         }
-        activity.settingsPrefs.edit().putString(PREF_CUSTOM_TOUCH_BUTTONS, raw).apply()
+        activity.settingsPrefs.edit { putString(PREF_CUSTOM_TOUCH_BUTTONS, raw) }
     }
 
     private fun loadLayoutOverrides(): MutableMap<String, RectF> {
@@ -927,7 +928,7 @@ internal class GbaTouchControlsView(
         val raw = layoutOverrides.entries.joinToString("\n") { (id, rect) ->
             "$id|${rect.left}|${rect.top}|${rect.right}|${rect.bottom}"
         }
-        activity.settingsPrefs.edit().putString(PREF_TOUCH_LAYOUT_RECTS, raw).apply()
+        activity.settingsPrefs.edit { putString(PREF_TOUCH_LAYOUT_RECTS, raw) }
     }
 
     private fun applyLayoutOverrides(viewW: Float, viewH: Float) {
@@ -1080,7 +1081,7 @@ internal class GbaTouchControlsView(
 
     private fun resetVirtualKeyLayout() {
         layoutOverrides.clear()
-        if (!editorMode) activity.settingsPrefs.edit().remove(PREF_TOUCH_LAYOUT_RECTS).apply()
+        if (!editorMode) activity.settingsPrefs.edit { remove(PREF_TOUCH_LAYOUT_RECTS) }
         selectedEditId = null
         rebuildLayout(width.toFloat(), height.toFloat())
         activity.showToast(tr("emulator.virtual.reset_done", "Default virtual button layout restored"))
@@ -1099,7 +1100,7 @@ internal class GbaTouchControlsView(
         }
         val styleInput = EditText(activity).apply {
             hint = tr("emulator.virtual.add_style_hint", "Style: circle or pill")
-            setText("circle")
+            setText(com.bond.md3elauncher.R.string.touch_style_circle)
             setSingleLine(true)
         }
         val methodInput = EditText(activity).apply {

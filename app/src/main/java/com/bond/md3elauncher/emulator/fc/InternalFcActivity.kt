@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.emulator.fc
 
+import androidx.core.content.edit
 import androidx.activity.ComponentActivity
 import android.app.ActivityManager
 import android.content.Context
@@ -126,7 +127,7 @@ open class InternalFcActivity : ComponentActivity() {
         set(value) {
             val fixed = value.coerceIn(0f, 1f)
             field = fixed
-            settingsPrefs.edit().putFloat(PREF_TOUCH_CONTROLS_ALPHA, fixed).apply()
+            settingsPrefs.edit { putFloat(PREF_TOUCH_CONTROLS_ALPHA, fixed) }
             controlsView?.invalidate()
         }
 
@@ -134,7 +135,7 @@ open class InternalFcActivity : ComponentActivity() {
         set(value) {
             val fixed = value.coerceIn(0f, 1f)
             field = fixed
-            settingsPrefs.edit().putFloat(PREF_HARDWARE_CONTROLS_ALPHA, fixed).apply()
+            settingsPrefs.edit { putFloat(PREF_HARDWARE_CONTROLS_ALPHA, fixed) }
             controlsView?.invalidate()
         }
 

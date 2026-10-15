@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
@@ -67,6 +69,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -762,71 +767,85 @@ private fun CoverScrapePage(
 
         }
 
-        if (imageSlot == EditImageSlot.PREVIEW) {
-            Text(
-                I18n.t(context, "edit.preview_scraper_hint", "Preview searches use Libretro screenshots first; other sources may return covers."),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
-        run {
-            CompactSearchField(
-                value = manualQuery,
-                onValueChange = { manualQuery = it },
-                enabled = !isLoading,
-                onSearch = { search() }
-            )
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(I18n.t(context, "edit.artwork_type", "Artwork type"), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            CoverArtworkType.entries.forEach { type ->
-                HubFilterChip(selected = artworkType == type, onClick = { artworkType = type }, enabled = !isLoading,
-                    label = { Text(I18n.t(context, if (type == CoverArtworkType.BOX_ART) "edit.artwork_cover" else "edit.artwork_screenshot", "Artwork"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+        ArtworkSearchBody(
+            manualQuery = manualQuery, onQueryChange = { manualQuery = it },
+            artworkType = artworkType, onArtworkTypeChange = { artworkType = it },
+            preview = imageSlot == EditImageSlot.PREVIEW, isLoading = isLoading,
+            candidates = candidates, errorText = errorText, debugText = debugText,
+            onSearch = { search() }, modifier = Modifier.weight(1f),
+            onCandidate = { candidate ->
+                scope.launch {
+                    isLoading = true
+                    errorText = null
+                    val path = withContext(Dispatchers.IO) { scraper.downloadCandidate(candidate, target.key) }
+                    isLoading = false
+                    if (path != null) onSelected(path) else errorText = I18n.t(context, "edit.download_cover_failed", "Download failed")
+                }
             }
-        }
+        )
+    }
+}
 
-        BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            val columns = (maxWidth / 126.dp).toInt().coerceIn(1, 4)
-            if (isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            } else if (candidates.isEmpty()) {
-                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(errorText ?: I18n.t(context, "edit.no_cover_candidate", "没有封面候选"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                    if (!debugText.isNullOrBlank()) {
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            debugText.orEmpty(),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 16,
-                            overflow = TextOverflow.Ellipsis
-                        )
+/** Search controls scroll with the results, leaving only the page's back/title bar fixed. */
+@Composable
+internal fun ArtworkSearchBody(
+    manualQuery: String,
+    onQueryChange: (String) -> Unit,
+    artworkType: CoverArtworkType,
+    onArtworkTypeChange: (CoverArtworkType) -> Unit,
+    preview: Boolean,
+    isLoading: Boolean,
+    candidates: List<CoverCandidate>,
+    errorText: String?,
+    debugText: String?,
+    onSearch: () -> Unit,
+    onCandidate: (CoverCandidate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val gridState = rememberLazyGridState()
+    LaunchedEffect(isLoading) { if (isLoading) gridState.scrollToItem(0) }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val columns = (maxWidth / 126.dp).toInt().coerceIn(1, 4)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(columns), state = gridState,
+            modifier = Modifier.fillMaxSize().testTag("artwork-search-scroll"),
+            contentPadding = PaddingValues(start = 2.dp, end = 2.dp, top = 2.dp, bottom = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item(key = "query", span = { GridItemSpan(maxLineSpan) }) {
+                CompactSearchField(manualQuery, onQueryChange, !isLoading, onSearch)
+            }
+            item(key = "type", span = { GridItemSpan(maxLineSpan) }) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(I18n.t(context, "edit.artwork_type", "Artwork type"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    CoverArtworkType.entries.forEach { type ->
+                        HubFilterChip(selected = artworkType == type, onClick = { onArtworkTypeChange(type) }, enabled = !isLoading,
+                            label = { Text(I18n.t(context, if (type == CoverArtworkType.BOX_ART) "edit.artwork_cover" else "edit.artwork_screenshot", "Artwork"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                     }
                 }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columns),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    gridItems(candidates, key = { it.imageUrl }) { candidate ->
-                        CoverCandidateCard(
-                            candidate = candidate,
-                            onClick = {
-                                scope.launch {
-                                    isLoading = true
-                                    val path = withContext(Dispatchers.IO) { scraper.downloadCandidate(candidate, target.key) }
-                                    isLoading = false
-                                    if (path != null) onSelected(path) else errorText = I18n.t(context, "edit.download_cover_failed", "下载封面失败")
-                                }
-                            }
-                        )
+            }
+            if (preview) item(key = "hint", span = { GridItemSpan(maxLineSpan) }) {
+                Text(I18n.t(context, "edit.preview_scraper_hint", "Choose screenshots or cover art."),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            when {
+                isLoading -> item(key = "loading", span = { GridItemSpan(maxLineSpan) }) {
+                    Box(Modifier.fillMaxWidth().height(96.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                }
+                else -> {
+                    if (errorText != null || candidates.isEmpty()) item(key = "message", span = { GridItemSpan(maxLineSpan) }) {
+                        Text(errorText ?: I18n.t(context, "edit.no_cover_candidate", "No images found"),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    }
+                    gridItems(candidates, key = { "image:${it.imageUrl}" }) { candidate ->
+                        CoverCandidateCard(candidate, onClick = { onCandidate(candidate) })
+                    }
+                    if (candidates.isEmpty() && !debugText.isNullOrBlank()) item(key = "report", span = { GridItemSpan(maxLineSpan) }) {
+                        Text(debugText, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall, maxLines = 16, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -837,12 +856,21 @@ private fun CoverScrapePage(
 @Composable
 private fun CompactSearchField(value: String, onValueChange: (String) -> Unit, enabled: Boolean, onSearch: () -> Unit) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val submit = {
+        if (enabled) {
+            focusManager.clearFocus()
+            keyboard?.hide()
+            onSearch()
+        }
+    }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        HubOutlinedTextField(value, onValueChange, modifier = Modifier.weight(1f).height(56.dp), singleLine = true,
+        HubOutlinedTextField(value, onValueChange, modifier = Modifier.weight(1f).height(56.dp), enabled = enabled, singleLine = true,
             placeholder = { Text(I18n.t(context, "edit.search_placeholder", "Search title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
-            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { if (enabled) onSearch() }), shape = RoundedCornerShape(16.dp))
-        HubFilledTonalButton(onClick = onSearch, enabled = enabled, modifier = Modifier.height(56.dp)) {
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { submit() }), shape = RoundedCornerShape(16.dp))
+        HubFilledTonalButton(onClick = submit, enabled = enabled, modifier = Modifier.height(56.dp)) {
             Text(I18n.t(context, if (enabled) "common.search" else "common.searching", "Search"), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }

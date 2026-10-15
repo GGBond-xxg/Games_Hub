@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.i18n
 
+import androidx.core.content.edit
 import android.content.Context
 import android.util.Log
 import androidx.compose.material3.LocalTextStyle
@@ -67,9 +68,7 @@ internal object I18n {
     fun setLanguageOverride(context: Context, mode: String) {
         val clean = mode.takeIf { it in SUPPORTED_LANGUAGE_MODES } ?: LANG_SYSTEM
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_LANGUAGE_MODE, clean)
-            .apply()
+            .edit { putString(KEY_LANGUAGE_MODE, clean) }
         runCatching {
             File(context.filesDir, LANGUAGE_MODE_FILE).writeText(clean, Charsets.UTF_8)
         }.onFailure {
