@@ -705,7 +705,12 @@ private fun EmulatorManagerRows(
 ) {
     val context = LocalContext.current
     var sorting by rememberSaveable { mutableStateOf(false) }
-    val order = emulatorTabs(tabOrder)
+    var showAdditionalPlatforms by rememberSaveable { mutableStateOf(false) }
+    val order = emulatorTabs(tabOrder).filter { tab ->
+        tab !in additionalEmulatorTabs || platforms.any {
+            it.id == tab.name && (it.folderUri != null || it.emulatorPackage != null)
+        }
+    }
     Text(
         if (sorting) I18n.t(context, "settings.emulator.sorting_hint", "排序模式：使用上移 / 下移调整模拟器顺序。") else I18n.t(context, "settings.emulator.normal_hint", "单点进入模拟器配置，长按任意一项进入排序。"),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -726,6 +731,8 @@ private fun EmulatorManagerRows(
             BeaconTab.PS1 -> platforms.firstOrNull { it.kind == PlatformKind.PS1 }
             BeaconTab.N64 -> platforms.firstOrNull { it.kind == PlatformKind.N64 }
             BeaconTab.ARCADE -> platforms.firstOrNull { it.kind == PlatformKind.ARCADE }
+            BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> platforms.firstOrNull { it.id == tab.name }
             else -> null
         }
         val title = tab.localizedLabel(context)
@@ -785,12 +792,43 @@ private fun EmulatorManagerRows(
         Spacer(Modifier.height(8.dp))
     }
 
-    PlatformPlaceholderRow(
+    PlatformSettingRow(
         title = I18n.t(context, "settings.emulator.add_other.title", "添加其他"),
-        subtitle = I18n.t(context, "settings.emulator.add_other.subtitle", "占位：后续可添加 N64 / 街机等模拟器"),
-        actionText = I18n.t(context, "settings.emulator.add_other.action", "待添加"),
-        icon = Icons.Rounded.AddCircle
+        subtitle = I18n.t(context, "settings.emulator.add_other.subtitle", "Configure PS2, DS, 3DS, GameCube, Wii or Dreamcast"),
+        actionText = I18n.t(context, "settings.emulator.add_other.action", "Add"),
+        icon = Icons.Rounded.AddCircle,
+        onClick = { showAdditionalPlatforms = true }
     )
+
+    if (showAdditionalPlatforms) {
+        AlertDialog(
+            onDismissRequest = { showAdditionalPlatforms = false },
+            title = { Text(I18n.t(context, "settings.emulator.add_other.title", "添加其他"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            text = {
+                Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                    additionalEmulatorTabs.forEach { tab ->
+                        platforms.firstOrNull { it.id == tab.name }?.let { platform ->
+                            TextButton(
+                                onClick = {
+                                    showAdditionalPlatforms = false
+                                    onOpenPlatform(platform)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(platform.kind.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showAdditionalPlatforms = false }) {
+                    Text(I18n.t(context, "common.cancel", "Cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        )
+    }
 
     if (sorting) {
         Spacer(Modifier.height(8.dp))
@@ -912,6 +950,8 @@ private fun localizedTabOrderSubtitle(context: android.content.Context, tab: Bea
     BeaconTab.PS1 -> I18n.t(context, "settings.tab_order.ps1", "PS1 内置 / 外部模拟器入口")
     BeaconTab.N64 -> I18n.t(context, "settings.tab_order.n64", "N64 内置 / 外部模拟器入口")
     BeaconTab.ARCADE -> I18n.t(context, "settings.tab_order.arcade", "街机内置 / 外部模拟器入口")
+    BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+    BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> I18n.t(context, "settings.tab_order.external", "External emulator platform")
     BeaconTab.ANDROID -> I18n.t(context, "settings.tab_order.android", "安卓应用入口")
     else -> ""
 }
@@ -994,6 +1034,13 @@ private fun OrderedPlatformRows(
             }
             BeaconTab.ARCADE -> {
                 platforms.firstOrNull { it.kind == PlatformKind.ARCADE }?.let { platform ->
+                    PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> {
+                platforms.firstOrNull { it.id == tab.name }?.let { platform ->
                     PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
                     Spacer(Modifier.height(8.dp))
                 }
@@ -1442,9 +1489,14 @@ internal fun PlatformSetupScreen(
     onPickEmulator: () -> Unit,
     onClearEmulator: () -> Unit,
     onUseInternalEmulator: () -> Unit,
-    onScan: () -> Unit
+    onScan: () -> Unit,
+    onSaveLaunchConfig: (com.bond.md3elauncher.data.EmulatorLaunchConfig) -> Unit
 ) {
     val context = LocalContext.current
+    var showLaunchConfig by rememberSaveable(platform.id) { mutableStateOf(false) }
+    if (showLaunchConfig) {
+        CustomLaunchSettings(platform, onDismiss = { showLaunchConfig = false }, onSave = onSaveLaunchConfig)
+    }
     val hasFolder = !platform.folderUri.isNullOrBlank()
     val usesInternalGba = InternalEmulators.usesInternalGba(platform)
     val usesInternalGb = InternalEmulators.usesInternalGb(platform)
@@ -1518,6 +1570,12 @@ internal fun PlatformSetupScreen(
                     onClick = onPickEmulator
                 )
                 if (hasExternalEmulator) {
+                    PlatformConfigRow(
+                        title = I18n.t(context, "launch.custom.title", "Launch configuration"),
+                        subtitle = I18n.t(context, if (platform.launchConfig.enabled) "launch.custom.active" else "launch.custom.automatic", "Automatic"),
+                        actionText = I18n.t(context, "common.config", "Configure"),
+                        onClick = { showLaunchConfig = true }
+                    )
                     PlatformConfigRow(
                         title = I18n.t(context, "settings.platform.clear_external.title", "清除外部模拟器"),
                         subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC || platform.kind == PlatformKind.MD || platform.kind == PlatformKind.PS1 || platform.kind == PlatformKind.N64 || platform.kind == PlatformKind.ARCADE) I18n.t(context, "settings.platform.clear_external.internal_subtitle", "清除后会回到内置模拟器。") else I18n.t(context, "settings.platform.clear_external.subtitle", "只清除绑定关系，不会删除模拟器 App。"),
@@ -1615,7 +1673,7 @@ internal fun SearchDialog(
 }
 
 @Composable
-internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, onBack: () -> Unit, onSelect: (InstalledApp) -> Unit) {
+internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, onBack: () -> Unit, onRefresh: () -> Unit, onSelect: (InstalledApp) -> Unit) {
     val context = LocalContext.current
     var query by rememberSaveable(platform.id) { mutableStateOf("") }
     var showAll by rememberSaveable(platform.id) { mutableStateOf(false) }
@@ -1647,7 +1705,9 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
                     I18n.t(context, "settings.picker.title", "选择 {platform} 模拟器", "platform" to platformDisplayName(platform.kind.title)),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     currentEmulatorLabel(context, platform),
@@ -1656,12 +1716,15 @@ internal fun AppPickerPage(platform: PlatformConfig, apps: List<InstalledApp>, o
                     overflow = TextOverflow.Ellipsis
                 )
             }
+            TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             IconButton(onClick = { showSearch = !showSearch }) {
                 Icon(if (showSearch) Icons.Rounded.Close else Icons.Rounded.Search, contentDescription = I18n.t(context, "settings.picker.search_action", "搜索模拟器"))
             }
             FilterChip(selected = !showAll, onClick = { showAll = false }, label = { Text(I18n.t(context, "common.recommended", "推荐"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
             FilterChip(selected = showAll, onClick = { showAll = true }, label = { Text(I18n.t(context, "common.all", "全部"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
-            TextButton(onClick = onBack) { Text(I18n.t(context, "common.back", "返回"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            TextButton(onClick = onRefresh) { Text(I18n.t(context, "settings.picker.refresh", "Refresh apps"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
 
         if (showSearch) {
@@ -1737,6 +1800,8 @@ private fun emulatorSearchHint(context: android.content.Context, platform: Platf
     PlatformKind.N64 -> I18n.t(context, "settings.picker.search.n64", "搜索 M64Plus FZ / Mupen64Plus / RetroArch / 包名")
     PlatformKind.ARCADE -> I18n.t(context, "settings.picker.search.arcade", "搜索 MAME / RetroArch / FinalBurn / 包名")
     PlatformKind.NES -> I18n.t(context, "settings.picker.search.nes", "搜索 Nes.emu / Nostalgia.NES / RetroArch / 包名")
+    PlatformKind.PS2, PlatformKind.NDS, PlatformKind.N3DS,
+    PlatformKind.GC, PlatformKind.WII, PlatformKind.DREAMCAST -> I18n.t(context, "settings.picker.search.external", "Search emulator name or package")
 }
 
 private fun externalEmulatorHelpText(context: android.content.Context, kind: PlatformKind): String = when (kind) {
@@ -1750,6 +1815,8 @@ private fun externalEmulatorHelpText(context: android.content.Context, kind: Pla
     PlatformKind.PSP -> I18n.t(context, "settings.platform.external.help.psp", "请选择 PPSSPP / PPSSPP Gold / RetroArch 等 PSP 模拟器")
     PlatformKind.NES -> I18n.t(context, "settings.platform.external.help.nes", "可选：改用 Nes.emu / Nostalgia.NES / RetroArch 等 FC/NES 外部模拟器")
     PlatformKind.SWITCH -> I18n.t(context, "settings.platform.external.help.switch", "请选择 Switch 外部模拟器；本项目不包含 keys / firmware")
+    PlatformKind.PS2, PlatformKind.NDS, PlatformKind.N3DS,
+    PlatformKind.GC, PlatformKind.WII, PlatformKind.DREAMCAST -> I18n.t(context, "settings.platform.external.help.other", "Choose an installed emulator. If needed, configure its custom launch parameters.")
 }
 
 private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: InstalledApp): Boolean {
@@ -1865,6 +1932,11 @@ private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: Inst
             "com.retroarch"
         )
         PlatformKind.NES -> FcExternalEmulatorProfiles.recommendedKeywords
+        PlatformKind.PS2 -> listOf("aethersx2", "nethersx2", "play!")
+        PlatformKind.NDS -> listOf("drastic", "melonds", "noods", "retroarch")
+        PlatformKind.N3DS -> listOf("citra", "lime3ds", "azahar", "mandarine")
+        PlatformKind.GC, PlatformKind.WII -> listOf("dolphin")
+        PlatformKind.DREAMCAST -> listOf("redream", "flycast", "reicast", "retroarch")
     }
     return platformKeywords.any { it in text }
 }

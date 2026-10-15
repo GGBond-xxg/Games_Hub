@@ -1,6 +1,7 @@
 package com.bond.md3elauncher.data
 
 import android.content.Context
+import com.bond.md3elauncher.system.CustomLaunchConfig
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -23,7 +24,8 @@ class LauncherStore(context: Context) {
                             emulatorPackage = obj.optStringOrNull("emulatorPackage"),
                             emulatorName = obj.optStringOrNull("emulatorName"),
                             gameCount = obj.optInt("gameCount", 0),
-                            lastScanAt = obj.optLong("lastScanAt", 0L)
+                            lastScanAt = obj.optLong("lastScanAt", 0L),
+                            launchConfig = CustomLaunchConfig.decode(obj.optJSONObject("launchConfig"))
                         )
                     )
                 }
@@ -44,6 +46,7 @@ class LauncherStore(context: Context) {
                     .putNullable("emulatorName", p.emulatorName)
                     .put("gameCount", p.gameCount)
                     .put("lastScanAt", p.lastScanAt)
+                    .put("launchConfig", CustomLaunchConfig.encode(p.launchConfig))
             )
         }
         prefs.edit().putString(KEY_PLATFORMS, arr.toString()).apply()
@@ -334,7 +337,13 @@ class LauncherStore(context: Context) {
         PlatformConfig(id = PlatformKind.MD.name, kind = PlatformKind.MD),
         PlatformConfig(id = PlatformKind.PS1.name, kind = PlatformKind.PS1),
         PlatformConfig(id = PlatformKind.N64.name, kind = PlatformKind.N64),
-        PlatformConfig(id = PlatformKind.ARCADE.name, kind = PlatformKind.ARCADE)
+        PlatformConfig(id = PlatformKind.ARCADE.name, kind = PlatformKind.ARCADE),
+        PlatformConfig(id = PlatformKind.PS2.name, kind = PlatformKind.PS2),
+        PlatformConfig(id = PlatformKind.NDS.name, kind = PlatformKind.NDS),
+        PlatformConfig(id = PlatformKind.N3DS.name, kind = PlatformKind.N3DS),
+        PlatformConfig(id = PlatformKind.GC.name, kind = PlatformKind.GC),
+        PlatformConfig(id = PlatformKind.WII.name, kind = PlatformKind.WII),
+        PlatformConfig(id = PlatformKind.DREAMCAST.name, kind = PlatformKind.DREAMCAST)
     )
 
     private fun mergeDefaultPlatforms(platforms: List<PlatformConfig>): List<PlatformConfig> {

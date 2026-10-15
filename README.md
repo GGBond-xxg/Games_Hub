@@ -8,7 +8,7 @@ GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以
 
 为手机、平板和安卓掌机打造一个用手柄也能轻松操作的游戏入口：选好平台、整理游戏、按下 `A` 开玩。
 
-当前正式版本：`v1.1.1`
+当前正式版本：`v1.2.0`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -18,8 +18,8 @@ Android 包名：`com.bond.md3elauncher`
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 - 系统要求：Android 6.0（API 23）或更高版本
-- `GameHub-v1.1.1-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.1.1-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- `GameHub-v1.2.0-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.2.0-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
@@ -34,6 +34,13 @@ Android 包名：`com.bond.md3elauncher`
 - 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
 - 5 个普通即时存档槽及 1 个快捷存档。
 - English、简体中文、繁體中文三语界面。
+
+### v1.2.0 更新
+
+- **添加更多平台**：设置 → 平台管理 → 模拟器 → 添加其他，支持 PS2、Nintendo DS、Nintendo 3DS、GameCube、Wii、Dreamcast 的扫描与外部模拟器启动入口。
+- **自定义启动配置**：选好模拟器后，可配置 Activity、Action、MIME、ROM URI 模板和 JSON 附加参数；默认仍自动适配。
+- **独立截图搜索**：Libretro 预览图搜索游戏截图，宫格图搜索封面；模拟器选择页新增刷新应用。
+- 新平台需自行安装外部模拟器，实际游戏兼容性取决于模拟器及其启动接口。完整功能差异与后续计划见 [Beacon 对比报告](docs/BEACON_COMPARISON.md)。
 
 ### v1.1.1 更新
 

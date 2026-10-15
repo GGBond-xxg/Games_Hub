@@ -15,6 +15,11 @@ import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
 
+enum class CoverArtworkType {
+    BOX_ART,
+    SCREENSHOT
+}
+
 class CoverScraper(private val context: Context) {
     var lastReport: String = ""
         private set
@@ -23,7 +28,8 @@ class CoverScraper(private val context: Context) {
         title: String,
         platformLabel: String,
         serial: String?,
-        settings: ScraperSettings
+        settings: ScraperSettings,
+        artworkType: CoverArtworkType = CoverArtworkType.BOX_ART
     ): List<CoverCandidate> {
         val cleanTitle = normalizeTitle(title)
         if (cleanTitle.isBlank()) {
@@ -38,7 +44,7 @@ class CoverScraper(private val context: Context) {
         report.add(I18n.t(context, "cover.report.queries", "Queries: {queries}", "queries" to queries.joinToString(" / ")))
 
         if (settings.useLibretro) {
-            val libretro = searchLibretro(queries, platformLabel)
+            val libretro = searchLibretro(queries, platformLabel, artworkType)
             report.add(I18n.t(context, "cover.report.libretro_count", "Libretro: {count}", "count" to libretro.size))
             libretro.forEach { result[it.imageUrl] = it }
         } else {
@@ -100,15 +106,14 @@ class CoverScraper(private val context: Context) {
         }.getOrNull()
     }
 
-    private fun searchLibretro(queries: List<String>, platformLabel: String): List<CoverCandidate> {
+    private fun searchLibretro(queries: List<String>, platformLabel: String, artworkType: CoverArtworkType): List<CoverCandidate> {
         val repos = CoverSources.libretroRepos(platformLabel)
         val out = linkedMapOf<String, CoverCandidate>()
         val deadline = System.nanoTime() + 25_000_000_000L
         for (variant in queries.flatMap { buildTitleVariants(it) }.distinct().take(24)) {
             for (repo in repos) {
                 if (System.nanoTime() >= deadline) return out.values.toList()
-                val encoded = pathEncode("$variant.png")
-                val url = "https://raw.githubusercontent.com/libretro-thumbnails/$repo/master/Named_Boxarts/$encoded"
+                val url = CoverSources.libretroImageUrl(repo, variant, artworkType)
                 if (urlExists(url)) out[url] = CoverCandidate(variant, url, "Libretro")
             }
         }

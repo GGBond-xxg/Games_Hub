@@ -2,9 +2,19 @@ package com.bond.md3elauncher.system
 
 import com.bond.md3elauncher.data.CoverCandidate
 import org.json.JSONObject
+import java.net.URLEncoder
 import java.util.Locale
 
 internal object CoverSources {
+    fun libretroImageUrl(repo: String, title: String, artworkType: CoverArtworkType): String {
+        val directory = when (artworkType) {
+            CoverArtworkType.BOX_ART -> "Named_Boxarts"
+            CoverArtworkType.SCREENSHOT -> "Named_Snaps"
+        }
+        val fileName = URLEncoder.encode("$title.png", "UTF-8").replace("+", "%20")
+        return "https://raw.githubusercontent.com/libretro-thumbnails/$repo/master/$directory/$fileName"
+    }
+
     fun libretroRepos(platform: String): List<String> = when (platform.lowercase(Locale.ROOT)) {
         "psp" -> listOf("Sony_-_PlayStation_Portable")
         "gba" -> listOf("Nintendo_-_Game_Boy_Advance")
@@ -13,6 +23,12 @@ internal object CoverSources {
         "sfc", "snes", "sfc/snes" -> listOf("Nintendo_-_Super_Nintendo_Entertainment_System")
         "md", "genesis", "md/genesis" -> listOf("Sega_-_Mega_Drive_-_Genesis")
         "ps1" -> listOf("Sony_-_PlayStation")
+        "ps2" -> listOf("Sony_-_PlayStation_2")
+        "nds", "nintendo ds" -> listOf("Nintendo_-_Nintendo_DS", "Nintendo_-_Nintendo_DSi")
+        "3ds", "nintendo 3ds" -> listOf("Nintendo_-_Nintendo_3DS")
+        "gc", "gamecube" -> listOf("Nintendo_-_GameCube")
+        "wii" -> listOf("Nintendo_-_Wii")
+        "dc", "dreamcast" -> listOf("Sega_-_Dreamcast")
         "n64" -> listOf("Nintendo_-_Nintendo_64")
         "arcade" -> listOf("MAME")
         else -> emptyList()

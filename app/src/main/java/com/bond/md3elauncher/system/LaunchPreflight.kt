@@ -36,6 +36,7 @@ internal object LaunchPreflight {
             val core = coreName(platform.kind, gles3) ?: return "launch.check.core"
             if (!File(context.applicationInfo.nativeLibraryDir, core).isFile) return "launch.check.core"
         } else {
+            CustomLaunchConfig.validationError(platform.launchConfig)?.let { return it }
             val name = platform.emulatorPackage
             if (name.isNullOrBlank()) return "launch.check.emulator"
             val installed = runCatching { context.packageManager.getApplicationInfo(name, 0).enabled }.getOrDefault(false)

@@ -75,6 +75,7 @@ fun LauncherApp(
     showHomePrompt: Boolean,
     onPickFolder: (PlatformConfig) -> Unit,
     onSelectEmulator: (PlatformConfig, InstalledApp) -> Unit,
+    onSaveLaunchConfig: (PlatformConfig, com.bond.md3elauncher.data.EmulatorLaunchConfig) -> Unit,
     onClearEmulator: (PlatformConfig) -> Unit,
     onUseInternalEmulator: (PlatformConfig) -> Unit,
     onScanPlatform: (PlatformConfig) -> Unit,
@@ -155,6 +156,8 @@ fun LauncherApp(
                 BeaconTab.PS1 -> games.any { it.platformId == PlatformKind.PS1.name } || tab == BeaconTab.PS1
                 BeaconTab.N64 -> games.any { it.platformId == PlatformKind.N64.name } || tab == BeaconTab.N64
                 BeaconTab.ARCADE -> games.any { it.platformId == PlatformKind.ARCADE.name } || tab == BeaconTab.ARCADE
+                BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+                BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> games.any { it.platformId == candidate.name } || tab == candidate
                 BeaconTab.ANDROID -> true
                 else -> false
             }
@@ -266,6 +269,11 @@ fun LauncherApp(
             }
             BeaconTab.ARCADE -> {
                 val first = games.firstOrNull { it.platformId == PlatformKind.ARCADE.name }
+                if (first != null && first.id in favorites) unfavoriteText else favoriteText
+            }
+            BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> {
+                val first = games.firstOrNull { it.platformId == next.name }
                 if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.ANDROID -> {
@@ -467,6 +475,7 @@ fun LauncherApp(
                             platform = pickerPlatform,
                             apps = installedApps,
                             onBack = { appPickerPlatform = null },
+                            onRefresh = onRefreshInstalledApps,
                             onSelect = { app ->
                                 onSelectEmulator(pickerPlatform, app)
                                 appPickerPlatform = null
@@ -502,7 +511,8 @@ fun LauncherApp(
                             onPickEmulator = { appPickerPlatform = setupPlatform },
                             onClearEmulator = { onClearEmulator(setupPlatform) },
                             onUseInternalEmulator = { onUseInternalEmulator(setupPlatform) },
-                            onScan = { onScanPlatform(setupPlatform) }
+                            onScan = { onScanPlatform(setupPlatform) },
+                            onSaveLaunchConfig = { onSaveLaunchConfig(setupPlatform, it) }
                         )
                     } else if (showAllApps) {
                         AndroidBeaconScreen(
@@ -772,6 +782,27 @@ fun LauncherApp(
                                 onToggleFavorite = onToggleFavorite
                             )
 
+                            BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+                            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> PlatformBeaconScreen(
+                                platform = platforms.firstOrNull { it.id == tab.name },
+                                games = games.filter { it.platformId == tab.name },
+                                favorites = favorites,
+                                itemOverrides = itemOverrides,
+                                query = searchQuery,
+                                layoutMode = launcherLayoutMode,
+                                itemOrder = itemOrders["platform:${tab.name}"].orEmpty(),
+                                onSaveItemOrder = { order -> onSaveItemOrder("platform:${tab.name}", order) },
+                                onLaunchSelectedChange = { publishLaunchSelected(it) },
+                                onToggleSelectedChange = { bottomBSelected = it },
+                                onEditSelectedChange = { editSelected = it },
+                                onBottomBLabelChange = { bottomBLabel = it },
+                                onMoveSelectionActionsChange = { up, down -> setMoveSelectionActions(up, down) },
+                                onEdit = { editTarget = it },
+                                onOpenPlatform = { setupPlatformId = it.id },
+                                onLaunchGame = onLaunchGame,
+                                onToggleFavorite = onToggleFavorite
+                            )
+
                             BeaconTab.ANDROID -> AndroidBeaconScreen(
                                 apps = installedApps.filter { "app:${it.packageName}" in androidGames },
                                 favorites = favorites,
@@ -893,6 +924,8 @@ fun LauncherApp(
                             BeaconTab.PS1 -> I18n.t(context, "launcher.center.ps1", "PS1 游戏")
                             BeaconTab.N64 -> I18n.t(context, "launcher.center.n64", "N64 游戏")
                             BeaconTab.ARCADE -> I18n.t(context, "launcher.center.arcade", "街机游戏")
+                            BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
+                            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> I18n.t(context, "launcher.center.platform", "{platform} games", "platform" to tab.localizedLabel(context))
                             BeaconTab.SETTINGS -> I18n.t(context, "launcher.center.settings", "设置")
                         }
                     }

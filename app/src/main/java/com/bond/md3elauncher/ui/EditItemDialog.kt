@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import com.bond.md3elauncher.data.CoverCandidate
 import com.bond.md3elauncher.data.ScraperSettings
 import com.bond.md3elauncher.system.CoverScraper
+import com.bond.md3elauncher.system.CoverArtworkType
 import com.bond.md3elauncher.i18n.I18n
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -748,7 +749,8 @@ private fun CoverScrapePage(
                         title = activeQuery,
                         platformLabel = target.typeLabel,
                         serial = null,
-                        settings = scraperSettings
+                        settings = scraperSettings,
+                        artworkType = if (imageSlot == EditImageSlot.PREVIEW) CoverArtworkType.SCREENSHOT else CoverArtworkType.BOX_ART
                     )
                 }
             }
@@ -762,7 +764,7 @@ private fun CoverScrapePage(
         }
     }
 
-    LaunchedEffect(target.key) { search() }
+    LaunchedEffect(target.key, imageSlot) { search() }
 
     Column(
         modifier = Modifier
@@ -791,6 +793,16 @@ private fun CoverScrapePage(
                 Icon(Icons.Rounded.Search, contentDescription = I18n.t(context, "common.search", "搜索"))
             }
             FilledTonalButton(onClick = { search() }, enabled = !isLoading) { Text(if (isLoading) I18n.t(context, "common.searching", "搜索中") else I18n.t(context, "common.search", "搜索"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
+
+        if (imageSlot == EditImageSlot.PREVIEW) {
+            Text(
+                I18n.t(context, "edit.preview_scraper_hint", "Preview searches use Libretro screenshots first; other sources may return covers."),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         }
 
         if (showSearchField) {

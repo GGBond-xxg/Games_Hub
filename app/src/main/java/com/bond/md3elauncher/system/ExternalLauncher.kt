@@ -31,11 +31,20 @@ class ExternalLauncher(private val context: Context) {
         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    fun launchGame(game: GameItem, platform: PlatformConfig) {
+    /** True only when a ROM launch Intent was accepted, never for the emulator home fallback. */
+    fun launchGame(game: GameItem, platform: PlatformConfig): Boolean {
         val emulatorPackage = platform.emulatorPackage
         if (emulatorPackage.isNullOrBlank()) {
             Toast.makeText(context, I18n.t(context, "toast.select_emulator_first", "请先给 {platform} 选择模拟器 App", "platform" to platform.kind.title), Toast.LENGTH_SHORT).show()
-            return
+            return false
+        }
+
+        if (platform.launchConfig.enabled) {
+            val launched = launchWithCustomConfig(game, platform, emulatorPackage)
+            if (!launched) {
+                Toast.makeText(context, I18n.t(context, "launch.custom.failed", "Custom emulator launch failed. Check the platform launch settings."), Toast.LENGTH_LONG).show()
+            }
+            return launched
         }
 
         val launched = when {
@@ -55,9 +64,45 @@ class ExternalLauncher(private val context: Context) {
         }
 
         if (!launched) {
-            openEmulatorOnly(emulatorPackage)
+            when {
+                platform.kind == PlatformKind.GB && emulatorPackage.isMyOldBoyPackage() -> openEmulatorOnly(
+                    emulatorPackage,
+                    I18n.t(context, "toast.my_oldboy_direct_open_failed", "My OldBoy opened, but this installed build did not expose a stable direct ROM launch entry. Use the built-in GB/GBC emulator for one-click launch.")
+                )
+                // John NESS already explains the unsupported direct launch; preserve that behavior.
+                platform.kind == PlatformKind.NES && emulatorPackage.isJohnNessPackage() -> Unit
+                else -> openEmulatorOnly(emulatorPackage)
+            }
         }
+        return launched
     }
+
+    private fun launchWithCustomConfig(game: GameItem, platform: PlatformConfig, emulatorPackage: String): Boolean = runCatching {
+        val config = platform.launchConfig
+        require(CustomLaunchConfig.validationError(config) == null)
+        val uri = Uri.parse(game.uri)
+        val dataValue = CustomLaunchConfig.renderTemplate(config.dataTemplate, game.uri, game.title)
+        val intent = Intent(config.action).apply {
+            setPackage(emulatorPackage)
+            CustomLaunchConfig.activityClass(emulatorPackage, config.activityName)?.let {
+                component = ComponentName(emulatorPackage, it)
+            }
+            setDataAndType(dataValue.takeIf { it.isNotEmpty() }?.let(Uri::parse), config.mimeType.takeIf { it.isNotEmpty() })
+            CustomLaunchConfig.parseExtras(config.extrasJson).forEach { (key, value) ->
+                when (value) {
+                    is String -> putExtra(key, CustomLaunchConfig.renderTemplate(value, game.uri, game.title))
+                    is Boolean -> putExtra(key, value)
+                    is Int -> putExtra(key, value)
+                    is Long -> putExtra(key, value)
+                    is Double -> putExtra(key, value)
+                }
+            }
+            // Keep the original document grant even when the ROM URI is passed only as an extra.
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            clipData = ClipData.newRawUri("rom", uri)
+        }
+        tryStartIntent(intent)
+    }.getOrDefault(false)
 
     private fun launchWithGenericView(
         game: GameItem,
@@ -210,15 +255,7 @@ class ExternalLauncher(private val context: Context) {
 
         exportedViewIntents.forEach { intent -> if (tryStartIntent(intent)) return true }
 
-        openEmulatorOnly(
-            emulatorPackage,
-            I18n.t(
-                context,
-                "toast.my_oldboy_direct_open_failed",
-                "My OldBoy opened, but this installed build did not expose a stable direct ROM launch entry. Use the built-in GB/GBC emulator for one-click launch."
-            )
-        )
-        return true
+        return false
     }
 
     private fun myOldBoyKnownComponents(emulatorPackage: String): List<ComponentName> {
@@ -435,8 +472,7 @@ class ExternalLauncher(private val context: Context) {
             "John NESS 当前版本未开放稳定的外部 ROM 直启入口，建议 FC/NES 一键启动改用 Nes.emu 或 RetroArch。",
             Toast.LENGTH_LONG
         ).show()
-        // Return true so launchGame does not fall back to opening John NESS's ROM list and look like a failed direct launch.
-        return true
+        return false
     }
 
     private fun Intent.addCommonRomExtras(uri: Uri, game: GameItem, platformKind: PlatformKind) {
@@ -507,7 +543,6 @@ class ExternalLauncher(private val context: Context) {
     }
 
     private fun launchWithRetroArch(game: GameItem, platformKind: PlatformKind, emulatorPackage: String): Boolean {
-        val cachedFile = copyRomToLaunchCache(game) ?: return launchWithGenericView(game, emulatorPackage, includeCacheUris = false)
         val coreNames = when (platformKind) {
             PlatformKind.PSP -> listOf("ppsspp_libretro_android.so")
             PlatformKind.GBA -> listOf("mgba_libretro_android.so", "gpsp_libretro_android.so", "vba_next_libretro_android.so", "vba_m_libretro_android.so")
@@ -518,9 +553,11 @@ class ExternalLauncher(private val context: Context) {
             PlatformKind.N64 -> listOf("mupen64plus_next_gles3_libretro_android.so", "mupen64plus_next_gles2_libretro_android.so", "parallel_n64_libretro_android.so")
             PlatformKind.ARCADE -> listOf("mame2003_plus_libretro_android.so", "fbneo_libretro_android.so", "mame_libretro_android.so")
             PlatformKind.NES -> FcExternalEmulatorProfiles.retroArchCoreNames
-            PlatformKind.SWITCH -> emptyList()
+            PlatformKind.SWITCH, PlatformKind.PS2, PlatformKind.NDS, PlatformKind.N3DS,
+            PlatformKind.GC, PlatformKind.WII, PlatformKind.DREAMCAST -> emptyList()
         }
         if (coreNames.isEmpty()) return launchWithGenericView(game, emulatorPackage, includeCacheUris = false)
+        val cachedFile = copyRomToLaunchCache(game) ?: return launchWithGenericView(game, emulatorPackage, includeCacheUris = false)
 
         val retroActivity = ComponentName(emulatorPackage, "com.retroarch.browser.retroactivity.RetroActivityFuture")
         val candidates = buildList {
@@ -596,8 +633,7 @@ class ExternalLauncher(private val context: Context) {
             }
         }
 
-        openEmulatorOnly(emulatorPackage)
-        return true
+        return false
     }
 
     private fun myBoyEmulatorActivityIntents(uri: Uri, game: GameItem, emulatorPackage: String): List<Intent> {

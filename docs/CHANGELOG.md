@@ -2,6 +2,15 @@
 
 Only current and high-value milestones are retained here. Detailed experimental notes were removed from the handoff package to keep project context focused.
 
+## 1.2.0
+
+- 新增 PS2、Nintendo DS、Nintendo 3DS、GameCube、Wii、Dreamcast 外部模拟器平台；“添加其他”现在可以进入实际配置。
+- 平台可选自定义 Activity、Action、MIME、URI 模板及 JSON 附加参数；默认保留自动适配，换模拟器时重置旧的自定义配置。
+- 模拟器选择页增加刷新，窄屏操作按钮可以换行。
+- Libretro 预览图搜索使用游戏截图，宫格图搜索使用封面；预览与宫格自定义图片保持独立。
+- 新平台仅提供前端扫描与外部启动入口，未增加内置核心；具体模拟器的运行兼容性仍取决于其 URI 与启动参数支持。
+- Beacon 功能对比与后续计划见 `docs/BEACON_COMPARISON.md`；元数据展示、批量刮削、多 ROM 目录及单游戏启动覆盖尚未实现。
+
 ## 1.1.1
 
 - Move backup, about and version actions to the bottom of Settings with equal-width entries.

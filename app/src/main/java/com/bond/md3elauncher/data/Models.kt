@@ -54,8 +54,23 @@ enum class PlatformKind(
         title = "FC/NES",
         subtitle = "内置 FC/NES / Nes.emu / Nostalgia.NES / RetroArch",
         extensions = setOf("nes", "fds", "unf", "unif", "zip", "7z")
-    );
+    ),
+    PS2("PS2", "External emulator", setOf("iso", "chd", "cso", "gz", "bin")),
+    NDS("Nintendo DS", "External emulator", setOf("nds", "dsi", "zip", "7z")),
+    N3DS("Nintendo 3DS", "External emulator", setOf("3ds", "cci", "cxi", "app")),
+    GC("GameCube", "External emulator", setOf("iso", "gcm", "rvz", "wia", "gcz", "ciso")),
+    WII("Wii", "External emulator", setOf("iso", "wbfs", "rvz", "wia", "gcz", "ciso", "wad")),
+    DREAMCAST("Dreamcast", "External emulator", setOf("chd", "gdi", "cdi"));
 }
+
+data class EmulatorLaunchConfig(
+    val enabled: Boolean = false,
+    val activityName: String = "",
+    val action: String = "android.intent.action.VIEW",
+    val mimeType: String = "",
+    val dataTemplate: String = "{romUri}",
+    val extrasJson: String = "{}"
+)
 
 data class PlatformConfig(
     val id: String,
@@ -64,7 +79,8 @@ data class PlatformConfig(
     val emulatorPackage: String? = null,
     val emulatorName: String? = null,
     val gameCount: Int = 0,
-    val lastScanAt: Long = 0L
+    val lastScanAt: Long = 0L,
+    val launchConfig: EmulatorLaunchConfig = EmulatorLaunchConfig()
 )
 
 data class GameItem(

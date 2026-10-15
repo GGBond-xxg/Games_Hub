@@ -167,12 +167,16 @@ class MainActivity : ComponentActivity() {
                     },
                     onSelectEmulator = { platform, app ->
                         updatePlatform(platform.id) {
-                            it.copy(emulatorPackage = app.packageName, emulatorName = app.label)
+                            it.copy(emulatorPackage = app.packageName, emulatorName = app.label,
+                                launchConfig = if (it.emulatorPackage == app.packageName) it.launchConfig else com.bond.md3elauncher.data.EmulatorLaunchConfig())
                         }
+                    },
+                    onSaveLaunchConfig = { platform, config ->
+                        updatePlatform(platform.id) { it.copy(launchConfig = config) }
                     },
                     onClearEmulator = { platform ->
                         updatePlatform(platform.id) {
-                            it.copy(emulatorPackage = null, emulatorName = null)
+                            it.copy(emulatorPackage = null, emulatorName = null, launchConfig = com.bond.md3elauncher.data.EmulatorLaunchConfig())
                         }
                     },
                     onUseInternalEmulator = { platform ->
@@ -419,7 +423,7 @@ class MainActivity : ComponentActivity() {
                     InternalEmulators.usesInternalPs1(platform) -> launchInternalPs1(game)
                     InternalEmulators.usesInternalN64(platform) -> launchInternalN64(game)
                     InternalEmulators.usesInternalArcade(platform) -> launchInternalArcade(game)
-                    else -> externalLauncher.launchGame(game, platform)
+                    else -> if (!externalLauncher.launchGame(game, platform)) return@launch
                 }
                 store.pushRecent(game.id)
                 recent = store.loadRecent()

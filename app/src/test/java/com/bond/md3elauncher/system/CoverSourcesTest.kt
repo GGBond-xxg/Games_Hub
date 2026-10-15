@@ -6,6 +6,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CoverSourcesTest {
+    @Test fun separatesScreenshotsFromBoxArtAndEncodesTheFileName() {
+        val repo = "Nintendo_-_Game_Boy_Advance"
+        val prefix = "https://raw.githubusercontent.com/libretro-thumbnails/$repo/master/"
+        assertEquals(prefix + "Named_Snaps/Example%20%28USA%29.png", CoverSources.libretroImageUrl(repo, "Example (USA)", CoverArtworkType.SCREENSHOT))
+        assertEquals(prefix + "Named_Boxarts/Example%20%28USA%29.png", CoverSources.libretroImageUrl(repo, "Example (USA)", CoverArtworkType.BOX_ART))
+        assertEquals(prefix + "Named_Snaps/A%2FB%20%26%20C.png", CoverSources.libretroImageUrl(repo, "A/B & C", CoverArtworkType.SCREENSHOT))
+    }
+
     @Test fun mapsEverySupportedRetroPlatform() {
         PlatformKind.entries.filter { it != PlatformKind.SWITCH }.forEach { assertTrue(it.title, CoverSources.libretroRepos(it.title).isNotEmpty()) }
         assertTrue(CoverSources.libretroRepos("Switch").isEmpty())

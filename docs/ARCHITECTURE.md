@@ -85,6 +85,7 @@ A launch request chooses one path:
 | `ARCADE` | `internal:arcade` | `InternalArcadeActivity` + MAME 2003-Plus |
 | `PSP` | none | external emulator only |
 | `SWITCH` | none | external emulator only |
+| `PS2`, `NDS`, `N3DS`, `GC`, `WII`, `DREAMCAST` | none | external emulator only |
 
 ## Artwork model
 
@@ -163,3 +164,11 @@ Avoid changing persisted keys, platform IDs, internal emulator markers or `appli
 - `data/GameLibraryCodec.kt` isolates per-record decoding and previous-valid-library recovery. `LauncherStore.saveGames` retains the prior valid document before replacing it.
 - `system/LaunchPreflight.kt` checks supported formats, core/emulator availability and readable game URIs on IO before recording a launch.
 - `system/CoverSources.kt` holds Libretro mappings and ScreenScraper response parsing. ScreenScraper developer and optional user credentials are supplied locally and excluded from portable backups.
+
+## Configurable external launches
+
+`PlatformConfig.launchConfig` defaults to disabled for existing data. `system/CustomLaunchConfig.kt` validates structured Activity/action/MIME/data-template/primitive JSON extras. `ExternalLauncher` applies enabled custom configurations exactly and keeps the original ROM URI read grant; it never executes a shell command. `ui/CustomLaunchSettings.kt` edits these fields. Selecting a different emulator resets its old launch configuration.
+
+The additional external platforms are appended to default platform and tab sets without changing existing IDs. Their settings rows appear after configuration; game tabs use the existing nonempty-library visibility rule. No additional internal cores are included.
+
+`CoverArtworkType` distinguishes preview screenshot queries (`Named_Snaps`) from grid box-art queries (`Named_Boxarts`) for Libretro. Other sources keep their existing cover behavior.
