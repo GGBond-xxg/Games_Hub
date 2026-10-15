@@ -1,7 +1,6 @@
 package com.bond.md3elauncher.i18n
 
 import android.content.Context
-import android.os.Build
 import android.util.Log
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -99,12 +98,7 @@ internal object I18n {
 
     private fun deviceLanguageFor(context: Context): String {
         val tag = runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.resources.configuration.locales[0].toLanguageTag()
-            } else {
-                @Suppress("DEPRECATION")
-                context.resources.configuration.locale.toLanguageTag()
-            }
+            context.resources.configuration.locales[0].toLanguageTag()
         }.getOrNull() ?: Locale.getDefault().toLanguageTag()
         val normalized = tag.lowercase(Locale.ROOT)
         return when {

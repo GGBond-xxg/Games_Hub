@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.ui
 
+import androidx.core.net.toUri
 import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -104,7 +105,7 @@ internal fun AboutAndBackupSettings(isScanning: Boolean) {
         confirmButton = { HubTextButton(onClick = {
             val uri = restoreUri
             restoreUri = null
-            uri?.let { runBackup(Uri.parse(it), true) }
+            uri?.let { runBackup((it).toUri(), true) }
         }) { Text(translated("settings.backup.restore"), maxLines = 1, overflow = TextOverflow.Ellipsis) } },
         dismissButton = { HubTextButton(onClick = { restoreUri = null }) { Text(translated("common.cancel"), maxLines = 1, overflow = TextOverflow.Ellipsis) } }
     )
@@ -148,7 +149,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                             HubTextButton(onClick = { document = "THIRD_PARTY_NOTICES.md" }) { Text(translated("settings.about.notices"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             HubTextButton(onClick = { document = "DISCLAIMER.md" }) { Text(translated("settings.about.disclaimer"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             HubTextButton(onClick = {
-                                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/GGBond-xxg/Games_Hub"))) }
+                                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, ("https://github.com/GGBond-xxg/Games_Hub").toUri())) }
                             }) { Text(translated("settings.about.project"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                             Text(translated("settings.about.sponsor"), style = MaterialTheme.typography.titleMedium)
                             Text(translated("settings.about.sponsor_description"))

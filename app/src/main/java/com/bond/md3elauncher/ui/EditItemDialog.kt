@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.ui
 
+import androidx.core.net.toUri
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -673,7 +674,7 @@ private fun loadEditImageBitmap(
     } ?: return null
 
     return runCatching {
-        val uri = Uri.parse(source)
+        val uri = (source).toUri()
         when {
             uri.scheme == "content" -> context.contentResolver.openInputStream(uri)?.use { input ->
                 BitmapFactory.decodeStream(input)?.asImageBitmap()
@@ -700,6 +701,9 @@ private fun CoverScrapePage(
     var errorText by remember { mutableStateOf<String?>(null) }
     var debugText by remember { mutableStateOf<String?>(null) }
     var candidates by remember { mutableStateOf<List<CoverCandidate>>(emptyList()) }
+    var artworkType by rememberSaveable(target.key, imageSlot) {
+        mutableStateOf(if (imageSlot == EditImageSlot.PREVIEW) CoverArtworkType.SCREENSHOT else CoverArtworkType.BOX_ART)
+    }
     val scraper = remember { CoverScraper(context) }
 
     fun search() {
@@ -716,7 +720,7 @@ private fun CoverScrapePage(
                         platformLabel = target.typeLabel,
                         serial = null,
                         settings = scraperSettings,
-                        artworkType = if (imageSlot == EditImageSlot.PREVIEW) CoverArtworkType.SCREENSHOT else CoverArtworkType.BOX_ART
+                        artworkType = artworkType
                     )
                 }
             }
@@ -724,13 +728,13 @@ private fun CoverScrapePage(
             debugText = scraper.lastReport
             errorText = result.exceptionOrNull()?.let { I18n.t(context, "cover.report.network_failed", "Request failed. Check your network and try again.") }
             if (candidates.isEmpty() && errorText == null) {
-                errorText = I18n.t(context, "edit.no_cover_found", "没有找到封面。可以换关键词，例如“星之卡比”或“Kirby and the Forgotten Land”。")
+                errorText = I18n.t(context, scraper.lastErrorKey ?: "edit.no_artwork_found", "No images of this type found. Try another artwork type or title.")
             }
             isLoading = false
         }
     }
 
-    LaunchedEffect(target.key, imageSlot) { search() }
+    LaunchedEffect(target.key, imageSlot, artworkType) { search() }
 
     Column(
         modifier = Modifier
@@ -775,6 +779,14 @@ private fun CoverScrapePage(
                 enabled = !isLoading,
                 onSearch = { search() }
             )
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(I18n.t(context, "edit.artwork_type", "Artwork type"), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            CoverArtworkType.entries.forEach { type ->
+                HubFilterChip(selected = artworkType == type, onClick = { artworkType = type }, enabled = !isLoading,
+                    label = { Text(I18n.t(context, if (type == CoverArtworkType.BOX_ART) "edit.artwork_cover" else "edit.artwork_screenshot", "Artwork"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
+            }
         }
 
         BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {

@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.io
 
+import androidx.core.net.toUri
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -20,7 +21,7 @@ class RomScanner(private val context: Context) {
 
     suspend fun scan(platform: PlatformConfig): List<GameItem> {
         val folderUri = platform.folderUri ?: return emptyList()
-        val tree = Uri.parse(folderUri)
+        val tree = (folderUri).toUri()
         val root = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
         val allowed = platform.kind.extensions
         val result = linkedMapOf<String, GameItem>()

@@ -1,6 +1,7 @@
 package com.bond.md3elauncher.data
 
 import android.content.Context
+import androidx.core.content.edit
 import com.bond.md3elauncher.system.CustomLaunchConfig
 import org.json.JSONArray
 import org.json.JSONObject
@@ -49,7 +50,7 @@ class LauncherStore(context: Context) {
                     .put("launchConfig", CustomLaunchConfig.encode(p.launchConfig))
             )
         }
-        prefs.edit().putString(KEY_PLATFORMS, arr.toString()).apply()
+        prefs.edit { putString(KEY_PLATFORMS, arr.toString()) }
     }
 
     var recoveredLibrary: Boolean = false
@@ -76,7 +77,7 @@ class LauncherStore(context: Context) {
     fun setFavorite(key: String, favorite: Boolean) {
         val next = loadFavorites().toMutableSet()
         if (favorite) next.add(key) else next.remove(key)
-        prefs.edit().putStringSet(KEY_FAVORITES, next).apply()
+        prefs.edit { putStringSet(KEY_FAVORITES, next) }
     }
 
     fun loadAndroidGames(): Set<String> = prefs.getStringSet(KEY_ANDROID_GAMES, emptySet()) ?: emptySet()
@@ -84,7 +85,7 @@ class LauncherStore(context: Context) {
     fun setAndroidGame(key: String, enabled: Boolean) {
         val next = loadAndroidGames().toMutableSet()
         if (enabled) next.add(key) else next.remove(key)
-        prefs.edit().putStringSet(KEY_ANDROID_GAMES, next).apply()
+        prefs.edit { putStringSet(KEY_ANDROID_GAMES, next) }
     }
 
     fun loadRecent(): List<String> {
@@ -103,7 +104,7 @@ class LauncherStore(context: Context) {
         next.add(0, gameId)
         val arr = JSONArray()
         next.take(20).forEach { arr.put(it) }
-        prefs.edit().putString(KEY_RECENT, arr.toString()).apply()
+        prefs.edit { putString(KEY_RECENT, arr.toString()) }
         saveItemOrder("recent", emptyList())
     }
 
@@ -171,13 +172,13 @@ class LauncherStore(context: Context) {
                     .putNullable("imagePath", item.gridImagePath ?: item.previewImagePath)
             )
         }
-        prefs.edit().putString(KEY_ITEM_OVERRIDES, arr.toString()).apply()
+        prefs.edit { putString(KEY_ITEM_OVERRIDES, arr.toString()) }
     }
 
     fun shouldShowHomePrompt(): Boolean = !prefs.getBoolean(KEY_HOME_PROMPT_DONE, false)
 
     fun markHomePromptDone() {
-        prefs.edit().putBoolean(KEY_HOME_PROMPT_DONE, true).apply()
+        prefs.edit { putBoolean(KEY_HOME_PROMPT_DONE, true) }
     }
 
     fun loadLandscapeMode(): LandscapeMode {
@@ -186,7 +187,7 @@ class LauncherStore(context: Context) {
     }
 
     fun saveLandscapeMode(mode: LandscapeMode) {
-        prefs.edit().putString(KEY_LANDSCAPE_MODE, mode.name).apply()
+        prefs.edit { putString(KEY_LANDSCAPE_MODE, mode.name) }
     }
 
     fun loadLauncherLayoutMode(defaultMode: LauncherLayoutMode = LauncherLayoutMode.LIST): LauncherLayoutMode {
@@ -195,7 +196,7 @@ class LauncherStore(context: Context) {
     }
 
     fun saveLauncherLayoutMode(mode: LauncherLayoutMode) {
-        prefs.edit().putString(KEY_LAUNCHER_LAYOUT_MODE, mode.name).apply()
+        prefs.edit { putString(KEY_LAUNCHER_LAYOUT_MODE, mode.name) }
     }
 
     fun loadThemeMode(): ThemeMode {
@@ -206,20 +207,20 @@ class LauncherStore(context: Context) {
     fun loadThemeStyle(): ThemeStyle = runCatching {
         ThemeStyle.valueOf(prefs.getString("theme_style", "M3") ?: "M3")
     }.getOrDefault(ThemeStyle.M3)
-    fun saveThemeStyle(style: ThemeStyle) { prefs.edit().putString("theme_style", style.name).apply() }
+    fun saveThemeStyle(style: ThemeStyle) { prefs.edit { putString("theme_style", style.name) } }
     fun loadBackgroundMotion() = prefs.getBoolean("background_motion", false)
-    fun saveBackgroundMotion(enabled: Boolean) { prefs.edit().putBoolean("background_motion", enabled).apply() }
+    fun saveBackgroundMotion(enabled: Boolean) { prefs.edit { putBoolean("background_motion", enabled) } }
     fun loadGlassSettings() = GlassSettings.decode(prefs.getString("glass_settings", null))
-    fun saveGlassSettings(settings: GlassSettings) { prefs.edit().putString("glass_settings", settings.clamped().toJson()).apply() }
+    fun saveGlassSettings(settings: GlassSettings) { prefs.edit { putString("glass_settings", settings.clamped().toJson()) } }
 
     fun saveThemeMode(mode: ThemeMode) {
-        prefs.edit().putString(KEY_THEME_MODE, mode.name).apply()
+        prefs.edit { putString(KEY_THEME_MODE, mode.name) }
     }
 
     fun loadUseDynamicColor(): Boolean = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)
 
     fun saveUseDynamicColor(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_DYNAMIC_COLOR, enabled).apply()
+        prefs.edit { putBoolean(KEY_DYNAMIC_COLOR, enabled) }
     }
 
     fun loadThemeColor(): ThemeColor {
@@ -228,7 +229,7 @@ class LauncherStore(context: Context) {
     }
 
     fun saveThemeColor(color: ThemeColor) {
-        prefs.edit().putString(KEY_THEME_COLOR, color.name).apply()
+        prefs.edit { putString(KEY_THEME_COLOR, color.name) }
     }
 
     fun loadSafeMargins(): SafeMarginSettings = SafeMarginSettings(
@@ -238,10 +239,10 @@ class LauncherStore(context: Context) {
 
     fun saveSafeMargins(settings: SafeMarginSettings) {
         val clean = settings.clamped()
-        prefs.edit()
-            .putInt(KEY_SAFE_MARGIN_LEFT, clean.leftDp)
-            .putInt(KEY_SAFE_MARGIN_RIGHT, clean.rightDp)
-            .apply()
+        prefs.edit {
+            putInt(KEY_SAFE_MARGIN_LEFT, clean.leftDp)
+            putInt(KEY_SAFE_MARGIN_RIGHT, clean.rightDp)
+        }
     }
 
     fun resetSafeMargins() {
@@ -263,7 +264,7 @@ class LauncherStore(context: Context) {
         val clean = (order.filter { it in allowed } + defaultTabOrder()).distinct()
         val arr = JSONArray()
         clean.forEach { arr.put(it) }
-        prefs.edit().putString(KEY_TAB_ORDER, arr.toString()).apply()
+        prefs.edit { putString(KEY_TAB_ORDER, arr.toString()) }
     }
 
     fun loadItemOrders(): Map<String, List<String>> {
@@ -302,7 +303,7 @@ class LauncherStore(context: Context) {
             values.forEach { arr.put(it) }
             obj.put(key, arr)
         }
-        prefs.edit().putString(KEY_ITEM_ORDERS, obj.toString()).apply()
+        prefs.edit { putString(KEY_ITEM_ORDERS, obj.toString()) }
     }
 
 
@@ -313,7 +314,7 @@ class LauncherStore(context: Context) {
 
     fun saveLanguageMode(mode: String) {
         val clean = mode.takeIf { it in setOf("system", "en", "zh", "zh-Hant") } ?: "system"
-        prefs.edit().putString(KEY_LANGUAGE_MODE, clean).apply()
+        prefs.edit { putString(KEY_LANGUAGE_MODE, clean) }
     }
 
     fun loadScraperSettings(): ScraperSettings = ScraperSettings(
@@ -327,15 +328,15 @@ class LauncherStore(context: Context) {
     )
 
     fun saveScraperSettings(settings: ScraperSettings) {
-        prefs.edit()
-            .putBoolean(KEY_SCRAPER_LIBRETRO, settings.useLibretro)
-            .putString(KEY_SCRAPER_TGDB, settings.theGamesDbApiKey.trim())
-            .putString(KEY_SCRAPER_STEAMGRID, settings.steamGridDbApiKey.trim())
-            .putString(KEY_SCRAPER_SCREEN_USER, settings.screenScraperUser.trim())
-            .putString(KEY_SCRAPER_SCREEN_PASS, settings.screenScraperPassword.trim())
-            .putString("scraper_screenscraper_dev_id", settings.screenScraperDevId.trim())
-            .putString("scraper_screenscraper_dev_pass", settings.screenScraperDevPassword.trim())
-            .apply()
+        prefs.edit {
+            putBoolean(KEY_SCRAPER_LIBRETRO, settings.useLibretro)
+            putString(KEY_SCRAPER_TGDB, settings.theGamesDbApiKey.trim())
+            putString(KEY_SCRAPER_STEAMGRID, settings.steamGridDbApiKey.trim())
+            putString(KEY_SCRAPER_SCREEN_USER, settings.screenScraperUser.trim())
+            putString(KEY_SCRAPER_SCREEN_PASS, settings.screenScraperPassword.trim())
+            putString("scraper_screenscraper_dev_id", settings.screenScraperDevId.trim())
+            putString("scraper_screenscraper_dev_pass", settings.screenScraperDevPassword.trim())
+        }
     }
 
     private fun defaultPlatforms(): List<PlatformConfig> = listOf(

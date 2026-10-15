@@ -9,6 +9,13 @@ coroutines = "1.10.2"
 junit4 = "4.13.2"
 
 [libraries]
+backdrop = { module = "io.github.kyant0:backdrop", version = "1.0.6" }
+miuix = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version = "0.9.4" }
+libretrodroid = { module = "com.github.Swordfish90:LibretroDroid", version = "0.13.2" }
+json = { module = "org.json:json", version = "20240303" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+androidx-compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }

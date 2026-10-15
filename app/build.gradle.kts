@@ -20,8 +20,8 @@ android {
         applicationId = "com.bond.md3elauncher"
         minSdk = 24
         targetSdk = 36
-        versionCode = 132
-        versionName = "1.3.2"
+        versionCode = 133
+        versionName = "1.3.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -68,8 +68,8 @@ android {
 }
 
 dependencies {
-    implementation("io.github.kyant0:backdrop:1.0.6")
-    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.4")
+    implementation(libs.backdrop)
+    implementation(libs.miuix)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -80,12 +80,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.documentfile)
     implementation(libs.kotlinx.coroutines.android)
-    implementation("com.github.Swordfish90:LibretroDroid:0.13.2")
+    implementation(libs.libretrodroid)
     testImplementation(libs.junit4)
-    testImplementation("org.json:json:20240303")
+    testImplementation(libs.json)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
 }

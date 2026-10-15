@@ -6,6 +6,18 @@ import org.junit.Test
 
 /** Opt-in live smoke test. Supply a disposable key through the environment, never a source file. */
 class TheGamesDbLiveTest {
+    @Test fun incrediboxEnglishCoverAndMissingScreenshotAreDistinguished() {
+        val key = System.getenv("GAMEHUB_TGDB_TEST_KEY").orEmpty()
+        assumeTrue("Live API key not supplied", key.isNotBlank())
+        val client = TheGamesDb()
+        for (title in listOf("Incredibox", "incredibox")) {
+            val covers = client.searchArtwork(listOf(title), "Android apps", key, CoverArtworkType.BOX_ART)
+            assertTrue("English cover search returned no results", covers.any { it.title == "Incredibox" })
+        }
+        // The official entry has box art/banner only. Never relabel either as a screenshot.
+        val screenshots = client.searchArtwork(listOf("Incredibox"), "Android apps", key, CoverArtworkType.SCREENSHOT)
+        assertTrue(screenshots.isEmpty())
+    }
     @Test fun chineseEnglishMetadataCoversAndScreenshots() {
         val key = System.getenv("GAMEHUB_TGDB_TEST_KEY").orEmpty()
         assumeTrue("Live API key not supplied", key.isNotBlank())

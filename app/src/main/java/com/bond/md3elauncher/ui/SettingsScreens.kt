@@ -62,6 +62,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -284,7 +285,7 @@ private fun ControllerShortcutSettingsScreen(
     var captureKeys by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var finishCaptureJob by remember { mutableStateOf<Job?>(null) }
     var conflictText by remember { mutableStateOf<String?>(null) }
-    var selectedIndex by rememberSaveable { mutableStateOf(0) }
+    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val shortcutListState = rememberLazyListState()
 
     fun beginCapture(action: ControllerShortcutAction) {
@@ -1428,8 +1429,8 @@ internal fun ScraperTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    isSecret: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSecret: Boolean = false
 ) {
     var editing by rememberSaveable(label) { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }

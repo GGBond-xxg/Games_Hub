@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.ui
 
+import androidx.core.net.toUri
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -56,7 +57,7 @@ private fun UpdateDialog(checkForUpdate: (suspend () -> ReleaseInfo)?, onDismiss
     fun requestInstall() {
         if (Build.VERSION.SDK_INT >= 26 && !context.packageManager.canRequestPackageInstalls()) {
             error = "update.permission"
-            try { permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))) }
+            try { permission.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, ("package:${context.packageName}").toUri())) }
             catch (_: Exception) { error = "update.install_failed" }
         } else installPending()
     }
@@ -109,7 +110,7 @@ private fun UpdateDialog(checkForUpdate: (suspend () -> ReleaseInfo)?, onDismiss
                     error != null -> HubTextButton(onClick = { checkAttempt++ }) { Text(label("update.retry"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
                 HubTextButton(onClick = {
-                    try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release?.page ?: ReleaseParser.PAGE))) }
+                    try { context.startActivity(Intent(Intent.ACTION_VIEW, (release?.page ?: ReleaseParser.PAGE).toUri())) }
                     catch (_: Exception) { error = "update.network_error" }
                 }) { Text(label("update.github"), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }

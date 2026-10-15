@@ -587,7 +587,7 @@
   "launch.custom.reset": "恢復自動適配",
   "launch.custom.invalid": "請檢查動作、Activity、MIME、範本及 JSON 參數。範本只支援 {romUri}、{gameTitle}；不支援巢狀 JSON。",
   "launch.custom.failed": "自訂啟動失敗，請在平台設定中檢查模擬器 Activity 和參數。",
-  "edit.preview_scraper_hint": "預覽圖使用 Libretro、TheGamesDB 和 ScreenScraper 遊戲截圖；SteamGridDB 可能返回美術圖。",
+  "edit.preview_scraper_hint": "預覽圖可選擇截圖或封面。部分遊戲只有封面，沒有截圖。",
   "launcher.center.platform": "{platform} 遊戲",
   "settings.tab_order.external": "外部模擬器平台入口",
   "settings.picker.search.external": "搜尋模擬器名稱或套件名稱",
@@ -624,5 +624,9 @@
   "theme.background_motion": "背景流動效果",
   "cover.report.network_failed": "請求失敗，請檢查網路後重試。",
   "cover.report.tgdb_auth": "TheGamesDB：金鑰無效或無權限（401/403），請檢查並儲存有效金鑰。",
-  "cover.report.tgdb_quota": "TheGamesDB：請求額度已用盡，請稍後重試。"
+  "cover.report.tgdb_quota": "TheGamesDB：請求額度已用盡，請稍後重試。",
+  "edit.artwork_type": "圖片類型",
+  "edit.artwork_cover": "封面",
+  "edit.artwork_screenshot": "截圖",
+  "edit.no_artwork_found": "找不到此類型的圖片。可以切換封面 / 截圖，或更換遊戲名稱。"
 }

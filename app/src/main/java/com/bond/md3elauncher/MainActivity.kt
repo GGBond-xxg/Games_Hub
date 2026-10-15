@@ -1,5 +1,7 @@
 package com.bond.md3elauncher
 
+import androidx.core.net.toUri
+import androidx.core.graphics.scale
 import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
@@ -731,13 +733,13 @@ class MainActivity : ComponentActivity() {
                 val previewPath = when {
                     previewImageUriString == "__REMOVE__" -> null
                     !previewImageUriString.isNullOrBlank() ->
-                        saveOverrideImage("${key}_preview", Uri.parse(previewImageUriString)) ?: old?.previewImagePath
+                        saveOverrideImage("${key}_preview", (previewImageUriString).toUri()) ?: old?.previewImagePath
                     else -> old?.previewImagePath
                 }
                 val gridPath = when {
                     gridImageUriString == "__REMOVE__" -> null
                     !gridImageUriString.isNullOrBlank() ->
-                        saveOverrideImage("${key}_grid", Uri.parse(gridImageUriString)) ?: old?.gridImagePath
+                        saveOverrideImage("${key}_grid", (gridImageUriString).toUri()) ?: old?.gridImagePath
                     else -> old?.gridImagePath
                 }
                 previewPath to gridPath
@@ -770,7 +772,7 @@ class MainActivity : ComponentActivity() {
             val targetWidth = (bitmap.width * scale).toInt().coerceAtLeast(1)
             val targetHeight = (bitmap.height * scale).toInt().coerceAtLeast(1)
             val scaled = if (targetWidth != bitmap.width || targetHeight != bitmap.height) {
-                Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+                bitmap.scale(targetWidth, targetHeight, true)
             } else {
                 bitmap
             }

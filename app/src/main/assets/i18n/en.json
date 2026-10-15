@@ -587,7 +587,7 @@
   "launch.custom.reset": "Use automatic settings",
   "launch.custom.invalid": "Check the action, Activity, MIME type, template and JSON parameters. Use only {romUri} and {gameTitle} placeholders; nested JSON is not supported.",
   "launch.custom.failed": "Custom launch failed. Check the emulator Activity and parameters in platform settings.",
-  "edit.preview_scraper_hint": "Preview searches use screenshots from Libretro, TheGamesDB and ScreenScraper; SteamGridDB may return artwork.",
+  "edit.preview_scraper_hint": "Choose screenshots or cover art for the preview. Some games have cover art but no screenshots.",
   "launcher.center.platform": "{platform} games",
   "settings.tab_order.external": "External emulator platform",
   "settings.picker.search.external": "Search emulator name or package",
@@ -624,5 +624,9 @@
   "theme.background_motion": "Flowing background",
   "cover.report.network_failed": "Request failed. Check your network and try again.",
   "cover.report.tgdb_auth": "TheGamesDB: API key rejected (401/403). Check and save a valid key.",
-  "cover.report.tgdb_quota": "TheGamesDB: request limit reached. Try again later."
+  "cover.report.tgdb_quota": "TheGamesDB: request limit reached. Try again later.",
+  "edit.artwork_type": "Artwork type",
+  "edit.artwork_cover": "Cover art",
+  "edit.artwork_screenshot": "Screenshots",
+  "edit.no_artwork_found": "No images of this type found. Try another artwork type or title."
 }

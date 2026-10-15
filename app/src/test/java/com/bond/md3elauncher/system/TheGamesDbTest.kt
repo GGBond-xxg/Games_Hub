@@ -5,6 +5,26 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class TheGamesDbTest {
+    @Test fun englishAndroidArtworkSearchIsNotRestrictedToAnAndroidPlatform() {
+        val requests = mutableListOf<String>()
+        val client = TheGamesDb { url ->
+            requests += java.net.URLDecoder.decode(url, "UTF-8")
+            if (url.contains("ByGameName")) {
+                JSONObject("""{"data":{"games":[{"id":104438,"game_title":"Incredibox","platform":1}]}}""")
+            } else {
+                JSONObject("""{"data":{"base_url":{"original":"https://cdn.thegamesdb.net/images/original/"},"images":{"104438":[
+                    {"type":"boxart","side":"front","filename":"boxart/front/104438-1.jpg"},
+                    {"type":"banner","side":null,"filename":"banner/104438-1.jpg"}]}}}""")
+            }
+        }
+        val covers = client.searchArtwork(listOf("Incredibox"), "Android apps", "test-placeholder", CoverArtworkType.BOX_ART)
+        assertEquals("Incredibox", covers.single().title)
+        assertTrue(requests.first().contains("name=Incredibox"))
+        assertFalse(requests.first().contains("filter[platform]"))
+        assertTrue(requests.last().contains("filter[type]=boxart"))
+        assertTrue(client.searchArtwork(listOf("incredibox"), "安卓应用", "test-placeholder", CoverArtworkType.SCREENSHOT).isEmpty())
+        assertTrue(requests.last().contains("filter[type]=screenshot"))
+    }
     private fun game(id: Int, title: String = "Advance Wars", platform: Int = 5, region: Int = 1) =
         JSONObject().put("id", id).put("game_title", title).put("platform", platform).put("region_id", region)
 

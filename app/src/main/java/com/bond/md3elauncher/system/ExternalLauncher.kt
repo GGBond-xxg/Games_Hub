@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.system
 
+import androidx.core.net.toUri
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ComponentName
@@ -80,7 +81,7 @@ class ExternalLauncher(private val context: Context) {
     private fun launchWithCustomConfig(game: GameItem, platform: PlatformConfig, emulatorPackage: String): Boolean = runCatching {
         val config = platform.launchConfig
         require(CustomLaunchConfig.validationError(config) == null)
-        val uri = Uri.parse(game.uri)
+        val uri = (game.uri).toUri()
         val dataValue = CustomLaunchConfig.renderTemplate(config.dataTemplate, game.uri, game.title)
         val intent = Intent(config.action).apply {
             setPackage(emulatorPackage)
@@ -177,7 +178,7 @@ class ExternalLauncher(private val context: Context) {
         // My OldBoy! does not behave like My Boy!: package-level ACTION_VIEW often opens
         // the ROM browser instead of the game. Prefer known / queried emulator activities,
         // and only show a clear fallback message if the installed build does not expose one.
-        val originalUri = Uri.parse(game.uri)
+        val originalUri = (game.uri).toUri()
         val cachedFile = copyRomToLaunchCache(game)
         val cachedContentUri = cachedFile?.let { file ->
             runCatching { FileProvider.getUriForFile(context, FILE_PROVIDER_AUTHORITY, file) }.getOrNull()
@@ -594,7 +595,7 @@ class ExternalLauncher(private val context: Context) {
     }
 
     private fun launchGbaWithMyBoy(game: GameItem, emulatorPackage: String): Boolean {
-        val originalUri = Uri.parse(game.uri)
+        val originalUri = (game.uri).toUri()
         val cachedFile = copyRomToLaunchCache(game)
         val cachedContentUri = cachedFile?.let { file ->
             runCatching {
@@ -766,7 +767,7 @@ class ExternalLauncher(private val context: Context) {
     }
 
     private fun romUriCandidates(game: GameItem, includeCacheUris: Boolean): List<Uri> {
-        val originalUri = Uri.parse(game.uri)
+        val originalUri = (game.uri).toUri()
         val originalFileUri = readableFilePath(originalUri)?.let { path ->
             runCatching {
                 StrictMode.setVmPolicy(StrictMode.VmPolicy.Builder().build())
@@ -865,7 +866,7 @@ class ExternalLauncher(private val context: Context) {
     }
 
     private fun copyRomToLaunchCache(game: GameItem): File? {
-        val sourceUri = Uri.parse(game.uri)
+        val sourceUri = (game.uri).toUri()
         val extension = game.extension.lowercase(Locale.ROOT).ifBlank { "rom" }
         val safeName = game.fileName
             .replace(Regex("[^A-Za-z0-9._-]"), "_")

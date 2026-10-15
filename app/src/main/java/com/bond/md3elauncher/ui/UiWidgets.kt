@@ -83,8 +83,8 @@ internal fun AppPreviewImage(
 @Composable
 internal fun GameCover(
     game: GameItem,
-    overridePath: String? = null,
     modifier: Modifier = Modifier,
+    overridePath: String? = null,
     contentScale: ContentScale = ContentScale.Fit
 ) {
     val coverBitmap = asyncBitmap("cover:${game.coverPath}:$overridePath") {
@@ -187,7 +187,7 @@ private fun drawableToBitmap(drawable: Drawable): Bitmap {
     if (drawable is BitmapDrawable && drawable.bitmap != null) return drawable.bitmap
     val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
     val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val bitmap = androidx.core.graphics.createBitmap(width, height, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     drawable.setBounds(0, 0, canvas.width, canvas.height)
     drawable.draw(canvas)

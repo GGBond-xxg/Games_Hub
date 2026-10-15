@@ -132,6 +132,11 @@ class ThemeAndMetadataTest(private val style: ThemeStyle) {
         compose.waitUntil(5000) { compose.onAllNodesWithText(t("common.search")).fetchSemanticsNodes().isNotEmpty() }
         compose.onAllNodesWithText(t("common.search")).assertCountEquals(1)
         compose.onAllNodes(hasSetTextAction()).assertCountEquals(1)
+        compose.onNodeWithText(t("edit.artwork_screenshot")).assertIsSelected()
+        compose.onNodeWithText(t("edit.artwork_cover")).performClick()
+        compose.onNodeWithText(t("edit.artwork_cover")).assertIsSelected()
+        compose.onNodeWithText(t("edit.artwork_screenshot")).performClick()
+        compose.onNodeWithText(t("edit.artwork_screenshot")).assertIsSelected()
         compose.onNode(hasSetTextAction()).performTextReplacement("星之卡比")
         compose.onNodeWithText(t("common.search")).performClick()
         compose.waitForIdle()

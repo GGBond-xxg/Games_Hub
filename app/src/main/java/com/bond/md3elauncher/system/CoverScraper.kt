@@ -22,6 +22,8 @@ enum class CoverArtworkType {
 class CoverScraper(private val context: Context) {
     var lastReport: String = ""
         private set
+    var lastErrorKey: String? = null
+        private set
 
     fun searchCovers(
         title: String,
@@ -30,6 +32,7 @@ class CoverScraper(private val context: Context) {
         settings: ScraperSettings,
         artworkType: CoverArtworkType = CoverArtworkType.BOX_ART
     ): List<CoverCandidate> {
+        lastErrorKey = null
         val cleanTitle = normalizeTitle(title)
         if (cleanTitle.isBlank()) {
             lastReport = I18n.t(context, "cover.report.empty_title", "Search title is empty")
@@ -60,7 +63,7 @@ class CoverScraper(private val context: Context) {
 
         if (settings.theGamesDbApiKey.isNotBlank()) {
             try {
-                val tgdb = searchTheGamesDb(queries, platformLabel, settings.theGamesDbApiKey, artworkType)
+                val tgdb = TheGamesDb().searchArtwork(queries, platformLabel, settings.theGamesDbApiKey, artworkType)
                 report.add(I18n.t(context, "cover.report.tgdb_count", "TheGamesDB: {count}", "count" to tgdb.size))
                 tgdb.forEach { result[it.imageUrl] = it }
             } catch (failure: ScrapeHttpFailure) {
@@ -69,8 +72,10 @@ class CoverScraper(private val context: Context) {
                     429 -> "cover.report.tgdb_quota"
                     else -> "cover.report.network_failed"
                 }
+                lastErrorKey = key
                 report.add(I18n.t(context, key, "TheGamesDB request failed"))
             } catch (_: Exception) {
+                lastErrorKey = "cover.report.network_failed"
                 report.add(I18n.t(context, "cover.report.network_failed", "Request failed. Check your network and try again."))
             }
         } else {
@@ -164,16 +169,6 @@ class CoverScraper(private val context: Context) {
             }
         }
         return candidates.values.toList()
-    }
-
-    private fun searchTheGamesDb(queries: List<String>, platformLabel: String, apiKey: String, type: CoverArtworkType): List<CoverCandidate> {
-        val api = TheGamesDb()
-        val games = linkedMapOf<String, JSONObject>()
-        for (query in queries.take(5)) {
-            api.search(query, apiKey, TheGamesDb.platform(platformLabel)).take(12).forEach { games[it.optString("id")] = it }
-            if (games.size >= 12) break
-        }
-        return api.images(games.values.take(12), apiKey, type)
     }
 
     private fun getJson(url: String, headers: Map<String, String> = emptyMap()): JSONObject = ScrapeNetwork.request {

@@ -1,5 +1,6 @@
 package com.bond.md3elauncher.system
 
+import androidx.core.net.toUri
 import android.app.ActivityManager
 import android.content.Context
 import android.net.Uri
@@ -42,7 +43,7 @@ internal object LaunchPreflight {
             val installed = runCatching { context.packageManager.getApplicationInfo(name, 0).enabled }.getOrDefault(false)
             if (!installed) return "launch.check.emulator"
         }
-        val readable = runCatching { context.contentResolver.openInputStream(Uri.parse(game.uri))?.use { it.read() >= 0 } == true }.getOrDefault(false)
+        val readable = runCatching { context.contentResolver.openInputStream((game.uri).toUri())?.use { it.read() >= 0 } == true }.getOrDefault(false)
         return if (readable) null else "launch.check.file"
     }
 }

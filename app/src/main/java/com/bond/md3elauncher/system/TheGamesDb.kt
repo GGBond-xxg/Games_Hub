@@ -10,6 +10,14 @@ import java.util.Locale
 /** Shared manual/batch API adapter. The injected reader must bound responses and redact URLs on failure. */
 internal class TheGamesDb(private val read: (String) -> JSONObject = ::readGameDatabaseJson) {
     private val dictionaries = mutableMapOf<String, Map<String, String>>()
+    fun searchArtwork(queries: List<String>, platformLabel: String, apiKey: String, type: CoverArtworkType): List<CoverCandidate> {
+        val games = linkedMapOf<String, JSONObject>()
+        for (query in queries.take(5)) {
+            search(query, apiKey, platform(platformLabel)).take(12).forEach { games[it.optString("id")] = it }
+            if (games.size >= 12) break
+        }
+        return images(games.values.take(12), apiKey, type)
+    }
     fun search(query: String, apiKey: String, platform: String?): List<JSONObject> {
         val params = linkedMapOf("apikey" to apiKey.trim(), "name" to query,
             "fields" to "genres,publishers,alternates")

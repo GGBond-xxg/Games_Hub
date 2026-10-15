@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberCombinedBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -31,7 +32,7 @@ internal fun GlassSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?
         contentAlignment = Alignment.Center) {
         Box(Modifier.size(64.dp, 30.dp).layerBackdrop(track)
             .background(if (checked) colors.primary.copy(alpha = 0.72f) else colors.onSurface.copy(alpha = 0.18f), shape))
-        Box(Modifier.align(Alignment.CenterStart).offset(x = (2 + fraction * 22).dp).size(38.dp, 26.dp)
+        Box(Modifier.align(Alignment.CenterStart).offset { IntOffset((2 + fraction * 22).dp.roundToPx(), 0) }.size(38.dp, 26.dp)
             .styleSurface(shape, colors.surface.copy(alpha = 0.86f), combined))
     }
 }

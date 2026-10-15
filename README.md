@@ -8,7 +8,7 @@ GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以
 
 为手机、平板和安卓掌机打造一个用手柄也能轻松操作的游戏入口：选好平台、整理游戏、按下 `A` 开玩。
 
-当前正式版本：`v1.3.2`
+当前正式版本：`v1.3.3`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -18,8 +18,8 @@ Android 包名：`com.bond.md3elauncher`
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 - 系统要求：Android 7.0（API 24）或更高版本
-- `GameHub-v1.3.2-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.3.2-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- `GameHub-v1.3.3-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.3.3-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
@@ -34,6 +34,13 @@ Android 包名：`com.bond.md3elauncher`
 - 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
 - 5 个普通即时存档槽及 1 个快捷存档。
 - English、简体中文、繁體中文三语界面。
+
+### v1.3.3 更新
+
+- 手动图片搜索增加“封面 / 截图”切换，两种图片仍分别保存；只有封面的游戏也可手动选择为预览图，批量刮削不会把封面当截图。
+- TheGamesDB 密钥失效、额度和网络问题直接显示在搜索主提示，避免误认为英文标题搜索不到。
+- 安全清理 50 项 lint 警告与 1 项提示：等价 KTX 写法、Compose 参数与状态、无用资源和版本目录。依赖版本、模拟器核心和手柄分发不变。
+- 完整 lint 为 0 错误、61 警告；保留项目及验证范围见 `docs/VALIDATION_1_3_3.md`。
 
 ### v1.3.2 更新
 
