@@ -20,8 +20,8 @@ android {
         applicationId = "com.bond.md3elauncher"
         minSdk = 24
         targetSdk = 36
-        versionCode = 131
-        versionName = "1.3.1"
+        versionCode = 132
+        versionName = "1.3.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

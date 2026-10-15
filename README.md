@@ -8,7 +8,7 @@ GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以
 
 为手机、平板和安卓掌机打造一个用手柄也能轻松操作的游戏入口：选好平台、整理游戏、按下 `A` 开玩。
 
-当前正式版本：`v1.3.1`
+当前正式版本：`v1.3.2`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -18,8 +18,8 @@ Android 包名：`com.bond.md3elauncher`
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 - 系统要求：Android 7.0（API 24）或更高版本
-- `GameHub-v1.3.1-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.3.1-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- `GameHub-v1.3.2-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.3.2-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
@@ -34,6 +34,12 @@ Android 包名：`com.bond.md3elauncher`
 - 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
 - 5 个普通即时存档槽及 1 个快捷存档。
 - English、简体中文、繁體中文三语界面。
+
+### v1.3.2 更新
+
+- 修复 Glass、MIUIX 点击“当前版本”和备份弹窗时因重复滚动容器导致的闪退，长更新说明滚动时操作按钮保持可见。
+- 处理完整 `lintRelease` 的 11 项错误：刘海屏主题属性按系统版本加载；AndroidX 按键回调误报与启动器应用可见性使用有说明的局部豁免。
+- 模拟器按键处理、原生核心、存档与手柄快捷键行为保持不变。验证详情见 `docs/VALIDATION_1_3_2.md`。
 
 ### v1.3.1 更新
 

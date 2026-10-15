@@ -150,6 +150,68 @@ class ThemeAndMetadataTest(private val style: ThemeStyle) {
         finally { bitmap.recycle() }
     }
 
+    @Test fun versionEntryScrollsLongNotesAndKeepsDismissVisible() {
+        val checked = kotlinx.coroutines.CompletableDeferred<com.bond.md3elauncher.system.ReleaseInfo>()
+        compose.setContent {
+            GameHubTheme(themeStyle = style) { UpdateSettingsEntry(checkForUpdate = { checked.await() }) }
+        }
+        compose.onNodeWithText(t("update.version"), substring = true).performClick()
+        compose.onNodeWithText(t("update.checking")).assertIsDisplayed()
+        compose.runOnIdle {
+            checked.complete(com.bond.md3elauncher.system.ReleaseInfo("99.0.0",
+                (1..80).joinToString("\n") { "Release note $it" }, "https://github.com/GGBond-xxg/Games_Hub/releases", null))
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText(t("common.cancel")).assertIsDisplayed()
+        compose.onNodeWithText(t("update.github")).assertIsDisplayed()
+        compose.onNode(hasScrollAction()).performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+        val range = compose.onNode(hasScrollAction()).fetchSemanticsNode().config[
+            androidx.compose.ui.semantics.SemanticsProperties.VerticalScrollAxisRange]
+        compose.runOnIdle {
+            assertTrue("Long release notes must be scrollable", range.maxValue() > 0f)
+            assertEquals(range.maxValue(), range.value(), 1f)
+        }
+        screenshot("version")
+        compose.onNodeWithText(t("common.cancel")).performClick()
+        compose.onNodeWithText(t("update.title")).assertDoesNotExist()
+        // Opening again and system/controller Back must dismiss without losing the entry.
+        compose.onNodeWithText(t("update.version"), substring = true).performClick()
+        compose.onNodeWithText(t("update.title")).assertIsDisplayed()
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        compose.waitForIdle()
+        compose.onNodeWithText(t("update.title")).assertDoesNotExist()
+        compose.onNodeWithText(t("update.version"), substring = true).assertIsDisplayed()
+    }
+
+    @Test fun versionCheckErrorCanRetryWithoutClosingDialog() {
+        var attempts = 0
+        compose.setContent {
+            GameHubTheme(themeStyle = style) {
+                UpdateSettingsEntry(checkForUpdate = {
+                    attempts++
+                    if (attempts == 1) throw java.io.IOException("Offline test")
+                    com.bond.md3elauncher.system.ReleaseInfo(com.bond.md3elauncher.BuildConfig.VERSION_NAME, "", "", null)
+                })
+            }
+        }
+        compose.onNodeWithText(t("update.version"), substring = true).performClick()
+        compose.onNodeWithText(t("update.network_error")).assertIsDisplayed()
+        compose.onNodeWithText(t("update.retry")).performClick()
+        compose.onNodeWithText(t("update.latest"), substring = true).assertIsDisplayed()
+        compose.runOnIdle { assertEquals(2, attempts) }
+        compose.onNodeWithText(t("common.cancel")).performClick()
+    }
+
+    @Test fun backupEntryUsesOneScrollContainerAndCanCancel() {
+        compose.setContent { GameHubTheme(themeStyle = style) { AboutAndBackupSettings(isScanning = false) } }
+        compose.onNodeWithText(t("settings.backup.title")).performClick()
+        compose.onNodeWithText(t("settings.backup.export")).assertIsDisplayed()
+        compose.onNodeWithText(t("settings.backup.restore")).assertIsDisplayed()
+        compose.onNodeWithText(t("common.cancel")).performClick()
+        compose.onNodeWithText(t("settings.backup.export")).assertDoesNotExist()
+    }
+
     companion object {
         @JvmStatic @Parameterized.Parameters(name = "{0}") fun styles() = ThemeStyle.entries.map { arrayOf(it) }
     }

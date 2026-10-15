@@ -170,6 +170,10 @@ class InternalGbaActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+    // Public Activity callback inherited through androidx.activity.ComponentActivity.
+    // Lint picks up the restricted androidx.core base class; keep super dispatch so
+    // unhandled keys retain Android/Compose routing after emulator shortcuts.
+    @android.annotation.SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val keyCode = event.keyCode
 

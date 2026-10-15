@@ -1,11 +1,15 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
         Launcher/front-end app needs to list launchable apps and emulator apps.
-        QUERY_ALL_PACKAGES makes the private/sideload build behave closer to Beacon.
+        Broad visibility is intentional: custom emulator profiles can target packages
+        and exported activities without a launcher icon or a known ROM intent filter.
+        Keep this exception local to the permission; do not disable the lint check globally.
         If you plan to publish to Google Play, this permission needs policy review or removal.
     -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

@@ -86,7 +86,7 @@ internal fun AboutAndBackupSettings(isScanning: Boolean) {
     if (showBackup) HubAlertDialog(
         onDismissRequest = { showBackup = false },
         title = { Text(translated("settings.backup.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        text = { Text(translated("settings.backup.description"), modifier = Modifier.verticalScroll(rememberScrollState())) },
+        text = { Text(translated("settings.backup.description")) },
         confirmButton = {
             HubTextButton(onClick = { showBackup = false; export.launch("GameHub-backup.zip") }, enabled = !busy && !isScanning) {
                 Text(translated("settings.backup.export"), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -100,7 +100,7 @@ internal fun AboutAndBackupSettings(isScanning: Boolean) {
     if (restoreUri != null) HubAlertDialog(
         onDismissRequest = { restoreUri = null },
         title = { Text(translated("settings.backup.restore"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        text = { Text(translated("settings.backup.confirm"), modifier = Modifier.verticalScroll(rememberScrollState())) },
+        text = { Text(translated("settings.backup.confirm")) },
         confirmButton = { HubTextButton(onClick = {
             val uri = restoreUri
             restoreUri = null

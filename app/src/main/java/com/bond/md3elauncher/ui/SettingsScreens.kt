@@ -810,7 +810,7 @@ private fun EmulatorManagerRows(
             onDismissRequest = { showAdditionalPlatforms = false },
             title = { Text(I18n.t(context, "settings.emulator.add_other.title", "添加其他"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {
-                Column(Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState())) {
+                Column {
                     additionalEmulatorTabs.forEach { tab ->
                         platforms.firstOrNull { it.id == tab.name }?.let { platform ->
                             HubTextButton(

@@ -204,8 +204,13 @@ internal fun HubAlertDialog(onDismissRequest: () -> Unit, confirmButton: @Compos
     icon: (@Composable () -> Unit)? = null, title: (@Composable () -> Unit)? = null, text: (@Composable () -> Unit)? = null,
     properties: DialogProperties = DialogProperties()) {
     val style = LocalThemePreferences.current.style
+    // The dialog owns text scrolling in every theme. Callers must not add another
+    // unbounded vertical scroller inside this slot (Compose rejects infinite height).
+    val scrollableText: (@Composable () -> Unit)? = text?.let { content ->
+        { Column(Modifier.verticalScroll(rememberScrollState())) { content() } }
+    }
     if (style == ThemeStyle.M3) {
-        AlertDialog(onDismissRequest, confirmButton, modifier, dismissButton, icon, title, text, properties = properties); return
+        AlertDialog(onDismissRequest, confirmButton, modifier, dismissButton, icon, title, scrollableText, properties = properties); return
     }
     val body: @Composable () -> Unit = {
         Column(Modifier.heightIn(max = 480.dp).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

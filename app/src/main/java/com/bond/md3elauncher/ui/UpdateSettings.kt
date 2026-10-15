@@ -7,8 +7,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,17 +21,17 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
-internal fun UpdateSettingsEntry(modifier: Modifier = Modifier) {
+internal fun UpdateSettingsEntry(modifier: Modifier = Modifier, checkForUpdate: (suspend () -> ReleaseInfo)? = null) {
     val context = LocalContext.current
     var open by rememberSaveable { mutableStateOf(false) }
     HubTextButton(onClick = { open = true }, modifier = modifier) {
         Text(I18n.t(context, "update.version", "Current version") + "  ${BuildConfig.VERSION_NAME}", maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
-    if (open) UpdateDialog { open = false }
+    if (open) UpdateDialog(checkForUpdate) { open = false }
 }
 
 @Composable
-private fun UpdateDialog(onDismiss: () -> Unit) {
+private fun UpdateDialog(checkForUpdate: (suspend () -> ReleaseInfo)?, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val updater = remember(context) { GitHubUpdater(context) }
@@ -65,7 +63,7 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
     LaunchedEffect(checkAttempt) {
         checking = true
         error = null
-        try { release = updater.check() }
+        try { release = checkForUpdate?.invoke() ?: updater.check() }
         catch (e: Exception) {
             if (e is CancellationException) throw e
             error = (e as? UpdateFailure)?.key ?: "update.network_error"
@@ -76,7 +74,7 @@ private fun UpdateDialog(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = { Text(label("update.title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            Column {
                 when {
                     checking -> { Text(label("update.checking")); LinearProgressIndicator(Modifier.fillMaxWidth()) }
                     downloading -> { Text(label("update.downloading") + " $progress%"); LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth()) }

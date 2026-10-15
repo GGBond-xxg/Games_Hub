@@ -85,7 +85,7 @@ internal fun CustomLaunchSettings(
             onDismissRequest = { chooseActivity = false },
             title = { Text(t("launch.custom.choose_activity"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             text = {
-                Column(Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState())) {
+                Column {
                     activities.forEach { name ->
                         HubTextButton(onClick = { activity = name; chooseActivity = false }) {
                             Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
