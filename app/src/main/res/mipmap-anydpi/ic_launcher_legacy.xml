@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Preserve the artwork; provide transparent breathing room for API 24/25 launchers. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_launcher_legacy_art"
+    android:inset="4dp" />

@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
 import android.os.StrictMode
@@ -561,6 +562,18 @@ class ExternalLauncher(private val context: Context) {
         if (coreNames.isEmpty()) return launchWithGenericView(game, emulatorPackage, includeCacheUris = false)
         val cachedFile = copyRomToLaunchCache(game) ?: return launchWithGenericView(game, emulatorPackage, includeCacheUris = false)
 
+        // Resolve the target app's directory for the current Android user. The launcher's
+        // own dataDir, or a fixed /data/data path, would point at the wrong core location.
+        val emulatorDataDir = try {
+            context.packageManager.getApplicationInfo(emulatorPackage, 0).dataDir
+        } catch (_: PackageManager.NameNotFoundException) {
+            null
+        }
+        if (emulatorDataDir.isNullOrBlank()) {
+            return launchWithGenericView(game, emulatorPackage, includeCacheUris = true)
+        }
+        val coreDirectory = File(emulatorDataDir, "cores")
+
         val retroActivity = ComponentName(emulatorPackage, "com.retroarch.browser.retroactivity.RetroActivityFuture")
         val candidates = buildList {
             coreNames.forEach { core ->
@@ -570,7 +583,7 @@ class ExternalLauncher(private val context: Context) {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         putExtra("ROM", cachedFile.absolutePath)
-                        putExtra("LIBRETRO", "/data/data/$emulatorPackage/cores/$core")
+                        putExtra("LIBRETRO", File(coreDirectory, core).absolutePath)
                         putExtra("CONFIGFILE", "/storage/emulated/0/Android/data/$emulatorPackage/files/retroarch.cfg")
                         putExtra("QUITFOCUS", "")
                     }
@@ -582,7 +595,7 @@ class ExternalLauncher(private val context: Context) {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         putExtra("ROM", cachedFile.absolutePath)
-                        putExtra("LIBRETRO", "/data/data/$emulatorPackage/cores/$core")
+                        putExtra("LIBRETRO", File(coreDirectory, core).absolutePath)
                         putExtra("CONFIGFILE", "/storage/emulated/0/Android/data/$emulatorPackage/files/retroarch.cfg")
                         putExtra("QUITFOCUS", "")
                     }

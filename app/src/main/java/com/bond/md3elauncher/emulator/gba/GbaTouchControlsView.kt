@@ -2,6 +2,7 @@ package com.bond.md3elauncher.emulator.gba
 
 import androidx.core.content.edit
 import android.app.AlertDialog
+import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -22,8 +23,10 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 internal class GbaTouchControlsView(
-    private val activity: InternalGbaActivity
-) : View(activity) {
+    context: Context
+) : View(context) {
+    // Like FcTouchControlsView, this overlay is created programmatically by its host.
+    private val activity = context as InternalGbaActivity
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE

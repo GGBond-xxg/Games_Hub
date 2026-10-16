@@ -140,11 +140,12 @@ imports/references, reflection, JNI symbols and build/keep configuration. Curren
 routing and ROM scanning explicitly use the corresponding `emulator/` implementations.
 No active emulator, controller handler, persisted marker or save path was changed.
 
-`cpp/gba_cheat_bridge.cpp` still contains historical JNI exports for the old root-package
-bridge. This native scaffold is not connected to Gradle's `externalNativeBuild`, is not
-packaged as a cheat bridge library, and had no native declarations or library loader in
-the removed Kotlin scaffold. Enabling it in the future requires deliberate JNI/package
-integration and testing; it is not the current LibretroDroid cheat backend.
+The unreferenced `emulator/gba/GbaNativeCheatBridge.kt` placeholder and the disconnected
+`cpp/gba_cheat_bridge.cpp` / `cpp/CMakeLists.txt` scaffold have also been removed. The
+native scaffold exported symbols for the already deleted root-package bridge, had no
+library loader, was not connected to Gradle's `externalNativeBuild`, and was not packaged
+in the APK. Current GBA cheats continue to use LibretroDroid; disabling an active cheat
+still uses quick-save, restart and quick-load.
 
 ## Native resources
 

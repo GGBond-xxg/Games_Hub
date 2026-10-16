@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- These source bitmaps are NOT exposed directly as launcher icons. The API 24/25
+         fallback wraps them in mipmap-anydpi/ic_launcher_legacy.xml with a 4dp inset.
+         IconDetector follows the reference but inspects raw pixels without the inset.
+         LauncherIconTest verifies transparent bounds on the rendered drawable.
+         Keep the check enabled for every other icon, including adaptive foregrounds. -->
+    <issue id="IconLauncherShape">
+        <ignore path="src/main/res/drawable-mdpi/ic_launcher_legacy_art.png" />
+        <ignore path="src/main/res/drawable-hdpi/ic_launcher_legacy_art.png" />
+        <ignore path="src/main/res/drawable-xhdpi/ic_launcher_legacy_art.png" />
+        <ignore path="src/main/res/drawable-xxhdpi/ic_launcher_legacy_art.png" />
+        <ignore path="src/main/res/drawable-xxxhdpi/ic_launcher_legacy_art.png" />
+    </issue>
+</lint>

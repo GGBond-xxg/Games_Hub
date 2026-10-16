@@ -6,7 +6,6 @@ Active files:
 InternalGbaActivity.kt   # Lifecycle, core startup, ROM preparation, save/load and cheats
 GbaTouchControlsView.kt  # Touch controls, Canvas menus and controller interaction
 GbaModels.kt             # Runtime models, menu state and control definitions
-GbaNativeCheatBridge.kt  # Future native backend bridge; not currently active
 ```
 
 ## Supported internal input

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Adaptive icons in mipmap-anydpi-v26 still take precedence on API 26+. -->
+    <item type="mipmap" name="ic_launcher">@mipmap/ic_launcher_legacy</item>
     <!-- Pre-26 round icons used identical pixels. Keep that fallback without duplicate PNGs.
          The mipmap-anydpi-v26 adaptive round icon still takes precedence on API 26+. -->
     <item type="mipmap" name="ic_launcher_round">@mipmap/ic_launcher</item>
