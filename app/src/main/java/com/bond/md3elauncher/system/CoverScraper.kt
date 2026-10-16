@@ -13,6 +13,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
 
 enum class CoverArtworkType {
     BOX_ART,
@@ -66,6 +67,8 @@ class CoverScraper(private val context: Context) {
                 val tgdb = TheGamesDb().searchArtwork(queries, platformLabel, settings.theGamesDbApiKey, artworkType)
                 report.add(I18n.t(context, "cover.report.tgdb_count", "TheGamesDB: {count}", "count" to tgdb.size))
                 tgdb.forEach { result[it.imageUrl] = it }
+            } catch (cancelled: CancellationException) { throw cancelled
+            } catch (interrupted: InterruptedException) { throw interrupted
             } catch (failure: ScrapeHttpFailure) {
                 val key = when (failure.status) {
                     401, 403 -> "cover.report.tgdb_auth"
@@ -94,6 +97,8 @@ class CoverScraper(private val context: Context) {
                 val covers = CoverSources.screenScraper(getJson(url), cleanTitle, artworkType)
                 covers.forEach { result[it.imageUrl] = it }
                 report.add(I18n.t(context, "cover.report.screenscraper_count", "ScreenScraper: {count}", "count" to covers.size))
+            } catch (cancelled: CancellationException) { throw cancelled
+            } catch (interrupted: InterruptedException) { throw interrupted
             } catch (_: Exception) {
                 report.add(I18n.t(context, "cover.report.screenscraper_failed", "ScreenScraper request failed. Check credentials, quota and network."))
             }
@@ -104,7 +109,7 @@ class CoverScraper(private val context: Context) {
         return result.values.take(36)
     }
 
-    fun downloadCandidate(candidate: CoverCandidate, key: String): String? = runCatching {
+    fun downloadCandidate(candidate: CoverCandidate, key: String): String? = cancellableAttempt {
         val bytes = ScrapeNetwork.request {
             val conn = openConnection(candidate.imageUrl, method = "GET")
             try {
@@ -131,6 +136,10 @@ class CoverScraper(private val context: Context) {
         catch (error: Exception) { outFile.delete(); throw error }
     }.getOrNull()
 
+    private inline fun <T> cancellableAttempt(block: () -> T): Result<T> = runCatching(block).onFailure {
+        if (it is CancellationException || it is InterruptedException) throw it
+    }
+
     private fun searchLibretro(queries: List<String>, platformLabel: String, artworkType: CoverArtworkType): List<CoverCandidate> {
         val repos = CoverSources.libretroRepos(platformLabel)
         val out = linkedMapOf<String, CoverCandidate>()
@@ -148,10 +157,10 @@ class CoverScraper(private val context: Context) {
     private fun searchSteamGridDb(queries: List<String>, apiKey: String): List<CoverCandidate> {
         val candidates = linkedMapOf<String, CoverCandidate>()
         queries.take(6).forEach { query ->
-            runCatching {
+            cancellableAttempt {
                 val searchUrl = "https://www.steamgriddb.com/api/v2/search/autocomplete/${pathEncode(query)}"
                 val searchJson = getJson(searchUrl, mapOf("Authorization" to "Bearer $apiKey"))
-                val games = searchJson.optJSONArray("data") ?: return@runCatching
+                val games = searchJson.optJSONArray("data") ?: return@cancellableAttempt
                 for (i in 0 until minOf(games.length(), 5)) {
                     val game = games.optJSONObject(i) ?: continue
                     val id = game.optLong("id", 0L)
@@ -191,7 +200,7 @@ class CoverScraper(private val context: Context) {
         } finally { conn.disconnect() }
     }
 
-    private fun urlExists(url: String): Boolean = runCatching { ScrapeNetwork.request(7000) {
+    private fun urlExists(url: String): Boolean = cancellableAttempt { ScrapeNetwork.request(7000) {
         val conn = openConnection(url, method = "HEAD")
         try { conn.responseCode in 200..299 } finally { conn.disconnect() }
     } }.getOrDefault(false)

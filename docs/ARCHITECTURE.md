@@ -128,18 +128,20 @@ app/src/main/assets/i18n/zh-Hant.json
 
 The files must contain identical key sets. Built-in emulators use separate processes, so language mode is also persisted to a file under `filesDir`; see `docs/I18N.md`.
 
-## Legacy duplicate source files
+## Legacy duplicate cleanup (1.3.5)
 
-The repository currently contains old root-package copies that are not used by the manifest/current imports:
+The unused root-package `InternalGbaActivity.kt` and `GbaNativeCheatBridge.kt`,
+`system/InternalEmulators.kt`, and `io/PspIsoReader.kt` (including its private-to-that-file
+usage of `PspIsoMetadata`) were removed after checking manifest components, Kotlin
+imports/references, reflection, JNI symbols and build/keep configuration. Current launch
+routing and ROM scanning explicitly use the corresponding `emulator/` implementations.
+No active emulator, controller handler, persisted marker or save path was changed.
 
-```text
-app/src/main/java/com/bond/md3elauncher/InternalGbaActivity.kt
-app/src/main/java/com/bond/md3elauncher/GbaNativeCheatBridge.kt
-app/src/main/java/com/bond/md3elauncher/system/InternalEmulators.kt
-app/src/main/java/com/bond/md3elauncher/io/PspIsoReader.kt
-```
-
-Current work should use the corresponding files under `emulator/` paths. Do not update both copies. These legacy files can be removed later in a dedicated cleanup after confirming no hidden compatibility requirement.
+`cpp/gba_cheat_bridge.cpp` still contains historical JNI exports for the old root-package
+bridge. This native scaffold is not connected to Gradle's `externalNativeBuild`, is not
+packaged as a cheat bridge library, and had no native declarations or library loader in
+the removed Kotlin scaffold. Enabling it in the future requires deliberate JNI/package
+integration and testing; it is not the current LibretroDroid cheat backend.
 
 ## Native resources
 
@@ -171,7 +173,7 @@ Avoid changing persisted keys, platform IDs, internal emulator markers or `appli
 
 The additional external platforms are appended to default platform and tab sets without changing existing IDs. Their settings rows appear after configuration; game tabs use the existing nonempty-library visibility rule. No additional internal cores are included.
 
-`CoverArtworkType` distinguishes preview screenshot queries (`Named_Snaps`) from grid box-art queries (`Named_Boxarts`) for Libretro. Other sources keep their existing cover behavior.
+`CoverArtworkType` distinguishes screenshot queries (`Named_Snaps`) from box-art queries (`Named_Boxarts`). Both manual artwork slots default to box art and allow switching during a request. `ArtworkSearchController` cancels the previous request and publishes only the latest result; each request has isolated diagnostics. Batch scraping still fills separate cover/screenshot fields without substituting one type for the other.
 
 ## Metadata, batch jobs and theme styles (1.3.0)
 

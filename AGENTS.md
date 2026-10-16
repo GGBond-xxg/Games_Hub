@@ -10,7 +10,7 @@ Before editing code:
 4. Read `docs/I18N.md` for any user-visible UI change.
 5. Do not load old version history unless the task requires it.
 
-Current release is `1.3.4` (`versionCode = 134`).
+Current release is `1.3.5` (`versionCode = 135`).
 
 ## Build and checks
 

@@ -28,11 +28,16 @@ licenses; see `DISCLAIMER.md`.
   `third_party/mame2003_plus/`. The bundled core must not be sold or included
   in a commercial distribution.
 
-## Additional bundled binaries
+## Historical source-only binaries
 
-The source package also currently contains FCEUmm binaries for multiple ABIs and one arm64 Mesen binary from earlier FC/NES experiments. Current FC/NES routing selects Nestopia, but Gradle may still package unused files found in `jniLibs`.
+Version 1.3.5 removes unused FCEUmm binaries from both released ARM ABIs and the
+unused arm64 Mesen binary. Current FC/NES routing continues to use Nestopia;
+external RetroArch core selection is unchanged and uses RetroArch's own files.
 
-Before public distribution, perform a dedicated native-library cleanup and verify that removing unused cores does not affect supported devices.
+Historical FCEUmm binaries for x86/x86_64 remain in the source repository but are
+not included in the ARM-only release APKs. Existing license texts and provenance
+notes are retained. Any future build that packages these source-only binaries
+must review and satisfy their redistribution requirements.
 
 ## License obligations
 
@@ -46,7 +51,7 @@ Licenses and redistribution requirements must be reviewed for every shipped bina
 - PCSX-ReARMed libretro core;
 - Mupen64Plus-Next libretro core;
 - MAME 2003-Plus libretro core;
-- any FCEUmm or Mesen binary that remains in the final APK.
+- historical FCEUmm binaries if a future non-ARM build includes them.
 
 A historical GPL notice from the Lemuroid core package is retained at:
 

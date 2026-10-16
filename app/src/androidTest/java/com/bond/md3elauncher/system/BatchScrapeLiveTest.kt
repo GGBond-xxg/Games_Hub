@@ -38,7 +38,9 @@ class BatchScrapeLiveTest {
         }
         try {
             compose.onAllNodesWithText(t("edit.choose_online")).onFirst().performClick()
-            compose.waitUntil(30_000) { compose.onAllNodesWithText(t("edit.no_artwork_found")).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText(t("edit.artwork_cover")).assertIsSelected()
+            // Switch without awaiting the provider, then verify only the final cover request wins.
+            compose.onNodeWithText(t("edit.artwork_screenshot")).performClick()
             compose.onNodeWithText(t("edit.artwork_cover")).performClick()
             compose.waitUntil(30_000) { compose.onAllNodesWithText("Incredibox").fetchSemanticsNodes().size >= 2 }
             compose.onNodeWithTag("artwork-search-scroll").performScrollToNode(hasText("Incredibox") and hasClickAction())

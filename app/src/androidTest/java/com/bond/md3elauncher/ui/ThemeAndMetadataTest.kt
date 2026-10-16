@@ -135,8 +135,6 @@ class ThemeAndMetadataTest(private val style: ThemeStyle) {
         compose.waitUntil(5000) { compose.onAllNodesWithText(t("common.search")).fetchSemanticsNodes().isNotEmpty() }
         compose.onAllNodesWithText(t("common.search")).assertCountEquals(1)
         compose.onAllNodes(hasSetTextAction()).assertCountEquals(1)
-        compose.onNodeWithText(t("edit.artwork_screenshot")).assertIsSelected()
-        compose.onNodeWithText(t("edit.artwork_cover")).performClick()
         compose.onNodeWithText(t("edit.artwork_cover")).assertIsSelected()
         compose.onNodeWithText(t("edit.artwork_screenshot")).performClick()
         compose.onNodeWithText(t("edit.artwork_screenshot")).assertIsSelected()
@@ -147,6 +145,51 @@ class ThemeAndMetadataTest(private val style: ThemeStyle) {
         compose.runOnUiThread { compose.activity.getSystemService(android.view.inputmethod.InputMethodManager::class.java)
             .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0) }
         screenshot("search")
+        compose.onNodeWithContentDescription(t("common.back")).performClick()
+        compose.onAllNodesWithText(t("edit.choose_online")).onLast().performClick()
+        compose.onNodeWithText(t("edit.artwork_cover")).assertIsSelected()
+    }
+
+    @Test fun artworkTypeAndQueryRemainInteractiveWhileLoading() {
+        var type by mutableStateOf(com.bond.md3elauncher.system.CoverArtworkType.BOX_ART)
+        var query by mutableStateOf("old")
+        var submitted = ""
+        compose.setContent {
+            GameHubTheme(themeStyle = style) {
+                ArtworkSearchBody(query, { query = it }, type, { type = it }, preview = true,
+                    isLoading = true, candidates = emptyList(), errorText = null, debugText = null,
+                    onSearch = { submitted = query }, onCandidate = {})
+            }
+        }
+        compose.onNodeWithText(t("edit.artwork_screenshot")).assertIsEnabled().performClick().assertIsSelected()
+        compose.onNodeWithText(t("edit.artwork_cover")).performClick().assertIsSelected()
+        compose.onNode(hasSetTextAction()).performTextReplacement("Incredibox")
+        compose.onNodeWithText(t("common.search")).assertIsEnabled().performClick()
+        compose.runOnIdle { assertEquals("Incredibox", submitted) }
+    }
+
+    @Test fun backgroundWavesAnimateOnlyWhenEnabled() {
+        var enabled by mutableStateOf(true)
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            GameHubTheme(themeStyle = style, backgroundMotion = enabled) { Text("Stable content") }
+        }
+        compose.mainClock.advanceTimeBy(32)
+        val first = compose.onRoot().captureToImage().asAndroidBitmap()
+        compose.mainClock.advanceTimeBy(8_000)
+        val second = compose.onRoot().captureToImage().asAndroidBitmap()
+        assertEquals(style == ThemeStyle.M3, first.sameAs(second))
+        first.recycle(); second.recycle()
+        compose.runOnUiThread { enabled = false }
+        compose.mainClock.advanceTimeBy(32)
+        val stopped = compose.onRoot().captureToImage().asAndroidBitmap()
+        compose.mainClock.advanceTimeBy(8_000)
+        val still = compose.onRoot().captureToImage().asAndroidBitmap()
+        assertTrue(stopped.sameAs(still))
+        stopped.recycle(); still.recycle()
+        compose.onNodeWithText("Stable content").assertIsDisplayed()
+        screenshot("waves")
+        compose.mainClock.autoAdvance = true
     }
 
     private fun screenshot(page: String) {

@@ -20,10 +20,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -55,22 +56,41 @@ internal fun StyleBackdrop(content: @Composable () -> Unit) {
     val styled = prefs.style != ThemeStyle.M3
     val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val animate = styled && prefs.backgroundMotion && lifecycle.isAtLeast(Lifecycle.State.RESUMED)
-    val phase = if (animate) rememberInfiniteTransition(label = "backgroundFlow").animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(18000, easing = LinearEasing), RepeatMode.Reverse), label = "backgroundPhase"
-    ) else remember { mutableFloatStateOf(0f) }
+    val transition = if (animate) rememberInfiniteTransition(label = "backgroundWaves") else null
+    val phases = listOf(20_000, 15_000, 10_000).mapIndexed { index, duration ->
+        transition?.animateFloat(initialValue = 0f, targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(duration, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "wave$index") ?: remember { mutableFloatStateOf(0f) }
+    }
+    val paths = remember { List(3) { Path() } }
+
     val backdrop = rememberLayerBackdrop()
     val colors = MaterialTheme.colorScheme
+    val waveBrushes = remember(colors) {
+        val alpha = if (colors.background.luminance() < 0.5f) 0.25f else 0.30f
+        listOf(colors.primary, colors.secondary, colors.tertiary).mapIndexed { index, color ->
+            Brush.verticalGradient(listOf(color.copy(alpha = alpha - index * 0.02f), Color.Transparent))
+        }
+    }
     Box(Modifier.fillMaxSize()) {
         if (styled) Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
             drawRect(colors.background)
-            val p = phase.value
-            drawRect(Brush.linearGradient(listOf(colors.primaryContainer.copy(alpha = 0.4f), colors.background, colors.tertiaryContainer.copy(alpha = 0.3f))))
-            val radius = size.maxDimension * 0.6f
-            val first = Offset(size.width * (0.12f + 0.55f * p), size.height * (0.2f + 0.35f * p))
-            val second = Offset(size.width * (0.9f - 0.4f * p), size.height * (0.85f - 0.65f * p))
-            drawCircle(Brush.radialGradient(listOf(colors.primary.copy(alpha = 0.18f), Color.Transparent), first, radius), radius, first)
-            drawCircle(Brush.radialGradient(listOf(colors.tertiary.copy(alpha = 0.12f), Color.Transparent), second, radius), radius, second)
+            // Independent three-wave geometry; only drawing observes animation state.
+            paths.forEachIndexed { index, path ->
+                val phase = phases[index].value
+                val direction = if (index % 2 == 0) 1f else -1f
+                val bend = (phase * 2f - 1f) * direction
+                val base = size.height * (0.5f + index * 0.1f)
+                val amplitude = size.height * (0.34f - index * 0.035f)
+                path.reset()
+                path.moveTo(0f, base)
+                path.cubicTo(size.width * (0.25f + 0.12f * bend), base - amplitude * bend,
+                    size.width * (0.75f - 0.12f * bend), base + amplitude * bend, size.width, base)
+                path.lineTo(size.width, size.height)
+                path.lineTo(0f, size.height)
+                path.close()
+                drawPath(path, waveBrushes[index])
+            }
         }
         CompositionLocalProvider(LocalGlassBackdrop provides if (glass) backdrop else null) { content() }
     }

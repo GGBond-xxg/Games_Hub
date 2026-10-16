@@ -8,7 +8,7 @@ GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以
 
 为手机、平板和安卓掌机打造一个用手柄也能轻松操作的游戏入口：选好平台、整理游戏、按下 `A` 开玩。
 
-当前正式版本：`v1.3.4`
+当前正式版本：`v1.3.5`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -18,8 +18,8 @@ Android 包名：`com.bond.md3elauncher`
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 - 系统要求：Android 7.0（API 24）或更高版本
-- `GameHub-v1.3.4-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.3.4-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- `GameHub-v1.3.5-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.3.5-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
@@ -34,6 +34,13 @@ Android 包名：`com.bond.md3elauncher`
 - 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
 - 5 个普通即时存档槽及 1 个快捷存档。
 - English、简体中文、繁體中文三语界面。
+
+### v1.3.5 更新
+
+- 预览图与宫格图的手动搜索都默认选择封面，仍可切换截图；加载中可切换类型或重新搜索，旧请求不会覆盖新结果。
+- Glass / MIUIX 流动背景改为三层缓慢渐变波浪，保留开关与后台暂停，按 Beacon 默认背景的运动方式独立实现。
+- 清理确认无入口的旧 Kotlin 副本和未使用原生库；活动模拟器、手柄分发和存档逻辑不变。
+- 验证记录见 [1.3.5 验证报告](docs/VALIDATION_1_3_5.md)，后续性能与内置平台建议见 [优化评估](docs/OPTIMIZATION_REVIEW_1_3_5.md)。
 
 ### v1.3.4 更新
 

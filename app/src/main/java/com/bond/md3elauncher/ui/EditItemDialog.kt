@@ -53,6 +53,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -79,9 +82,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bond.md3elauncher.data.CoverCandidate
 import com.bond.md3elauncher.data.ScraperSettings
+import com.bond.md3elauncher.system.ArtworkSearchController
+import com.bond.md3elauncher.system.ArtworkSearchResult
 import com.bond.md3elauncher.system.CoverScraper
 import com.bond.md3elauncher.system.CoverArtworkType
 import com.bond.md3elauncher.i18n.I18n
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -702,44 +710,37 @@ private fun CoverScrapePage(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var manualQuery by rememberSaveable(target.key) { mutableStateOf(queryTitle) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorText by remember { mutableStateOf<String?>(null) }
-    var debugText by remember { mutableStateOf<String?>(null) }
-    var candidates by remember { mutableStateOf<List<CoverCandidate>>(emptyList()) }
-    var artworkType by rememberSaveable(target.key, imageSlot) {
-        mutableStateOf(if (imageSlot == EditImageSlot.PREVIEW) CoverArtworkType.SCREENSHOT else CoverArtworkType.BOX_ART)
-    }
-    val scraper = remember { CoverScraper(context) }
-
-    fun search() {
-        if (isLoading) return
-        scope.launch {
-            isLoading = true
-            errorText = null
-            debugText = null
-            val activeQuery = manualQuery.ifBlank { queryTitle }
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    scraper.searchCovers(
-                        title = activeQuery,
-                        platformLabel = target.typeLabel,
-                        serial = null,
-                        settings = scraperSettings,
-                        artworkType = artworkType
-                    )
-                }
+    var searchAttempt by remember { mutableIntStateOf(0) }
+    var artworkType by rememberSaveable(target.key, imageSlot) { mutableStateOf(CoverArtworkType.BOX_ART) }
+    var downloadJob by remember { mutableStateOf<Job?>(null) }
+    var isDownloading by remember { mutableStateOf(false) }
+    var downloadError by remember { mutableStateOf<String?>(null) }
+    val controller = remember(target.key, imageSlot, scraperSettings) {
+        ArtworkSearchController(scope) { query, type ->
+            runInterruptible(Dispatchers.IO) {
+                // Each request owns its diagnostics; an older provider cannot overwrite the latest report.
+                val scraper = CoverScraper(context)
+                val found = scraper.searchCovers(query, target.typeLabel, null, scraperSettings, type)
+                ArtworkSearchResult(found, scraper.lastReport, scraper.lastErrorKey)
             }
-            candidates = result.getOrDefault(emptyList())
-            debugText = scraper.lastReport
-            errorText = result.exceptionOrNull()?.let { I18n.t(context, "cover.report.network_failed", "Request failed. Check your network and try again.") }
-            if (candidates.isEmpty() && errorText == null) {
-                errorText = I18n.t(context, scraper.lastErrorKey ?: "edit.no_artwork_found", "No images of this type found. Try another artwork type or title.")
-            }
-            isLoading = false
         }
     }
+    val searchState by controller.state.collectAsState()
+    val isLoading = searchState.loading || isDownloading
+    val candidates = searchState.result.candidates
+    val debugText = searchState.result.report
+    val errorText = downloadError ?: searchState.result.errorKey?.let { I18n.t(context, it, "Search failed") }
+        ?: if (!isLoading && candidates.isEmpty()) I18n.t(context, "edit.no_artwork_found", "No images of this type found.") else null
 
-    LaunchedEffect(target.key, imageSlot, artworkType) { search() }
+    LaunchedEffect(controller, artworkType, searchAttempt) {
+        downloadJob?.cancel()
+        isDownloading = false
+        downloadError = null
+        controller.search(manualQuery.ifBlank { queryTitle }, artworkType)
+    }
+    DisposableEffect(controller) {
+        onDispose { controller.cancel(); downloadJob?.cancel() }
+    }
 
     Column(
         modifier = Modifier
@@ -772,14 +773,24 @@ private fun CoverScrapePage(
             artworkType = artworkType, onArtworkTypeChange = { artworkType = it },
             preview = imageSlot == EditImageSlot.PREVIEW, isLoading = isLoading,
             candidates = candidates, errorText = errorText, debugText = debugText,
-            onSearch = { search() }, modifier = Modifier.weight(1f),
+            onSearch = { searchAttempt++ }, modifier = Modifier.weight(1f),
             onCandidate = { candidate ->
-                scope.launch {
-                    isLoading = true
-                    errorText = null
-                    val path = withContext(Dispatchers.IO) { scraper.downloadCandidate(candidate, target.key) }
-                    isLoading = false
-                    if (path != null) onSelected(path) else errorText = I18n.t(context, "edit.download_cover_failed", "Download failed")
+                downloadJob?.cancel()
+                downloadJob = scope.launch {
+                    isDownloading = true
+                    downloadError = null
+                    var pendingFile: String? = null
+                    try {
+                        val path = runInterruptible(Dispatchers.IO) {
+                            CoverScraper(context).downloadCandidate(candidate, target.key).also { pendingFile = it }
+                        }
+                        ensureActive()
+                        isDownloading = false
+                        if (path != null) {
+                            onSelected(path)
+                            pendingFile = null
+                        } else downloadError = I18n.t(context, "edit.download_cover_failed", "Download failed")
+                    } finally { pendingFile?.let { File(it).delete() } }
                 }
             }
         )
@@ -815,13 +826,13 @@ internal fun ArtworkSearchBody(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item(key = "query", span = { GridItemSpan(maxLineSpan) }) {
-                CompactSearchField(manualQuery, onQueryChange, !isLoading, onSearch)
+                CompactSearchField(manualQuery, onQueryChange, true, onSearch)
             }
             item(key = "type", span = { GridItemSpan(maxLineSpan) }) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(I18n.t(context, "edit.artwork_type", "Artwork type"), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     CoverArtworkType.entries.forEach { type ->
-                        HubFilterChip(selected = artworkType == type, onClick = { onArtworkTypeChange(type) }, enabled = !isLoading,
+                        HubFilterChip(selected = artworkType == type, onClick = { onArtworkTypeChange(type) },
                             label = { Text(I18n.t(context, if (type == CoverArtworkType.BOX_ART) "edit.artwork_cover" else "edit.artwork_screenshot", "Artwork"), maxLines = 1, overflow = TextOverflow.Ellipsis) })
                     }
                 }
