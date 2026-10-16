@@ -4,7 +4,7 @@ internal object BackupPaths {
     const val MAX_BYTES = 512L * 1024 * 1024
     const val MAX_FILE_BYTES = 64L * 1024 * 1024
     const val MAX_ENTRIES = 10000
-    private val runtimes = setOf("internal_gba", "internal_fc", "internal_sfc", "internal_md", "internal_ps1", "internal_n64", "internal_arcade")
+    private val runtimes = setOf("internal_gba", "internal_fc", "internal_sfc", "internal_md", "internal_sms", "internal_gg", "internal_sg1000", "internal_ps1", "internal_n64", "internal_arcade")
 
     fun allowed(path: String): Boolean {
         val parts = path.split('/')

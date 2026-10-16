@@ -9,6 +9,32 @@ import java.util.UUID
 
 /** Dedicated preferences only: never reads/writes the user's launcher store or language file. */
 class LauncherStorePersistenceTest {
+    @Test fun sega8DefaultsAppendWithoutChangingExistingPlatformBindings() {
+        val target = InstrumentationRegistry.getInstrumentation().targetContext
+        val name = "qa-migrate-${UUID.randomUUID()}"
+        val preferences = target.getSharedPreferences(name, Context.MODE_PRIVATE)
+        val isolated = object : ContextWrapper(target) {
+            override fun getSharedPreferences(requestedName: String, mode: Int) = preferences
+        }
+        try {
+            val added = setOf(PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000)
+            val store = LauncherStore(isolated)
+            val old = store.loadPlatforms().filter { it.kind !in added }.map {
+                it.copy(folderUri = "content://qa/${it.id}", emulatorPackage = "external.${it.id}", gameCount = 9)
+            }.reversed()
+            store.savePlatforms(old)
+            val migrated = LauncherStore(isolated).loadPlatforms()
+            assertEquals(old, migrated.filter { it.kind !in added })
+            assertEquals(added, migrated.filter { it.kind in added }.map { it.kind }.toSet())
+            assertEquals(migrated.size, migrated.distinctBy { it.id }.size)
+            val configured = migrated.map {
+                if (it.kind == PlatformKind.GG) it.copy(emulatorPackage = "com.retroarch", folderUri = "content://qa/gg") else it
+            }
+            store.savePlatforms(configured)
+            assertEquals(configured, LauncherStore(isolated).loadPlatforms())
+        } finally { target.deleteSharedPreferences(name) }
+    }
+
     @Test fun languageFileRemainsTheSourceAcrossContextRecreation() {
         val target = InstrumentationRegistry.getInstrumentation().targetContext
         val name = "qa-language-${UUID.randomUUID()}"

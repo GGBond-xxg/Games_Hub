@@ -8,7 +8,7 @@ GameHub 是一款面向 Android 横屏设备的开源游戏启动器。它可以
 
 为手机、平板和安卓掌机打造一个用手柄也能轻松操作的游戏入口：选好平台、整理游戏、按下 `A` 开玩。
 
-当前正式版本：`v1.3.5`
+当前正式版本：`v1.3.6`
 
 Android 包名：`com.bond.md3elauncher`
 
@@ -18,8 +18,8 @@ Android 包名：`com.bond.md3elauncher`
 
 - [下载最新版 GameHub APK](https://github.com/GGBond-xxg/Games_Hub/releases/latest)
 - 系统要求：Android 7.0（API 24）或更高版本
-- `GameHub-v1.3.5-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
-- `GameHub-v1.3.5-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
+- `GameHub-v1.3.6-arm64.apk`：推荐，适用于绝大多数现代 Android 手机、平板和掌机。
+- `GameHub-v1.3.6-arm32.apk`：仅用于较旧的 32 位 ARM 设备。
 
 从早期 Debug 测试包升级到 `v1.0.0` 时，如果系统提示签名不一致，需要先卸载测试包再安装正式版。`v1.0.0` 之后使用同一发布签名，可直接覆盖升级。
 
@@ -34,6 +34,13 @@ Android 包名：`com.bond.md3elauncher`
 - 内置模拟器共享触控按键、实体手柄快捷键和存档菜单。
 - 5 个普通即时存档槽及 1 个快捷存档。
 - English、简体中文、繁體中文三语界面。
+
+### v1.3.6 更新
+
+- 新增 SMS、Game Gear、SG-1000 内置模拟器，复用现有 Genesis Plus GX 核心，不增加原生库。
+- 三个平台分别保存五个即时存档和快速存档，复用现有菜单与手柄快捷键；SMS / SG-1000 提供 Pause，Game Gear 提供 Start。
+- 在“设置 → 平台管理 → 模拟器 → 添加其他”选择平台，指定 ROM 目录后扫描。支持对应 `.sms` / `.gg` / `.sg` 文件和普通 ZIP，7z 需要先解压；不需要 BIOS。
+- 支持平台封面/资料刮削、内置与外部模拟器切换及存档备份，详见 [1.3.6 验证报告](docs/VALIDATION_1_3_6.md)。
 
 ### v1.3.5 更新
 
@@ -152,6 +159,9 @@ ScreenScraper 需要你自己的开发者 ID 和开发者密码，普通用户�
 | FC/NES | Nestopia | Nes.emu、Nostalgia.NES、RetroArch | `.nes`、`.fds`、`.unf`、`.unif`、`.zip`、`.7z` |
 | SFC/SNES | Snes9x | Snes9x EX+、RetroArch | `.sfc`、`.smc`、`.swc`、`.fig`、`.zip`、`.7z` |
 | MD/Genesis | Genesis Plus GX | MD.emu、RetroArch | `.md`、`.gen`、`.smd`、`.bin`、`.zip`、`.7z` |
+| SMS | Genesis Plus GX | RetroArch、SMS.emu | `.sms`、`.zip`、`.7z` |
+| Game Gear | Genesis Plus GX | RetroArch、Gearsystem | `.gg`、`.zip`、`.7z` |
+| SG-1000 | Genesis Plus GX | RetroArch | `.sg`、`.zip`、`.7z` |
 | PS1 | PCSX-ReARMed（HLE BIOS） | DuckStation、ePSXe、FPse、RetroArch | `.chd`、`.pbp`、`.iso`、`.bin` |
 | N64 | Mupen64Plus-Next | M64Plus FZ、Mupen64Plus、RetroArch | `.z64`、`.v64`、`.n64`、`.bin`、`.zip`、`.7z` |
 | 街机 | MAME 2003-Plus | MAME4droid、RetroArch、FinalBurn | `.zip` |

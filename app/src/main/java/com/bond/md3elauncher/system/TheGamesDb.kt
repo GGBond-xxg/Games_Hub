@@ -54,6 +54,7 @@ internal class TheGamesDb(private val read: (String) -> JSONObject = ::readGameD
             "psp" -> "13"; "ns", "switch" -> "4971"; "gba" -> "5"
             "gb" -> "4"; "gbc" -> "41"; "gb/gbc" -> "4,41"
             "nes", "fc", "fc/nes" -> "7"; "sfc", "snes", "sfc/snes" -> "6"
+            "sms", "master system" -> "35"; "gg", "game gear" -> "20"; "sg1000", "sg-1000" -> "4949"
             "md", "genesis", "md/genesis" -> "18"; "ps1" -> "10"; "ps2" -> "11"
             "n64" -> "3"; "arcade" -> "23"; "nds", "nintendo ds" -> "8"
             "n3ds", "3ds", "nintendo 3ds" -> "4912"; "gc", "gamecube" -> "2"

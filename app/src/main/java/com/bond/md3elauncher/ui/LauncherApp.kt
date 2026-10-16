@@ -161,7 +161,8 @@ fun LauncherApp(
                 BeaconTab.N64 -> games.any { it.platformId == PlatformKind.N64.name } || tab == BeaconTab.N64
                 BeaconTab.ARCADE -> games.any { it.platformId == PlatformKind.ARCADE.name } || tab == BeaconTab.ARCADE
                 BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
-                BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> games.any { it.platformId == candidate.name } || tab == candidate
+                BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST,
+                BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> games.any { it.platformId == candidate.name } || tab == candidate
                 BeaconTab.ANDROID -> true
                 else -> false
             }
@@ -276,7 +277,8 @@ fun LauncherApp(
                 if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
             BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
-            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> {
+            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST,
+            BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> {
                 val first = games.firstOrNull { it.platformId == next.name }
                 if (first != null && first.id in favorites) unfavoriteText else favoriteText
             }
@@ -791,7 +793,8 @@ fun LauncherApp(
                             )
 
                             BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
-                            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> PlatformBeaconScreen(
+                            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST,
+                            BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> PlatformBeaconScreen(
                                 platform = platforms.firstOrNull { it.id == tab.name },
                                 games = games.filter { it.platformId == tab.name },
                                 favorites = favorites,
@@ -933,7 +936,8 @@ fun LauncherApp(
                             BeaconTab.N64 -> I18n.t(context, "launcher.center.n64", "N64 游戏")
                             BeaconTab.ARCADE -> I18n.t(context, "launcher.center.arcade", "街机游戏")
                             BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
-                            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> I18n.t(context, "launcher.center.platform", "{platform} games", "platform" to tab.localizedLabel(context))
+                            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST,
+                            BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> I18n.t(context, "launcher.center.platform", "{platform} games", "platform" to tab.localizedLabel(context))
                             BeaconTab.SETTINGS -> I18n.t(context, "launcher.center.settings", "设置")
                         }
                     }

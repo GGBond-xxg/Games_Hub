@@ -11,6 +11,7 @@ internal data class GameScrapeResult(
 
 internal object GameScrapeSources {
     fun systemId(game: GameItem): Int? = when (game.platformId) {
+        "SMS" -> 2; "GG" -> 21; "SG1000" -> 109
         "MD" -> 1; "NES" -> 3; "SFC" -> 4; "GB" -> if (game.extension.equals("gbc", true)) 10 else 9
         "GBA" -> 12; "GC" -> 13; "NDS" -> 15; "WII" -> 16; "N3DS" -> 17; "DREAMCAST" -> 23
         "PS1" -> 57; "PS2" -> 58; "PSP" -> 61; "N64" -> 64; "ARCADE" -> 75; "SWITCH" -> 225

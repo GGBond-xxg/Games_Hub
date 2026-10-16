@@ -376,7 +376,7 @@
   "settings.cover.steamgrid.placeholder": "Leave empty to skip SteamGridDB",
   "settings.cover.tgdb.placeholder": "Leave empty to skip TheGamesDB",
   "settings.emulator.add_other.action": "Add",
-  "settings.emulator.add_other.subtitle": "Configure PS2, DS, 3DS, GameCube, Wii or Dreamcast",
+  "settings.emulator.add_other.subtitle": "More platforms: PS2 / DS / 3DS / GC / Wii / DC / SMS / GG / SG-1000",
   "settings.emulator.add_other.title": "Add More",
   "settings.emulator.normal_hint": "Tap to configure emulator. Long-press any row to sort.",
   "settings.emulator.sorting_hint": "Sorting mode: use Move Up / Move Down to reorder emulators.",
@@ -442,7 +442,7 @@
   "settings.platform.selected_emulator": "Selected emulator",
   "settings.platform.setup_title": "{platform} Settings",
   "settings.platform.sorting_hint": "Sorting mode: use Move Up / Move Down; top tabs update after saving.",
-  "settings.platform.tip": "GBA, GB/GBC, FC/NES, SFC/SNES, MD/Genesis, and PS1 use built-in emulators by default. They can also use external emulators; PSP and NS remain external. Long-press a game to edit its display name and image.",
+  "settings.platform.tip": "Platforms with a built-in emulator use it by default; you can also select an external emulator. Long-press a game to edit its display name and artwork.",
   "settings.safe_margin.default": "Default",
   "settings.safe_margin.large_cutout": "Large Cutout",
   "settings.safe_margin.left": "Left Margin",
@@ -628,5 +628,14 @@
   "edit.artwork_type": "Artwork type",
   "edit.artwork_cover": "Cover art",
   "edit.artwork_screenshot": "Screenshots",
-  "edit.no_artwork_found": "No images of this type found. Try another artwork type or title."
+  "edit.no_artwork_found": "No images of this type found. Try another artwork type or title.",
+  "platform.sega8.name": "Built-in {platform} emulator",
+  "settings.tab_order.sega8": "Built-in / external Sega emulator",
+  "settings.platform.internal_sega8.subtitle": "Genesis Plus GX; matching ROM or ZIP; 5 save slots plus quick save. No BIOS required. Extract 7z first.",
+  "launch.check.sega8_format": "Use a ROM matching the selected Sega platform (.sms / .gg / .sg), or a ZIP containing that ROM.",
+  "emulator.sega8.pause": "PAUSE",
+  "emulator.sega8.turbo1": "1 Turbo",
+  "emulator.sega8.turbo2": "2 Turbo",
+  "emulator.sega8.cheat": "Sega 8-bit cheat entry reserved",
+  "emulator.sega8.cheat_hint": "Use an external emulator for Sega 8-bit cheats."
 }

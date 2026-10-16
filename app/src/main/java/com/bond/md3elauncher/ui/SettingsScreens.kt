@@ -678,6 +678,7 @@ private fun internalEmulatorDisplayName(context: android.content.Context, platfo
     InternalEmulators.usesInternalGb(platform) -> I18n.t(context, "platform.gb.name", "内置 GB/GBC 模拟器")
     InternalEmulators.usesInternalGba(platform) -> I18n.t(context, "platform.gba.name", "内置 GBA 模拟器")
     InternalEmulators.usesInternalSfc(platform) -> I18n.t(context, "platform.sfc.name", "内置 SFC/SNES 模拟器")
+    InternalEmulators.usesInternalSega8Bit(platform) -> I18n.t(context, "platform.sega8.name", "Built-in {platform} emulator", "platform" to platform.kind.title)
     InternalEmulators.usesInternalMd(platform) -> I18n.t(context, "platform.md.name", "内置 MD/Genesis 模拟器")
     InternalEmulators.usesInternalPs1(platform) -> I18n.t(context, "platform.ps1.name", "内置 PS1 模拟器")
     InternalEmulators.usesInternalN64(platform) -> I18n.t(context, "platform.n64.name", "内置 N64 模拟器")
@@ -703,7 +704,7 @@ private fun currentEmulatorLabel(context: android.content.Context, platform: Pla
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun EmulatorManagerRows(
+internal fun EmulatorManagerRows(
     tabOrder: List<String>,
     platforms: List<PlatformConfig>,
     onOpenPlatform: (PlatformConfig) -> Unit,
@@ -738,7 +739,8 @@ private fun EmulatorManagerRows(
             BeaconTab.N64 -> platforms.firstOrNull { it.kind == PlatformKind.N64 }
             BeaconTab.ARCADE -> platforms.firstOrNull { it.kind == PlatformKind.ARCADE }
             BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
-            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> platforms.firstOrNull { it.id == tab.name }
+            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST,
+            BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> platforms.firstOrNull { it.id == tab.name }
             else -> null
         }
         val title = tab.localizedLabel(context)
@@ -958,6 +960,7 @@ private fun localizedTabOrderSubtitle(context: android.content.Context, tab: Bea
     BeaconTab.ARCADE -> I18n.t(context, "settings.tab_order.arcade", "街机内置 / 外部模拟器入口")
     BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
     BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> I18n.t(context, "settings.tab_order.external", "External emulator platform")
+    BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> I18n.t(context, "settings.tab_order.sega8", "Built-in / external Sega emulator")
     BeaconTab.ANDROID -> I18n.t(context, "settings.tab_order.android", "安卓应用入口")
     else -> ""
 }
@@ -1045,7 +1048,8 @@ private fun OrderedPlatformRows(
                 }
             }
             BeaconTab.PS2, BeaconTab.NDS, BeaconTab.N3DS,
-            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST -> {
+            BeaconTab.GC, BeaconTab.WII, BeaconTab.DREAMCAST,
+            BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000 -> {
                 platforms.firstOrNull { it.id == tab.name }?.let { platform ->
                     PlatformSettingRow(platform = platform, onOpenPlatform = onOpenPlatform)
                     Spacer(Modifier.height(8.dp))
@@ -1504,15 +1508,7 @@ internal fun PlatformSetupScreen(
         CustomLaunchSettings(platform, onDismiss = { showLaunchConfig = false }, onSave = onSaveLaunchConfig)
     }
     val hasFolder = !platform.folderUri.isNullOrBlank()
-    val usesInternalGba = InternalEmulators.usesInternalGba(platform)
-    val usesInternalGb = InternalEmulators.usesInternalGb(platform)
-    val usesInternalFc = InternalEmulators.usesInternalFc(platform)
-    val usesInternalSfc = InternalEmulators.usesInternalSfc(platform)
-    val usesInternalMd = InternalEmulators.usesInternalMd(platform)
-    val usesInternalPs1 = InternalEmulators.usesInternalPs1(platform)
-    val usesInternalN64 = InternalEmulators.usesInternalN64(platform)
-    val usesInternalArcade = InternalEmulators.usesInternalArcade(platform)
-    val usesInternal = usesInternalGba || usesInternalGb || usesInternalFc || usesInternalSfc || usesInternalMd || usesInternalPs1 || usesInternalN64 || usesInternalArcade
+    val usesInternal = InternalEmulators.usesInternal(platform)
     val hasExternalEmulator = !platform.emulatorPackage.isNullOrBlank() && !usesInternal
     val displayApp = emulatorApp ?: InstalledApp(
         label = platform.emulatorName ?: I18n.t(context, "settings.platform.selected_emulator", "已选择的模拟器"),
@@ -1539,8 +1535,9 @@ internal fun PlatformSetupScreen(
                     actionText = if (hasFolder) I18n.t(context, "common.change", "更换") else I18n.t(context, "common.select", "选择"),
                     onClick = onPickFolder
                 )
-                if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC || platform.kind == PlatformKind.MD || platform.kind == PlatformKind.PS1 || platform.kind == PlatformKind.N64 || platform.kind == PlatformKind.ARCADE) {
+                if (InternalEmulators.usesInternal(platform.copy(emulatorPackage = null))) {
                     val internalTitle = when (platform.kind) {
+                        PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> I18n.t(context, "platform.sega8.name", "Built-in {platform} emulator", "platform" to platform.kind.title)
                         PlatformKind.GB -> I18n.t(context, "platform.gb.name", "内置 GB/GBC 模拟器")
                         PlatformKind.SFC -> I18n.t(context, "platform.sfc.name", "内置 SFC/SNES 模拟器")
                         PlatformKind.MD -> I18n.t(context, "platform.md.name", "内置 MD/Genesis 模拟器")
@@ -1551,6 +1548,7 @@ internal fun PlatformSetupScreen(
                         else -> I18n.t(context, "platform.gba.name", "内置 GBA 模拟器")
                     }
                     val internalSubtitle = when (platform.kind) {
+                        PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> I18n.t(context, "settings.platform.internal_sega8.subtitle", "Genesis Plus GX; ROM or ZIP; five save slots and quick save. No BIOS required.")
                         PlatformKind.GB -> I18n.t(context, "settings.platform.internal_gb.subtitle", "复用 mGBA libretro core，支持 .gb / .gbc 和普通 .zip 内 ROM。")
                         PlatformKind.SFC -> I18n.t(context, "settings.platform.internal_sfc.subtitle", "基于 Snes9x libretro core，支持 .sfc / .smc 和普通 .zip 内 ROM。")
                         PlatformKind.MD -> I18n.t(context, "settings.platform.internal_md.subtitle", "基于 Genesis Plus GX libretro core，支持 .md / .gen / .smd 和普通 .zip 内 ROM。")
@@ -1584,7 +1582,7 @@ internal fun PlatformSetupScreen(
                     )
                     PlatformConfigRow(
                         title = I18n.t(context, "settings.platform.clear_external.title", "清除外部模拟器"),
-                        subtitle = if (platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC || platform.kind == PlatformKind.MD || platform.kind == PlatformKind.PS1 || platform.kind == PlatformKind.N64 || platform.kind == PlatformKind.ARCADE) I18n.t(context, "settings.platform.clear_external.internal_subtitle", "清除后会回到内置模拟器。") else I18n.t(context, "settings.platform.clear_external.subtitle", "只清除绑定关系，不会删除模拟器 App。"),
+                        subtitle = if (InternalEmulators.usesInternal(platform.copy(emulatorPackage = null))) I18n.t(context, "settings.platform.clear_external.internal_subtitle", "清除后会回到内置模拟器。") else I18n.t(context, "settings.platform.clear_external.subtitle", "只清除绑定关系，不会删除模拟器 App。"),
                         actionText = I18n.t(context, "common.clear", "清除"),
                         onClick = onClearEmulator
                     )
@@ -1802,6 +1800,7 @@ private fun emulatorSearchHint(context: android.content.Context, platform: Platf
     PlatformKind.GBA -> I18n.t(context, "settings.picker.search.gba", "搜索 My Boy / Pizza Boy / John GBA / GBA.emu / RetroArch / 包名")
     PlatformKind.GB -> I18n.t(context, "settings.picker.search.gb", "搜索 My OldBoy / Pizza Boy C / GBC.emu / RetroArch / 包名")
     PlatformKind.SFC -> I18n.t(context, "settings.picker.search.sfc", "搜索 Snes9x EX+ / SuperRetro16 / RetroArch / 包名")
+    PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> I18n.t(context, "settings.picker.search.external", "Search emulator name or package")
     PlatformKind.MD -> I18n.t(context, "settings.picker.search.md", "搜索 MD.emu / RetroArch / 包名")
     PlatformKind.PS1 -> I18n.t(context, "settings.picker.search.ps1", "搜索 DuckStation / ePSXe / FPse / RetroArch / 包名")
     PlatformKind.N64 -> I18n.t(context, "settings.picker.search.n64", "搜索 M64Plus FZ / Mupen64Plus / RetroArch / 包名")
@@ -1815,6 +1814,7 @@ private fun externalEmulatorHelpText(context: android.content.Context, kind: Pla
     PlatformKind.GBA -> I18n.t(context, "settings.platform.external.help.gba", "可选：改用 My Boy / Pizza Boy / John GBA / RetroArch")
     PlatformKind.GB -> I18n.t(context, "settings.platform.external.help.gb", "可选：改用 My OldBoy / Pizza Boy C / GBC.emu / RetroArch")
     PlatformKind.SFC -> I18n.t(context, "settings.platform.external.help.sfc", "可选：改用 Snes9x EX+ / SuperRetro16 / RetroArch 等 SFC/SNES 外部模拟器")
+    PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> I18n.t(context, "settings.platform.external.help.other", "Choose an installed emulator. If needed, configure its custom launch parameters.")
     PlatformKind.MD -> I18n.t(context, "settings.platform.external.help.md", "可选：改用 MD.emu / RetroArch 等 MD/Genesis 外部模拟器")
     PlatformKind.PS1 -> I18n.t(context, "settings.platform.external.help.ps1", "可选：改用 DuckStation / ePSXe / FPse / RetroArch 等 PS1 外部模拟器")
     PlatformKind.N64 -> I18n.t(context, "settings.platform.external.help.n64", "可选：改用 M64Plus FZ / Mupen64Plus / RetroArch 等 N64 外部模拟器")
@@ -1899,6 +1899,7 @@ private fun isRecommendedEmulatorForPlatform(platform: PlatformConfig, app: Inst
             "retroarch",
             "com.retroarch"
         )
+        PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> listOf("retroarch", "gearsystem", "sms.emu", "md.emu", "mdemu")
         PlatformKind.MD -> listOf(
             "md.emu",
             "mdemu",

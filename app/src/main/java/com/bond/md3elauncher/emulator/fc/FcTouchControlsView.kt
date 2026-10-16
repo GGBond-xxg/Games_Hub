@@ -134,6 +134,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
                     else -> "R"
                 },
                 a = when {
+                    activity.isSega8BitMode -> "2"
                     activity.isArcadeMode -> "2"
                     activity.isN64Mode -> "A"
                     activity.isPs1Mode -> "○"
@@ -141,17 +142,20 @@ internal class FcTouchControlsView(context: Context) : View(context) {
                     else -> "A"
                 },
                 b = when {
+                    activity.isSega8BitMode -> "1"
                     activity.isArcadeMode -> "1"
                     activity.isPs1Mode -> "×"
                     else -> "B"
                 },
                 x = when {
+                    activity.isSega8BitMode -> tr("emulator.sega8.turbo2", "2 Turbo")
                     activity.isArcadeMode -> "4"
                     activity.isN64Mode -> "C↓"
                     activity.isPs1Mode -> "△"
                     else -> "X"
                 },
                 y = when {
+                    activity.isSega8BitMode -> tr("emulator.sega8.turbo1", "1 Turbo")
                     activity.isArcadeMode -> "3"
                     activity.isN64Mode -> "C↑"
                     activity.isPs1Mode -> "□"
@@ -159,6 +163,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
                     else -> "Y"
                 },
                 l2 = if (activity.isN64Mode) "Z" else "L2",
+                start = if (activity.isSega8BitMode && activity.sega8System != com.bond.md3elauncher.emulator.md.Sega8BitSystem.GG) tr("emulator.sega8.pause", "PAUSE") else "START",
                 select = if (activity.isMdMode) "MODE" else if (activity.isN64Mode) "C" else if (activity.isArcadeMode) "COIN" else "SELECT",
                 quickSave = I18n.short(context, "emulator.short.quick_save", "Save", maxChars = 4),
                 quickLoad = I18n.short(context, "emulator.short.quick_load", "Load", maxChars = 4),
@@ -182,7 +187,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         dpadRects.forEach { (key, rect) ->
             buttons += FcTouchButton("dpad_$key", "", setOf(key), RectF(rect))
         }
-        layout.buttons.forEach { item ->
+        layout.buttons.filterNot { activity.isSega8BitMode && it.id in setOf("l1", "r1") }.forEach { item ->
             buttons += FcTouchButton(item.id, item.label, item.keyCodes, RectF(item.rect), item.circle)
         }
         applyLayoutOverrides(w, h)
@@ -1053,6 +1058,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
             activity.isArcadeMode -> tr("emulator.subtitle.arcade_cheat", "Arcade cheat entry reserved")
             activity.isN64Mode -> tr("emulator.subtitle.n64_cheat", "N64 cheat entry reserved")
             activity.isPs1Mode -> tr("emulator.subtitle.ps1_cheat", "PS1 cheat entry reserved")
+            activity.isSega8BitMode -> tr("emulator.sega8.cheat", "Sega 8-bit cheat entry reserved")
             activity.isMdMode -> tr("emulator.subtitle.md_cheat", "MD/Genesis cheat entry reserved")
             activity.isSfcMode -> tr("emulator.subtitle.sfc_cheat", "SFC/SNES cheat entry reserved")
             else -> tr("emulator.subtitle.fc_cheat", "FC/NES cheat entry reserved")
@@ -1083,6 +1089,7 @@ internal class FcTouchControlsView(context: Context) : View(context) {
         activity.isArcadeMode -> tr("emulator.hint.arcade_cheats", "Arcade built-in cheats are reserved for later.")
         activity.isN64Mode -> tr("emulator.hint.n64_cheats", "N64 built-in cheats are reserved for later.")
         activity.isPs1Mode -> tr("emulator.hint.ps1_cheats", "PS1 built-in cheats are reserved for later.")
+        activity.isSega8BitMode -> tr("emulator.sega8.cheat_hint", "Use an external emulator for Sega 8-bit cheats.")
         activity.isMdMode -> tr("emulator.hint.md_cheats", "MD/Genesis built-in cheats are reserved for later.")
         activity.isSfcMode -> tr("emulator.hint.sfc_cheats", "SFC/SNES built-in cheats are reserved for later.")
         else -> tr("emulator.hint.fc_cheats", "FC/NES built-in cheats are reserved for later.")

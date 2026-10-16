@@ -356,7 +356,10 @@ class LauncherStore(context: Context) {
         PlatformConfig(id = PlatformKind.N3DS.name, kind = PlatformKind.N3DS),
         PlatformConfig(id = PlatformKind.GC.name, kind = PlatformKind.GC),
         PlatformConfig(id = PlatformKind.WII.name, kind = PlatformKind.WII),
-        PlatformConfig(id = PlatformKind.DREAMCAST.name, kind = PlatformKind.DREAMCAST)
+        PlatformConfig(id = PlatformKind.DREAMCAST.name, kind = PlatformKind.DREAMCAST),
+        PlatformConfig(id = PlatformKind.SMS.name, kind = PlatformKind.SMS),
+        PlatformConfig(id = PlatformKind.GG.name, kind = PlatformKind.GG),
+        PlatformConfig(id = PlatformKind.SG1000.name, kind = PlatformKind.SG1000)
     )
 
     private fun mergeDefaultPlatforms(platforms: List<PlatformConfig>): List<PlatformConfig> {

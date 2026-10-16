@@ -59,7 +59,7 @@ class ExternalLauncher(private val context: Context) {
             else -> launchWithGenericView(
                 game = game,
                 emulatorPackage = emulatorPackage,
-                includeCacheUris = platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC || platform.kind == PlatformKind.MD || platform.kind == PlatformKind.PS1 || platform.kind == PlatformKind.N64 || platform.kind == PlatformKind.ARCADE,
+                includeCacheUris = platform.kind == PlatformKind.GBA || platform.kind == PlatformKind.GB || platform.kind == PlatformKind.NES || platform.kind == PlatformKind.SFC || platform.kind == PlatformKind.MD || platform.kind in setOf(PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000) || platform.kind == PlatformKind.PS1 || platform.kind == PlatformKind.N64 || platform.kind == PlatformKind.ARCADE,
                 extraBuilder = { uri -> addCommonRomExtras(uri, game, platform.kind) }
             )
         }
@@ -549,6 +549,7 @@ class ExternalLauncher(private val context: Context) {
             PlatformKind.GBA -> listOf("mgba_libretro_android.so", "gpsp_libretro_android.so", "vba_next_libretro_android.so", "vba_m_libretro_android.so")
             PlatformKind.GB -> listOf("gambatte_libretro_android.so", "sameboy_libretro_android.so", "mgba_libretro_android.so")
             PlatformKind.SFC -> listOf("snes9x_libretro_android.so", "bsnes_libretro_android.so", "mesen-s_libretro_android.so")
+            PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> listOf("genesis_plus_gx_libretro_android.so")
             PlatformKind.MD -> listOf("genesis_plus_gx_libretro_android.so", "picodrive_libretro_android.so")
             PlatformKind.PS1 -> listOf("pcsx_rearmed_libretro_android.so", "swanstation_libretro_android.so", "mednafen_psx_hw_libretro_android.so")
             PlatformKind.N64 -> listOf("mupen64plus_next_gles3_libretro_android.so", "mupen64plus_next_gles2_libretro_android.so", "parallel_n64_libretro_android.so")

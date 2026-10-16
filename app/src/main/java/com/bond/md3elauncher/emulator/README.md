@@ -9,7 +9,7 @@ emulator/
 ├── common/                       # Shared menu, host contract and touch layout
 ├── gba/                          # GBA + GB/GBC runtime
 ├── fc/                           # FC/NES runtime and current SFC host mode
-├── md/                           # MD/Genesis runtime wrapper and notes
+├── md/                           # MD/Genesis and Sega 8-bit runtime
 ├── ps1/                          # PS1 runtime wrapper and notes
 ├── n64/                          # N64 runtime wrapper and notes
 ├── arcade/                       # Arcade runtime wrapper and notes
@@ -36,6 +36,9 @@ emulator/
 | FC/NES | `internal:fc` | `fc/InternalFcActivity` + Nestopia |
 | SFC/SNES | `internal:sfc` | `fc/InternalFcActivity` SFC mode + Snes9x |
 | MD/Genesis | `internal:md` | `md/InternalMdActivity` + Genesis Plus GX |
+| SMS | `internal:sms` | `md/InternalMdActivity` + Genesis Plus GX (SMS mode) |
+| Game Gear | `internal:gg` | `md/InternalMdActivity` + Genesis Plus GX (GG mode) |
+| SG-1000 | `internal:sg1000` | `md/InternalMdActivity` + Genesis Plus GX (SG mode) |
 | PS1 | `internal:ps1` | `ps1/InternalPs1Activity` + PCSX-ReARMed |
 | N64 | `internal:n64` | `n64/InternalN64Activity` + Mupen64Plus-Next |
 | Arcade | `internal:arcade` | `arcade/InternalArcadeActivity` + MAME 2003-Plus |

@@ -22,8 +22,8 @@ class AdditionalPlatformsTest {
     }
 
     @Test
-    fun additionalPlatformsNeverSelectAnInternalCoreByDefault() {
-        additionalEmulatorTabs.forEach { tab ->
+    fun existingExternalPlatformsNeverSelectAnInternalCoreByDefault() {
+        additionalEmulatorTabs.filter { it !in listOf(BeaconTab.SMS, BeaconTab.GG, BeaconTab.SG1000) }.forEach { tab ->
             val kind = PlatformKind.valueOf(tab.name)
             assertFalse(InternalEmulators.usesInternal(PlatformConfig(id = kind.name, kind = kind)))
             assertNull(LaunchPreflight.coreName(kind, gles3 = true))

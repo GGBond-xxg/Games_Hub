@@ -47,6 +47,7 @@ import com.bond.md3elauncher.emulator.gba.InternalGbaActivity
 import com.bond.md3elauncher.emulator.arcade.InternalArcadeActivity
 import com.bond.md3elauncher.emulator.fc.InternalFcActivity
 import com.bond.md3elauncher.emulator.md.InternalMdActivity
+import com.bond.md3elauncher.emulator.md.Sega8BitSystem
 import com.bond.md3elauncher.emulator.n64.InternalN64Activity
 import com.bond.md3elauncher.emulator.ps1.InternalPs1Activity
 import com.bond.md3elauncher.ui.LauncherApp
@@ -224,6 +225,10 @@ class MainActivity : ComponentActivity() {
                                     emulatorPackage = InternalEmulators.SFC_PACKAGE,
                                     emulatorName = InternalEmulators.SFC_NAME
                                 )
+                            }
+                            PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> updatePlatform(platform.id) {
+                                it.copy(emulatorPackage = Sega8BitSystem.fromKind(platform.kind)!!.internalPackage,
+                                    emulatorName = null)
                             }
                             PlatformKind.MD -> updatePlatform(platform.id) {
                                 it.copy(
@@ -451,6 +456,7 @@ class MainActivity : ComponentActivity() {
                     InternalEmulators.usesInternalFc(platform) -> launchInternalFc(game)
                     InternalEmulators.usesInternalSfc(platform) -> launchInternalSfc(game)
                     InternalEmulators.usesInternalMd(platform) -> launchInternalMd(game)
+                    InternalEmulators.usesInternalSega8Bit(platform) -> launchInternalMd(game, Sega8BitSystem.fromKind(platform.kind))
                     InternalEmulators.usesInternalPs1(platform) -> launchInternalPs1(game)
                     InternalEmulators.usesInternalN64(platform) -> launchInternalN64(game)
                     InternalEmulators.usesInternalArcade(platform) -> launchInternalArcade(game)
@@ -495,12 +501,13 @@ class MainActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    private fun launchInternalMd(game: GameItem) {
+    private fun launchInternalMd(game: GameItem, sega8: Sega8BitSystem? = null) {
         val intent = Intent(this, InternalMdActivity::class.java).apply {
             putExtra(InternalFcActivity.EXTRA_ROM_URI, game.uri)
             putExtra(InternalFcActivity.EXTRA_FILE_NAME, game.fileName)
             putExtra(InternalFcActivity.EXTRA_TITLE, game.title)
-            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, "MD/Genesis")
+            putExtra(InternalFcActivity.EXTRA_PLATFORM_LABEL, sega8?.kind?.title ?: "MD/Genesis")
+            sega8?.let { putExtra(Sega8BitSystem.EXTRA_SYSTEM, it.kind.name) }
             putExtra(InternalFcActivity.EXTRA_CORE_FILE_NAME, InternalFcActivity.GENESIS_PLUS_GX_CORE_FILE_NAME)
         }
         startActivity(intent)

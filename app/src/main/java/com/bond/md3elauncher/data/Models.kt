@@ -60,7 +60,10 @@ enum class PlatformKind(
     N3DS("Nintendo 3DS", "External emulator", setOf("3ds", "cci", "cxi", "app")),
     GC("GameCube", "External emulator", setOf("iso", "gcm", "rvz", "wia", "gcz", "ciso")),
     WII("Wii", "External emulator", setOf("iso", "wbfs", "rvz", "wia", "gcz", "ciso", "wad")),
-    DREAMCAST("Dreamcast", "External emulator", setOf("chd", "gdi", "cdi"));
+    DREAMCAST("Dreamcast", "External emulator", setOf("chd", "gdi", "cdi")),
+    SMS("SMS", "Genesis Plus GX / RetroArch", setOf("sms", "zip", "7z")),
+    GG("Game Gear", "Genesis Plus GX / RetroArch", setOf("gg", "zip", "7z")),
+    SG1000("SG-1000", "Genesis Plus GX / RetroArch", setOf("sg", "zip", "7z"));
 }
 
 data class EmulatorLaunchConfig(

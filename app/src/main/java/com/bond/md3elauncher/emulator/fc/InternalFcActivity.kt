@@ -30,6 +30,7 @@ import com.bond.md3elauncher.emulator.ControllerShortcutAction
 import com.bond.md3elauncher.emulator.ControllerShortcutSettings
 import com.bond.md3elauncher.i18n.I18n
 import com.bond.md3elauncher.emulator.n64.normalizeN64Rom
+import com.bond.md3elauncher.emulator.md.Sega8BitSystem
 import com.swordfish.libretrodroid.GLRetroView
 import com.swordfish.libretrodroid.GLRetroViewData
 import com.swordfish.libretrodroid.LibretroDroid
@@ -86,7 +87,9 @@ open class InternalFcActivity : ComponentActivity() {
     private var firstFrameRendered = false
     internal val platformLabel: String get() = intent.getStringExtra(EXTRA_PLATFORM_LABEL).orEmpty().ifBlank { "FC/NES" }
     internal val isSfcMode: Boolean get() = intent.getStringExtra(EXTRA_CORE_FILE_NAME) == SNES9X_CORE_FILE_NAME || platformLabel.contains("SFC", ignoreCase = true) || platformLabel.contains("SNES", ignoreCase = true)
-    internal val isMdMode: Boolean get() = intent.getStringExtra(EXTRA_CORE_FILE_NAME) == GENESIS_PLUS_GX_CORE_FILE_NAME || platformLabel.contains("Genesis", ignoreCase = true) || platformLabel == "MD"
+    internal val sega8System: Sega8BitSystem? get() = Sega8BitSystem.fromId(intent.getStringExtra(Sega8BitSystem.EXTRA_SYSTEM))
+    internal val isSega8BitMode: Boolean get() = sega8System != null
+    internal val isMdMode: Boolean get() = !isSega8BitMode && (intent.getStringExtra(EXTRA_CORE_FILE_NAME) == GENESIS_PLUS_GX_CORE_FILE_NAME || platformLabel.contains("Genesis", ignoreCase = true) || platformLabel == "MD")
     internal val isPs1Mode: Boolean get() = intent.getStringExtra(EXTRA_CORE_FILE_NAME) == PCSX_REARMED_CORE_FILE_NAME || platformLabel.contains("PS1", ignoreCase = true)
     internal val isN64Mode: Boolean get() =
         intent.getStringExtra(EXTRA_CORE_FILE_NAME) in setOf(MUPEN64PLUS_NEXT_GLES2_CORE_FILE_NAME, MUPEN64PLUS_NEXT_GLES3_CORE_FILE_NAME) ||
@@ -98,6 +101,7 @@ open class InternalFcActivity : ComponentActivity() {
         isArcadeMode -> "internal_arcade"
         isN64Mode -> "internal_n64"
         isPs1Mode -> "internal_ps1"
+        isSega8BitMode -> sega8System!!.storageDirectory
         isMdMode -> "internal_md"
         isSfcMode -> "internal_sfc"
         else -> "internal_fc"
@@ -106,6 +110,7 @@ open class InternalFcActivity : ComponentActivity() {
         isArcadeMode -> "Arcade"
         isN64Mode -> "N64"
         isPs1Mode -> "PS1"
+        isSega8BitMode -> sega8System!!.kind.title
         isMdMode -> "MD/Genesis"
         isSfcMode -> "SFC/SNES"
         else -> "FC/NES"
@@ -153,6 +158,7 @@ open class InternalFcActivity : ComponentActivity() {
                 isArcadeMode -> "game.zip"
                 isN64Mode -> "game.z64"
                 isPs1Mode -> "game.chd"
+                isSega8BitMode -> "game.${sega8System!!.extension}"
                 isMdMode -> "game.md"
                 isSfcMode -> "game.sfc"
                 else -> "game.nes"
@@ -414,9 +420,9 @@ open class InternalFcActivity : ComponentActivity() {
             val chosenFile = File(nativeDir, PCSX_REARMED_CORE_FILE_NAME)
             Log.d(TAG, "PS1 core selected=PCSX-ReARMed file=${chosenFile.absolutePath}")
             FcCoreChoice(chosenFile, "PCSX-ReARMed")
-        } else if (isMdMode) {
+        } else if (isMdMode || isSega8BitMode) {
             val chosenFile = File(nativeDir, GENESIS_PLUS_GX_CORE_FILE_NAME)
-            Log.d(TAG, "MD/Genesis core selected=Genesis Plus GX file=${chosenFile.absolutePath}")
+            Log.d(TAG, "$processLogName core selected=Genesis Plus GX file=${chosenFile.absolutePath}")
             FcCoreChoice(chosenFile, "Genesis Plus GX")
         } else if (isSfcMode) {
             val chosenFile = File(nativeDir, SNES9X_CORE_FILE_NAME)
@@ -432,7 +438,13 @@ open class InternalFcActivity : ComponentActivity() {
     }
 
     private fun coreVariables(): Array<Variable> =
-        if (isArcadeMode) {
+        if (isSega8BitMode) {
+            arrayOf(
+                Variable("genesis_plus_gx_system_hw", sega8System!!.coreSystem),
+                Variable("genesis_plus_gx_bios", "disabled"),
+                Variable("genesis_plus_gx_gg_extra", "disabled")
+            )
+        } else if (isArcadeMode) {
             arrayOf(
                 Variable("mame2003-plus_input_interface", "retropad"),
                 Variable("mame2003-plus_skip_disclaimer", "enabled"),
@@ -461,6 +473,7 @@ open class InternalFcActivity : ComponentActivity() {
                 isArcadeMode -> "game.zip"
                 isN64Mode -> "game.z64"
                 isPs1Mode -> "game.chd"
+                isSega8BitMode -> "game.${sega8System!!.extension}"
                 isMdMode -> "game.md"
                 isSfcMode -> "game.sfc"
                 else -> "game.nes"
@@ -484,10 +497,14 @@ open class InternalFcActivity : ComponentActivity() {
         }
         if (lower.endsWith(".zip")) {
             extractFcFromZip(uri, dir, safeName)?.let { extracted ->
-                preparedRomHeaderInfo = if (isSfcMode || isMdMode || isPs1Mode || isN64Mode || isArcadeMode) null else analyzeFcRomHeader(extracted)
+                preparedRomHeaderInfo = if (isSfcMode || isMdMode || isSega8BitMode || isPs1Mode || isN64Mode || isArcadeMode) null else analyzeFcRomHeader(extracted)
                 return if (isN64Mode) normalizePreparedN64Rom(extracted) else extracted
             }
             error(tr("emulator.zip_no_rom", "No supported ROM found in ZIP"))
+        }
+
+        if (isSega8BitMode && platformRomExtension(lower) == null) {
+            error(tr("launch.check.sega8_format", "Use a ROM matching the selected Sega platform, or a ZIP containing that ROM."))
         }
 
         // v0.1.65：不要把中文/特殊字符文件名直接传给 libretro core。
@@ -497,6 +514,7 @@ open class InternalFcActivity : ComponentActivity() {
             isArcadeMode -> ".zip"
             isN64Mode -> ".z64"
             isPs1Mode -> ".chd"
+            isSega8BitMode -> ".${sega8System!!.extension}"
             isMdMode -> ".md"
             isSfcMode -> ".sfc"
             else -> ".nes"
@@ -507,7 +525,7 @@ open class InternalFcActivity : ComponentActivity() {
             requireNotNull(input) { tr("emulator.rom_input_failed", "Unable to open ROM input stream") }
             FileOutputStream(outFile).use { output -> input.copyTo(output) }
         }
-        preparedRomHeaderInfo = if (isSfcMode || isMdMode || isPs1Mode || isN64Mode || isArcadeMode) null else analyzeFcRomHeader(outFile)
+        preparedRomHeaderInfo = if (isSfcMode || isMdMode || isSega8BitMode || isPs1Mode || isN64Mode || isArcadeMode) null else analyzeFcRomHeader(outFile)
         return if (isN64Mode) normalizePreparedN64Rom(outFile) else outFile
     }
 
@@ -540,6 +558,7 @@ open class InternalFcActivity : ComponentActivity() {
                             isArcadeMode -> ".zip"
                             isN64Mode -> ".z64"
                             isPs1Mode -> ".chd"
+                            isSega8BitMode -> ".${sega8System!!.extension}"
                             isMdMode -> ".md"
                             isSfcMode -> ".sfc"
                             else -> ".nes"
@@ -551,6 +570,7 @@ open class InternalFcActivity : ComponentActivity() {
                         isArcadeMode -> ".zip"
                         isN64Mode -> ".z64"
                         isPs1Mode -> ".chd"
+                        isSega8BitMode -> ".${sega8System!!.extension}"
                         isMdMode -> ".md"
                         isSfcMode -> ".sfc"
                         else -> ".nes"
@@ -839,6 +859,7 @@ open class InternalFcActivity : ComponentActivity() {
                 isArcadeMode -> "ARCADE"
                 isN64Mode -> "N64"
                 isPs1Mode -> "PS1"
+                isSega8BitMode -> sega8System!!.kind.name
                 isMdMode -> "MD_GENESIS"
                 isSfcMode -> "SFC_SNES"
                 else -> "FC_NES"
@@ -883,6 +904,7 @@ open class InternalFcActivity : ComponentActivity() {
             isArcadeMode -> arcadeRomExtension(lowerName)
             isN64Mode -> n64RomExtension(lowerName)
             isPs1Mode -> ps1RomExtension(lowerName)
+            isSega8BitMode -> sega8System!!.romExtension(lowerName)
             isMdMode -> mdRomExtension(lowerName)
             isSfcMode -> sfcRomExtension(lowerName)
             else -> fcRomExtension(lowerName)

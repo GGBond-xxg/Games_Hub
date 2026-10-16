@@ -1,6 +1,7 @@
 package com.bond.md3elauncher.emulator
 import com.bond.md3elauncher.data.PlatformConfig
 import com.bond.md3elauncher.data.PlatformKind
+import com.bond.md3elauncher.emulator.md.Sega8BitSystem
 
 object InternalEmulators {
     const val GBA_PACKAGE = "internal:gba"
@@ -69,6 +70,11 @@ object InternalEmulators {
     fun usesInternalMd(platform: PlatformConfig): Boolean =
         platform.kind == PlatformKind.MD && isInternalMdPackage(platform.emulatorPackage)
 
+    fun usesInternalSega8Bit(platform: PlatformConfig): Boolean =
+        Sega8BitSystem.fromKind(platform.kind)?.let {
+            platform.emulatorPackage.isNullOrBlank() || platform.emulatorPackage == it.internalPackage
+        } == true
+
     fun usesInternalPs1(platform: PlatformConfig): Boolean =
         platform.kind == PlatformKind.PS1 && isInternalPs1Package(platform.emulatorPackage)
 
@@ -79,5 +85,5 @@ object InternalEmulators {
         platform.kind == PlatformKind.ARCADE && isInternalArcadePackage(platform.emulatorPackage)
 
     fun usesInternal(platform: PlatformConfig): Boolean =
-        usesInternalGbaCore(platform) || usesInternalFc(platform) || usesInternalSfc(platform) || usesInternalMd(platform) || usesInternalPs1(platform) || usesInternalN64(platform) || usesInternalArcade(platform)
+        usesInternalGbaCore(platform) || usesInternalFc(platform) || usesInternalSfc(platform) || usesInternalMd(platform) || usesInternalSega8Bit(platform) || usesInternalPs1(platform) || usesInternalN64(platform) || usesInternalArcade(platform)
 }

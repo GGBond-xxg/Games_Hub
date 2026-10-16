@@ -9,7 +9,7 @@ This document describes the current active structure. It intentionally excludes 
 | Main app process | `MainActivity` | Launcher, settings, scanning, cover editing and external app launch |
 | `:internal_gba` | `emulator.gba.InternalGbaActivity` | GBA and GB/GBC internal emulation |
 | `:internal_fc` | `emulator.fc.InternalFcActivity` | FC/NES and SFC/SNES internal emulation |
-| `:internal_md` | `emulator.md.InternalMdActivity` | MD/Genesis internal emulation |
+| `:internal_md` | `emulator.md.InternalMdActivity` | MD/Genesis and Sega 8-bit internal emulation |
 | `:internal_ps1` | `emulator.ps1.InternalPs1Activity` | PS1 internal emulation |
 | `:internal_n64` | `emulator.n64.InternalN64Activity` | N64 internal emulation |
 | `:internal_arcade` | `emulator.arcade.InternalArcadeActivity` | Arcade internal emulation |
@@ -66,7 +66,7 @@ A launch request chooses one path:
 - `emulator/gba/`: GBA/GB/GBC Activity, controls, models and cheat flow.
 - `emulator/fc/`: FC/NES Activity and controls; the same Activity currently accepts SFC mode.
 - `emulator/sfc/`: SFC-specific documentation/resources; no separate Activity yet.
-- `emulator/md/`: MD/Genesis Activity wrapper and platform-specific documentation.
+- `emulator/md/`: MD/Genesis wrapper, explicit SMS/GG/SG-1000 system selection and documentation.
 - `emulator/ps1/`: PS1 Activity wrapper and PCSX-ReARMed/HLE documentation.
 - `emulator/n64/`: N64 Activity wrapper and Mupen64Plus-Next/GLES documentation.
 - `emulator/arcade/`: Arcade Activity wrapper and MAME 2003-Plus romset documentation.
@@ -80,6 +80,9 @@ A launch request chooses one path:
 | `NES` | `internal:fc` | `InternalFcActivity` + Nestopia |
 | `SFC` | `internal:sfc` | `InternalFcActivity` SFC mode + Snes9x |
 | `MD` | `internal:md` | `InternalMdActivity` + Genesis Plus GX |
+| SMS | `internal:sms` | `md/InternalMdActivity` + Genesis Plus GX (SMS mode) |
+| Game Gear | `internal:gg` | `md/InternalMdActivity` + Genesis Plus GX (GG mode) |
+| SG-1000 | `internal:sg1000` | `md/InternalMdActivity` + Genesis Plus GX (SG mode) |
 | `PS1` | `internal:ps1` | `InternalPs1Activity` + PCSX-ReARMed |
 | `N64` | `internal:n64` | `InternalN64Activity` + Mupen64Plus-Next |
 | `ARCADE` | `internal:arcade` | `InternalArcadeActivity` + MAME 2003-Plus |

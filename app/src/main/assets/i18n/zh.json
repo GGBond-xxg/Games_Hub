@@ -376,7 +376,7 @@
   "settings.cover.steamgrid.placeholder": "不填写就跳过 SteamGridDB",
   "settings.cover.tgdb.placeholder": "不填写就跳过 TheGamesDB",
   "settings.emulator.add_other.action": "添加",
-  "settings.emulator.add_other.subtitle": "配置 PS2、DS、3DS、GameCube、Wii 或 Dreamcast",
+  "settings.emulator.add_other.subtitle": "更多平台：PS2 / DS / 3DS / GC / Wii / DC / SMS / GG / SG-1000",
   "settings.emulator.add_other.title": "添加其他",
   "settings.emulator.normal_hint": "单点进入模拟器配置，长按任意一项进入排序。",
   "settings.emulator.sorting_hint": "排序模式：使用上移 / 下移调整模拟器顺序。",
@@ -442,7 +442,7 @@
   "settings.platform.selected_emulator": "已选择的模拟器",
   "settings.platform.setup_title": "{platform} 平台设置",
   "settings.platform.sorting_hint": "排序模式：使用上移 / 下移调整；完成后顶部导航会跟随变化。",
-  "settings.platform.tip": "GBA、GB/GBC、FC/NES、SFC/SNES、MD/Genesis 和 PS1 默认使用内置模拟器，也可改用外部模拟器；PSP 和 NS 继续使用外部模拟器。长按游戏可以自定义显示名称和图标。",
+  "settings.platform.tip": "支持内置模拟器的平台默认使用内置，也可选择外部模拟器。长按游戏可自定义显示名称和图片。",
   "settings.safe_margin.default": "默认预留",
   "settings.safe_margin.large_cutout": "大挖孔",
   "settings.safe_margin.left": "左边距",
@@ -628,5 +628,14 @@
   "edit.artwork_type": "图片类型",
   "edit.artwork_cover": "封面",
   "edit.artwork_screenshot": "截图",
-  "edit.no_artwork_found": "没有找到此类型的图片。可以切换封面 / 截图，或更换游戏名称。"
+  "edit.no_artwork_found": "没有找到此类型的图片。可以切换封面 / 截图，或更换游戏名称。",
+  "platform.sega8.name": "内置 {platform} 模拟器",
+  "settings.tab_order.sega8": "世嘉内置 / 外部模拟器入口",
+  "settings.platform.internal_sega8.subtitle": "复用 Genesis Plus GX，支持本平台 ROM 或 ZIP，5 个存档槽及快存，无需 BIOS。7z 请先解压。",
+  "launch.check.sega8_format": "请选择与平台对应的 ROM（.sms / .gg / .sg），或包含该 ROM 的 ZIP。",
+  "emulator.sega8.pause": "暂停",
+  "emulator.sega8.turbo1": "1 连发",
+  "emulator.sega8.turbo2": "2 连发",
+  "emulator.sega8.cheat": "世嘉 8 位金手指入口预留",
+  "emulator.sega8.cheat_hint": "世嘉 8 位金手指暂请使用外部模拟器。"
 }

@@ -13,6 +13,7 @@ import java.io.File
 internal object LaunchPreflight {
     fun formatIssue(kind: PlatformKind, extension: String, internal: Boolean): String? = when {
         internal && extension.equals("7z", true) -> "launch.check.archive"
+        internal && kind in setOf(PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000) && extension.lowercase() !in kind.extensions -> "launch.check.sega8_format"
         internal && kind == PlatformKind.PS1 && extension.lowercase() !in setOf("chd", "pbp", "iso", "bin") -> "launch.check.disc"
         else -> null
     }
@@ -21,7 +22,7 @@ internal object LaunchPreflight {
         PlatformKind.GBA, PlatformKind.GB -> "libmgba_libretro_android.so"
         PlatformKind.NES -> "libnestopia_libretro_android.so"
         PlatformKind.SFC -> "libsnes9x_libretro_android.so"
-        PlatformKind.MD -> "libgenesis_plus_gx_libretro_android.so"
+        PlatformKind.MD, PlatformKind.SMS, PlatformKind.GG, PlatformKind.SG1000 -> "libgenesis_plus_gx_libretro_android.so"
         PlatformKind.PS1 -> "libpcsx_rearmed_libretro_android.so"
         PlatformKind.N64 -> "libmupen64plus_next_gles${if (gles3) 3 else 2}_libretro_android.so"
         PlatformKind.ARCADE -> "libmame2003_plus_libretro_android.so"

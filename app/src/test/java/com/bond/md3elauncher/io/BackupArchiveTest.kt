@@ -57,11 +57,25 @@ class BackupArchiveTest {
     }
 
     @Test fun allowsEveryRuntimeButOnlyFiveNormalSlotsAndQuickSave() {
-        listOf("gba", "fc", "sfc", "md", "ps1", "n64", "arcade").forEach { runtime ->
+        listOf("gba", "fc", "sfc", "md", "ps1", "n64", "arcade", "sms", "gg", "sg1000").forEach { runtime ->
             val prefix = "internal_$runtime/game_data/game/"
             (1..5).forEach { assertTrue(BackupPaths.allowed("${prefix}slot_$it.state")) }
             assertTrue(BackupPaths.allowed("${prefix}quick.state"))
             assertTrue(BackupPaths.allowed("${prefix}save_ram.srm"))
+            assertFalse(BackupPaths.allowed("${prefix}slot_6.state"))
+            assertFalse(BackupPaths.allowed("internal_$runtime/roms/game.bin"))
+            assertFalse(BackupPaths.allowed("internal_$runtime/system/bios.bin"))
         }
+    }
+
+    @Test fun sega8SaveArchivesKeepPlatformsSeparated() {
+        val stage = folder.newFolder("sega8")
+        val entries = listOf("sms", "gg", "sg1000").flatMap { runtime ->
+            ((1..5).map { "slot_$it.state" } + listOf("quick.state", "save_ram.srm")).map {
+                "files/internal_$runtime/game_data/same-game/$it" to "$runtime-$it"
+            }
+        }
+        BackupArchive.extract(ByteArrayInputStream(archive("manifest.json" to "{}", *entries.toTypedArray())), stage)
+        entries.forEach { (path, content) -> assertEquals(content, File(stage, path.removePrefix("files/")).readText()) }
     }
 }
